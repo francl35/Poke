@@ -181,6 +181,7 @@ sceLibFont,0x980F4895,sceFontGetCharGlyphImage
 sceLibFont,0xA834319D,sceFontOpen
 sceLibFont,0xDCC80C2F,sceFontGetCharInfo
 sceMpeg,0x0F6C18D7,sceMpegAvcDecodeDetail
+sceMpeg,0x0E3C2E9D,sceMpegAvcDecode
 sceMpeg,0x13407F13,sceMpegRingbufferDestruct
 sceMpeg,0x167AFD9E,sceMpegInitAu
 sceMpeg,0x211A057C,sceMpegAvcQueryYCbCrSize

@@ -1175,20 +1175,19 @@ void emit_target(std::ostringstream &body, std::uint32_t target, const std::set<
     const char *indent, std::uint32_t executable_base = 0u, std::uint32_t unit_span_bytes = 0u,
     const std::map<std::uint32_t, std::uint16_t> *direct_entry_ids = nullptr,
     const std::set<std::uint32_t> *import_stubs = nullptr, const std::set<std::uint32_t> *unit_indices = nullptr) {
-    if (labels.contains(target)) {
-        body << indent << "goto L_" << psprecomp::hex32(target).substr(2) << ";\n";
-        return;
-    }
 
-    // A fixed J/JAL to a PSP import must return to the outer dispatcher.
-    // Trying the generated-unit chain first is guaranteed to fail because import
-    // registration deliberately poisons/replaces that exact PC, and these stubs
-    // are frequently hot in real titles. Emit the minimal correct handoff directly.
+    // PSP imports are outer-dispatch boundaries even when the import stub
+    // address is also an emitted label in this generated unit. Check imports
+    // before local labels so generated code cannot bypass the HLE wrapper.
     if (import_stubs != nullptr && import_stubs->contains(target)) {
         body << indent << "ctx.pc = " << psprecomp::hex32(target) << "u; return;\n";
         return;
     }
 
+    if (labels.contains(target)) {
+        body << indent << "goto L_" << psprecomp::hex32(target).substr(2) << ";\n";
+        return;
+    }
     // A fixed-span AOT partition can split one guest CFG across neighbouring
     // C++ translation units. knows the destination bucket for every
     // fixed direct edge, so the common case bypasses Runtime's large per-PC
@@ -1370,8 +1369,16 @@ std::string emit_function_source(
                         emit_target(body, target, function.entry_labels, "    ", function.executable_base,
                             function.unit_span_bytes, function.direct_entry_ids, function.import_stubs,
                             function.unit_indices);
+                    } else if (function.import_stubs != nullptr &&
+                            function.import_stubs->contains(target)) {
+                        // A same-unit JAL to a PSP import must leave generated code so the
+                        // registered import/HLE wrapper gets control. The delay slot and $ra
+                        // write have already executed above.
+                        body << "    ctx.pc = " << psprecomp::hex32(target) << "u;\n"
+                            << "    return;\n";
+                        break;
                     } else if (function.entry_labels.contains(target)) {
-                        // Fixed same-unit JAL: the destination is already a C++
+                        // Fixed same-unit non-import JAL: the destination is already a C++
                         // label. Going through ctx.pc + LOCAL_DISPATCH needlessly
                         // re-decodes a dense entry id and burns the local-transfer
                         // counter. The delay slot and $ra write have already run.

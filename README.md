@@ -1,155 +1,74 @@
+# Poke
 
+**Poke** is an experimental native recompilation project focused on **Monster Hunter Portable 2nd G** (MHP2G, known internationally as *Monster Hunter Freedom Unite*) for PSP.
 
-# Poke - WIP porting mhfu from Yakumo team work on mhp3rd
+Poke is a **derivative of [TeamGDB/Yakumo](https://github.com/TeamGDB/Yakumo)**. The PSP runtime, recompilation framework, and substantial portions of the host implementation build on work done by Yakumo's original contributors. **Poke is not the original Yakumo project, is not maintained by the Yakumo team, and is not an official successor.** Please refer to the upstream project for its own releases, development, and support. Credit for the original work belongs to its respective authors and contributors.
 
-A native port of **Monster Hunter Portable 2nd G** made by static recompilation: the game's PSP code is translated ahead of time into C++ and compiled for your machine, then run on a reimplementation of the PSP system software. It is not an emulator — there is no interpreter or JIT at the heart of it — and it is not a decompilation.
+This fork focuses on adapting that technology to MHP2G. The inherited MHP3rd profile remains in the repository; its presence does not mean that Poke's MHP2G build is a release of the original Yakumo project.
 
-> **This project does not include any game assets.** You must provide the files from your own legally obtained copy of Monster Hunter Portable 3rd HD Ver. (`NPJB-40001`) to install or build Yakumo.
+## Current status
 
-## Legal disclaimer
+**Work in progress — not a general release.**
 
-**Yakumo** is an independent, open-source project and is not affiliated with, authorized by, sponsored by, or endorsed by CAPCOM, Sony, or any of their affiliates.
+- The MHP2G executable has been analyzed and its main code generated as native C++.
+- The Linux Vulkan build has booted successfully and village gameplay has been tested.
+- Quest, combat, zone-transition, and overlay compatibility testing is still in progress.
+- The MHP2G CMake target and executable are both named `Poke`.
+- Some guest code can fall back to an interpreter; the project is not exclusively ahead-of-time execution.
 
-Monster Hunter, Monster Hunter Portable 3rd HD Ver., CAPCOM, PlayStation, PSP, and all related trademarks, game assets, artwork, audio, characters, and other intellectual property belong to their respective owners.
+These observations are development test results, not a claim of full game compatibility or platform support.
 
-**Yakumo** does not include any game assets or original game files: no disc image, no copy of the game's executable or data, and no textures, models, audio or video from the game. You must provide the files from your own legally obtained copy of Monster Hunter Portable 3rd HD Ver. to install or build **Yakumo**; the installer checks that copy and accepts only the original release.
+## Game files and legal notice
 
-To use **Yakumo**, users must provide the required files from their own legally obtained copy of Monster Hunter Portable 3rd HD Ver. for PlayStation 3.
+**No copyrighted game content is included in this repository.** You must supply files from your own legally obtained copy of *Monster Hunter Portable 2nd G*. Game disc images, decrypted executables, extracted assets, game-derived generated C++ code, and compiled game overlays are not distributed here and must not be committed.
 
-Users are solely responsible for obtaining, dumping, extracting, and using their game copy in accordance with the laws applicable in their jurisdiction.
+Poke is an unofficial fan-made compatibility project and is not affiliated with, authorized, endorsed, or sponsored by CAPCOM, Sony, or their affiliates. *Monster Hunter*, *Monster Hunter Portable 2nd G*, *Monster Hunter Freedom Unite*, PSP, and related names and assets belong to their respective owners. Users are responsible for complying with applicable laws when preparing and using their own game files.
 
-**Yakumo** does not support, provide, link to, or encourage the use of unauthorized or pirated copies of the game.
+## Building MHP2G on Linux (development)
 
-Any references to the original game or its trademarks are made solely for identification, compatibility, and interoperability purposes.
+Requirements include a C++20 toolchain, CMake, Python 3, SDL3, Vulkan development files, and shader compilation tools. The MHP2G renderer build also uses FFmpeg for media support. See the CMake configuration and existing build documentation for additional dependencies.
 
-Screenshots and other depictions of the original game may be used solely to document or demonstrate **Yakumo's** functionality. All depicted third-party game content remains the property of its respective rights holders.
-
-The license covering **Yakumo** applies only to the project's own original code and materials and does not grant any rights to third-party intellectual property.
-
-**Yakumo** provides the software, not the game. You must provide your own legally obtained copy.
-
-## Status: playable
-
-You can load a save copied from a PSP or start a new game, hunt, play with other hunters and save your progress, with music, movies and lighting. The game simulation stays at the PSP's 30 frames per second; optional frame interpolation presents it at 45, 60, 90, 120 or the display's refresh rate without changing game speed. Loads are shorter than on a PSP: while the game loads in silence, it runs ahead of real time (*Fast loading*, on by default).
-
-| Works | Missing or rough |
-| --- | --- |
-| Booting, menus, character creation, the village and hunting areas | |
-| Saves in the PSP's own format, including saves and downloaded quests copied from a PSP; import, export and backups from the menu | Curved surfaces (#10); the save-data dialogs draw nothing yet (#33) |
-| Vulkan graphics: models, animation, textures, transparency, lighting and fog; adjustable internal resolution, arbitrary window shapes and frame interpolation | |
-| PPSSPP-compatible HD texture packs, installed from the menu or copied into the data directory | |
-| Mods in the community's mhp3reload format: file replacements and patches, managed from the menu (see the [profile README](profiles/mhp3rd/README.md#mods)) | Code mods (#81) |
-| Sound effects, streamed music and cutscene movies | |
-| Fully rebindable keyboard and mouse controls; gamepads with an analog right-stick camera and aim, control presets and button-combination binds | |
-| Yakumo's in-game menu, first-run setup, file browser and on-screen keyboard, all usable with a gamepad, keyboard or mouse | |
-| All 355 code overlays recompiled | |
-| Multiplayer: through the ad hoc servers PSP players use, or hosted from the game on a LAN or VPN | |
-
-Tested on macOS (Apple Silicon, Vulkan through MoltenVK), on a Steam Deck in Game Mode with native Vulkan and the built-in controls, and on Windows 11 with MSVC.
-
-The state of each part of the game on each platform is in [`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md).
-
-## Play
-
-### ⬇️ [Download the latest stable release](https://github.com/TeamGDB/Yakumo/releases/latest)
-
-A prebuilt release needs nothing but your disc image. Pick the file for your device from the release's **Assets**, start it, and point the first-run setup at your image: it checks the image, prepares the game from it and keeps everything in a per-user directory. Updating keeps your settings and saves.
-
-| Device | File | Install |
-| --- | --- | --- |
-| **Windows** (x86-64) | `yakumo-…-windows-x86_64.zip` | Unzip it anywhere and run `Yakumo.exe`. Its data goes to `%APPDATA%`. From v0.7.0 there is also a `…-portable.zip` that keeps everything (settings, saves, the prepared game) in a `data` folder next to `Yakumo.exe`, e.g. on a USB drive; see [Portable copy](profiles/mhp3rd/README.md#portable-copy). |
-| **Steam Deck and Linux** | `yakumo-…-linux-x86_64.flatpak` (or the portable `.tar.gz`) | Install the Flatpak, start Yakumo, and add it to Steam for Game Mode. [`docs/LINUX.md`](docs/LINUX.md) covers installing, the first start, Game Mode, where saves live, updating and uninstalling. |
-| **Android** (64-bit, Android 10+, Vulkan 1.1) | `yakumo-…-android-arm64.apk` | Open the APK on the phone and allow installing it. On the first start it takes your `.iso` through Android's file picker and copies it into the app (about 1.3 GB besides the app's 0.8 GB). Touch controls are drawn over the game; gamepads work too. |
-| **macOS** (Apple Silicon, macOS 13+) | `yakumo-…-macos-arm64.dmg` | Open the disk image and drag Yakumo to Applications. It is not notarized by Apple, so macOS asks you to allow it once. [`docs/MACOS.md`](docs/MACOS.md) covers installing, the first start, where saves live, updating and uninstalling. |
-
-**Test builds.** The [releases page](https://github.com/TeamGDB/Yakumo/releases) also lists test builds, marked *(test)* (older ones *(unstable)*) and published as pre-releases. They carry the newest changes and may have new bugs: install one only if you want to help test. If you just want to play, use the latest stable release above.
-
-## Requirements
-
-Building from source is a fully supported way to play. It needs:
-
-- Your own copy of the game (see above)
-- CMake 3.20 or newer, Ninja and a C++20 compiler
-- Python 3
-- SDL3, Vulkan and `glslangValidator`
-- `make` and a C compiler on macOS and Linux: the build makes its own FFmpeg for the music and the movies. Nothing to install for it on Windows
-- A few gigabytes of free memory for the build; the recompiled code is large
-
-## Getting started
-
-In short:
-
-1. Prepare the game's executable from your disc image: build `Yakumo` once without recompiled code and run it with `--install /path/to/image.iso`. No external decryption tool is needed. Then link the image and that executable into the profile with `profiles/mhp3rd/scripts/prepare_game.sh`.
-2. Configure, generate the recompiled code with `profiles/mhp3rd/scripts/generate.sh`, and build `Yakumo`.
-3. Recompile the code overlays with `profiles/mhp3rd/scripts/build_overlays.sh` (about 40 minutes the first time; resumable).
-4. Run `out/mhp3rd/bin/Yakumo`.
-
-The full instructions, including every setting, are in [`profiles/mhp3rd/README.md`](profiles/mhp3rd/README.md). Building on every platform, Windows included, how long each stage takes, and how to work on the code without full rebuilds: [`docs/BUILDING.md`](docs/BUILDING.md).
-
-## Controls
-
-On a gamepad the buttons are where you expect them: on a PlayStation pad circle confirms and cross backs out, as the game's prompts say, and the right stick drives the camera and aiming. Control presets (Default, Modern with attacks on the triggers, Left-handed, Classic keyboard, and your own) cover every control, and any of them can be bound to a single button or a combination such as L1 + ○. Keyboard and mouse play is complete; by default WASD moves, the mouse controls the camera, and its buttons attack. The full tables are in the [profile README](profiles/mhp3rd/README.md#running).
-
-Esc, or both sticks pressed together (L3+R3), opens Yakumo's own menu. It holds video, audio, control, network and save settings, including aspect ratio, frame rate, internal resolution and HD texture pack import. The first start sets the game up from your disc image in the same window, and works with a gamepad alone.
-
-## Roadmap
-
-- Android on real phones: device testing, graphics drivers and performance ([#127](https://github.com/TeamGDB/Yakumo/issues/127), [#17](https://github.com/TeamGDB/Yakumo/issues/17))
-- One consistent visual style across Yakumo's setup screens, menus and overlays ([#33](https://github.com/TeamGDB/Yakumo/issues/33))
-- Touch controls for gameplay, menus, camera movement and aiming
-
-## How it works
-
-The executable is analyzed and every instruction of its code is emitted as C++, which is compiled into the program. The game also loads 355 code overlays at run time into a handful of shared memory slots; each is recompiled into its own library, and when the game loads one, the matching library is installed between frames. An interpreter covers any code the recompiled set does not reach, so nothing stops the game — it only runs slower there.
-
-Around that code sits a reimplementation of the PSP system: a kernel with threads, semaphores, event flags and timers; disc I/O read straight from the image; a Vulkan renderer for the PSP's graphics engine; software voice mixing for audio; and input from SDL3.
-
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) describes the execution model and [`docs/DATA_BIN.md`](docs/DATA_BIN.md) the game's archive format. [`docs/TESTING.md`](docs/TESTING.md) has the smoke test and how to report results.
-
-## Repository layout
-
-```text
-include/psprecomp/   Framework interfaces: runtime, memory, Allegrex state
-src/                 Framework: ELF loading, decoder, runtime, interpreter
-tools/               Framework: analyzer and C++ code generator
-tests/               Framework regression tests
-configs/             PSP NID data and generic examples
-profiles/mhp3rd/     Everything specific to this game: host, kernel, renderer,
-                     audio, input, configuration and build scripts
-docs/                Architecture, archive format, profile guide, source rules
-```
-
-The recompiled code itself is generated locally from your copy of the game and is never committed.
-
-## Built on PSPRecomp
-
-**Yakumo** is built on [PSPRecomp](https://github.com/jessicanataliagta/PSPRecomp), a static recompilation framework for PSP software. The framework is game-neutral and can be built on its own:
+Configure and build the development tools and renderer:
 
 ```bash
-cmake -S . -B out/framework -DPSPRECOMP_PROFILE=""
-cmake --build out/framework --config Release
-ctest --test-dir out/framework -C Release --output-on-failure
+/usr/bin/cmake -S . -B out/mhp2g-renderer -G "Unix Makefiles" \
+  -DPSPRECOMP_PROFILE=mhp2g -DMHP2G_RENDERER=ON
+/usr/bin/cmake --build out/mhp2g-renderer --target Poke -j"$(nproc)"
 ```
 
-To target another title, see [`docs/PROFILE_GUIDE.md`](docs/PROFILE_GUIDE.md). [`docs/SOURCE_PROVENANCE.md`](docs/SOURCE_PROVENANCE.md) sets out the rules for independently written code and third-party source.
+Generate the main ahead-of-time code locally from your **own decrypted MHP2G `EBOOT.ELF`**:
 
-## Authors
+```bash
+profiles/mhp2g/scripts/generate.sh \
+  "$PWD/out/mhp2g-renderer" \
+  "/path/to/your/EBOOT.ELF"
+```
 
-- [@MHunterG](https://github.com/MHunterG)
-- [@mojitosunrise](https://github.com/mojitosunrise)
+Rebuild the executable after generation:
 
-## Credits
+```bash
+/usr/bin/cmake --build out/mhp2g-renderer --target Poke -j"$(nproc)"
+```
 
-- [PSPRecomp](https://github.com/jessicanataliagta/PSPRecomp) — the recompilation framework this project builds on
-- [SDL3](https://www.libsdl.org/) — windowing, input and audio output
-- [FFmpeg](https://ffmpeg.org/) — music and movie decoding
-- [Vulkan](https://www.vulkan.org/) and [MoltenVK](https://github.com/KhronosGroup/MoltenVK) — rendering
-- [Dear ImGui](https://github.com/ocornut/imgui) — Yakumo's menus and setup screens
-- [tiny-AES-c](https://github.com/kokke/tiny-AES-c) — the installer and PSP save-data support
-- [stb_truetype](https://github.com/nothings/stb) — font rasterization
-- [svanheulen/mhef](https://github.com/svanheulen/mhef) — community documentation of the game's archive format
-- [Cinzel](https://github.com/NDISCOVER/Cinzel) and [Shippori Mincho](https://github.com/fontdasu/ShipporiMincho) — the logo's lettering, under the SIL Open Font License
+Run it with the directory containing your local game files:
 
-## License
+```bash
+./out/mhp2g-renderer/bin/Poke "/path/to/your/game-directory"
+```
 
-The repository is distributed under the MIT License; see [`LICENSE`](LICENSE). Third-party files keep their own notices beside them; [`docs/SOURCE_PROVENANCE.md`](docs/SOURCE_PROVENANCE.md) lists their origins and licences.
+**Overlay generation is not yet documented as a verified, standalone Poke workflow.** The profile includes an overlay build script, but its game-image path and output assumptions are being adapted. Until that is completed, some code may execute through the interpreter. Do not copy or commit generated game code or overlay libraries into tracked source directories.
+
+## Project layout
+
+- `profiles/mhp2g/` — MHP2G host code, tools, shaders, scripts, and tests.
+- `profiles/mhp3rd/` — inherited MHP3rd profile from the upstream project.
+- `include/psprecomp/`, `src/`, `tools/` — shared PSP runtime and recompilation framework.
+- `docs/` — project documentation; some inherited documents still describe upstream MHP3rd behavior and should not be treated as verified MHP2G instructions.
+
+## Credits and licensing
+
+Poke is based on **[TeamGDB/Yakumo](https://github.com/TeamGDB/Yakumo)**, an independent project developed by contributors whom the maintainer of this fork does not represent. Thank you to the Yakumo team and all upstream contributors for the original runtime, tooling, and implementation work.
+
+The upstream project is distributed under the **MIT License**. Retain the original copyright and permission notices in `LICENSE` and any applicable source files. Third-party components may have their own licenses and notices; consult their accompanying license files. The software license does **not** grant rights to distribute CAPCOM or Sony game content.
+
+For upstream Yakumo's own documentation and releases, visit [TeamGDB/Yakumo](https://github.com/TeamGDB/Yakumo). For this fork, use [francl35/Poke](https://github.com/francl35/Poke).

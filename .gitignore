@@ -77,3 +77,18 @@ __pycache__/
 
 # Signing keys (the Android release key): never committed
 /keys/
+
+# MHP2G local game files and executable-derived outputs
+/mhp2g-test-game/
+/mhp2g-test-data/
+/profiles/mhp2g/game/
+/profiles/mhp2g/overlays/
+/profiles/mhp2g/generated/
+/profiles/mhp2g/generated.old/
+/profiles/mhp2g/analysis/
+
+# Local reverse-engineering reports and diagnostic artifacts
+/out.txt
+/psp_report*.csv
+/psp_report*.json
+/tools/*.bak
