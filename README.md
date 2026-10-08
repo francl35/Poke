@@ -1,5 +1,8 @@
 # Poke
 
+**[English](README.md) | [日本語](README.jp.md)**
+
+
 **Poke** is an experimental native recompilation project focused on **Monster Hunter Portable 2nd G** (MHP2G, known internationally as *Monster Hunter Freedom Unite*) for PSP.
 
 Poke is a **derivative of [TeamGDB/Yakumo](https://github.com/TeamGDB/Yakumo)**. The PSP runtime, recompilation framework, and substantial portions of the host implementation build on work done by Yakumo's original contributors. **Poke is not the original Yakumo project, is not maintained by the Yakumo team, and is not an official successor.** Please refer to the upstream project for its own releases, development, and support. Credit for the original work belongs to its respective authors and contributors.
