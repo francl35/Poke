@@ -30,14 +30,165 @@ Poke is an unofficial fan-made compatibility project and is not affiliated with,
 
 ## Building MHP2G on Linux (development)
 
-Requirements include a C++20 toolchain, CMake, Python 3, SDL3, Vulkan development files, and shader compilation tools. The MHP2G renderer build also uses FFmpeg for media support. See the CMake configuration and existing build documentation for additional dependencies.
+The Linux renderer build needs a C++20 compiler, CMake, Python 3, SDL3 development files, Vulkan loader/header development files, shader compilation tools, and standard build tools. The renderer also uses FFmpeg for media support.
+
+### Linux requirements
+
+Install the required build tools before configuring Poke.
+
+On Fedora, Bazzite, or Fedora-like containers:
+
+```bash
+sudo dnf install \
+  gcc-c++ \
+  cmake \
+  python3 \
+  SDL3-devel \
+  vulkan-loader-devel \
+  vulkan-headers \
+  glslang \
+  make \
+  ninja-build \
+  git
+```
+
+On Debian or Ubuntu-like environments, package names may differ by release. A typical starting point is:
+
+```bash
+sudo apt update
+sudo apt install \
+  build-essential \
+  cmake \
+  python3 \
+  libsdl3-dev \
+  libvulkan-dev \
+  glslang-tools \
+  make \
+  ninja-build \
+  git
+```
+
+Check the tools before building:
+
+```bash
+command -v cmake
+command -v python3
+command -v glslangValidator || command -v glslang
+c++ --version
+cmake --version
+```
+
+If `cmake` is not available, install it before continuing. The examples below detect CMake through `PATH` instead of assuming `/usr/bin/cmake` exists:
+
+```bash
+CMAKE_BIN="$(command -v cmake)"
+test -n "$CMAKE_BIN" || {
+  echo "error: cmake is not installed or not in PATH" >&2
+  exit 1
+}
+```
+
+### Steam Deck / SteamOS using Distrobox
+
+For Steam Deck, the recommended workflow is to build Poke inside a Distrobox container instead of installing development packages directly into SteamOS. SteamOS is immutable, and packages installed directly with `pacman` may be removed by system updates.
+
+Check whether Distrobox is already available:
+
+```bash
+command -v distrobox
+```
+
+If it is missing, install a Distrobox frontend such as BoxBuddy from Flathub:
+
+```bash
+flatpak install flathub io.github.dvlv.boxbuddyrs
+```
+
+BoxBuddy provides a graphical interface for creating and entering containers. If the `distrobox` command-line tool is available, create a Fedora build container:
+
+```bash
+distrobox create \
+  --name poke-fedora \
+  --image registry.fedoraproject.org/fedora:latest \
+  --home "$HOME/distrobox-homes/poke-fedora"
+```
+
+Enter the container:
+
+```bash
+distrobox enter poke-fedora
+```
+
+Inside the Fedora Distrobox, install the build dependencies:
+
+```bash
+sudo dnf install \
+  gcc-c++ \
+  cmake \
+  python3 \
+  SDL3-devel \
+  vulkan-loader-devel \
+  vulkan-headers \
+  glslang \
+  make \
+  ninja-build \
+  git
+```
+
+Verify the tools inside the container:
+
+```bash
+command -v cmake
+command -v python3
+command -v glslangValidator || command -v glslang
+c++ --version
+cmake --version
+```
+
+Build Poke from inside the container using the Linux build commands below. Your Steam Deck home directory and project files are still accessible from the container.
+
+To leave the container:
+
+```bash
+exit
+```
+
+To re-enter later:
+
+```bash
+distrobox enter poke-fedora
+```
+
+If Japanese text does not render correctly, install a CJK font inside the container:
+
+```bash
+sudo dnf install google-noto-sans-cjk-fonts
+```
+
+Then either choose the font from Poke's menu or run with `MHP2G_FONT` set to a readable CJK font path. The exact path may vary; find it with:
+
+```bash
+fc-match :lang=ja
+fc-list :lang=ja file | head
+```
+
+Direct package installation on SteamOS is not the recommended workflow. If you choose to do it anyway, SteamOS is Arch-based and requires disabling the read-only system partition before using `pacman`; this is more intrusive and may be undone by SteamOS updates.
+
+### Configure and build
 
 Configure and build the development tools and renderer:
 
 ```bash
-/usr/bin/cmake -S . -B out/mhp2g-renderer -G "Unix Makefiles" \
+CMAKE_BIN="$(command -v cmake)"
+test -n "$CMAKE_BIN" || {
+  echo "error: cmake is not installed or not in PATH" >&2
+  exit 1
+}
+
+"$CMAKE_BIN" -S . -B out/mhp2g-renderer -G "Unix Makefiles" \
   -DPSPRECOMP_PROFILE=mhp2g -DMHP2G_RENDERER=ON
-/usr/bin/cmake --build out/mhp2g-renderer --target Poke -j"$(nproc)"
+
+"$CMAKE_BIN" --build out/mhp2g-renderer --target Poke -j"$(nproc)"
 ```
 
 Generate the main ahead-of-time code locally from your **own decrypted MHP2G `EBOOT.ELF`**:
@@ -51,12 +202,13 @@ profiles/mhp2g/scripts/generate.sh \
 Rebuild the executable after generation:
 
 ```bash
-/usr/bin/cmake --build out/mhp2g-renderer --target Poke -j"$(nproc)"
+"$CMAKE_BIN" --build out/mhp2g-renderer --target Poke -j"$(nproc)"
 ```
 
 Run it with the directory containing your local game files:
 
 ```bash
+MHP2G_GPU_DECODE=1 \
 ./out/mhp2g-renderer/bin/Poke "/path/to/your/game-directory"
 ```
 
@@ -65,14 +217,6 @@ Run it with the directory containing your local game files:
 ## macOS (Apple Silicon) — Experimental Build
 
 Poke has been built with Vulkan rendering on an Apple Silicon Mac running macOS 15.7.7.
-
-Generate the main ahead-of-time code locally from your **own decrypted MHP2G `EBOOT.ELF`** using the mac specific script:
-
-```bash
-profiles/mhp2g/scripts/generate_mac.sh \
-  "$PWD/out/mhp2g-renderer" \
-  "/path/to/your/EBOOT.ELF"
-```
 
 The renderer uses **SDL3 + Vulkan + MoltenVK**, with MoltenVK translating Vulkan commands to Apple's Metal graphics API.
 
