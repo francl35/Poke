@@ -7344,14 +7344,17 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
                 impl.direct_indices.size() * sizeof(std::uint16_t));
         draw_count = static_cast<std::uint32_t>(impl.direct_indices.size());
     } else {
+        // Raw vertex data can end between four-byte boundaries.
+        // Expanded vertices contain float attributes.
+        vertex_start = (impl.vertex_offset + 3u) & ~VkDeviceSize{3u};
         const VkDeviceSize bytes = impl.scratch.size() * sizeof(GpuVertex);
-        if (impl.vertex_offset + bytes > impl.vertex_limit) {
+        if (vertex_start + bytes > impl.vertex_limit) {
             report_frame_space_full("vertex");
             return;
         }
-        std::memcpy(static_cast<std::uint8_t *>(impl.vertex_mapped) + impl.vertex_offset, impl.scratch.data(),
+        std::memcpy(static_cast<std::uint8_t *>(impl.vertex_mapped) + vertex_start, impl.scratch.data(),
             static_cast<std::size_t>(bytes));
-        draw_end = impl.vertex_offset + bytes;
+        draw_end = vertex_start + bytes;
         draw_count = static_cast<std::uint32_t>(impl.scratch.size());
         if (skinned)
             impl.recording_frame.skinned.insert(
