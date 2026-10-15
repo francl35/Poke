@@ -161,6 +161,10 @@ const Matching &Matcher::match(
         if (partner < 0 || seen++ % stride != 0u) continue;
         const DrawSummary &from = older[i];
         const DrawSummary &to = newer[static_cast<std::size_t>(partner)];
+        // Animated characters can dominate the draw count. Their own turn
+        // must not become the camera motion applied to static scenery.
+        // Keep matching/blending them, but do not use them as camera samples.
+        if (from.skinned || to.skinned) continue;
         Matrix before_inverse{};
         if (!affine_inverse(multiply(from.view, from.world), before_inverse)) continue;
         const Matrix motion = multiply(multiply(to.view, to.world), before_inverse);
