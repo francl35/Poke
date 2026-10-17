@@ -167,8 +167,15 @@ void test_hashes(const fs::path &root) {
     quick.replace(quick.find("xxh64"), 5, "quick");
     make_pack(root / "quick" / kGame, quick);
     TexturePackCheck c = check_texture_pack(root / "quick", kGame);
-    check(c.found() && !c.ok() && c.problem.find("\"quick\" hash") != std::string::npos,
-        "hash = quick is refused with its reason");
+    check(c.ok() && c.hash == TexturePackHash::Quick, "hash = quick is accepted");
+    std::string unsupported = kIni;
+    unsupported.replace(unsupported.find("xxh64"), 5, "unsupported");
+    make_pack(root / "bad-hash" / kGame, unsupported);
+    c = check_texture_pack(root / "bad-hash", kGame);
+    check(!c.ok(), "unknown hash algorithms remain refused");
+    make_pack(root / "bom" / kGame, std::string("\xEF\xBB\xBF") + quick);
+    c = check_texture_pack(root / "bom", kGame);
+    check(c.ok() && c.hash == TexturePackHash::Quick, "UTF-8 BOM does not hide [options]");
     std::string xxh32 = kIni;
     xxh32.replace(xxh32.find("xxh64"), 5, "xxh32");
     make_pack(root / "xxh32" / kGame, xxh32);
@@ -275,7 +282,7 @@ int check_folder(const char *folder) {
     std::printf("pack     %s\n", c.found() ? c.folder.string().c_str() : "(none)");
     std::printf("layout   %s\n", c.layout.c_str());
     if (!c.made_for.empty()) std::printf("made for %s\n", c.made_for.c_str());
-    std::printf("hash     %s%s\n", c.hash == TexturePackHash::Xxh64 ? "xxh64" : "xxh32",
+    std::printf("hash     %s%s\n", texture_pack_hash_name(c.hash),
         c.ignore_address ? ", ignoreAddress" : "");
     std::printf("keys     %zu\n", c.keys);
     std::printf("images   %zu\n", c.images);

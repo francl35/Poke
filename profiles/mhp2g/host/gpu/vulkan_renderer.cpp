@@ -6,6 +6,7 @@
 #include "replacement_textures.hpp"
 #include "mmpx.hpp"
 #include "ui_textures.hpp"
+#include "ui_selection.hpp"
 #include "texture_decode.hpp"
 #include "triangle_indices.hpp"
 #include "texture_pack.hpp"
@@ -666,6 +667,8 @@ struct VulkanRenderer::Impl {
         // tried again from this frame on; the image is kept, so the
         // texture is not decoded again for every draw.
         std::uint64_t set_retry{};
+        bool ui_selection_checked{};
+        ui::SelectiveSheet ui_sheet{ui::SelectiveSheet::None};
     };
     // Sharper copies of 2D textures (ui_textures.hpp), by texture key, mode
     // and scale: the glyph atlas drawn again at the internal resolution, or a
@@ -676,7 +679,8 @@ struct VulkanRenderer::Impl {
     std::unordered_map<std::uint64_t, std::uint64_t> ui_copy_sizes; // bytes, of the copies made
     std::uint64_t ui_copy_bytes{};
     [[nodiscard]] std::uint32_t ui_scale() const;
-    [[nodiscard]] VkDescriptorSet ui_copy(const GuestMemory &memory, const DrawCall &call, const Texture &texture);
+    [[nodiscard]] VkDescriptorSet ui_copy(
+        const GuestMemory &memory, const DrawCall &call, const Texture &texture, bool selected);
     void drop_ui_copies();
 
     RendererConfig config;
@@ -1861,7 +1865,8 @@ struct VulkanRenderer::Impl {
     std::string pack_status;
     std::uint64_t replaced_draws{}; // this second, for MHP2G_TRACE_TEXTURE_PACK
     void apply_texture_pack();
-    [[nodiscard]] VkDescriptorSet texture_descriptor(const GuestMemory &memory, const DrawCall &call);
+    [[nodiscard]] VkDescriptorSet texture_descriptor(
+        const GuestMemory &memory, const DrawCall &call, bool &high_resolution_text);
     std::uint64_t texture_clock{};
     // texture_key results for the display list being walked, by the state that
     // feeds the key; cleared by begin_display_list().
@@ -4384,21 +4389,70 @@ VulkanRenderer::Impl::Texture &VulkanRenderer::Impl::texture_for(const GuestMemo
     return cached;
 }
 
-VkDescriptorSet VulkanRenderer::Impl::texture_descriptor(const GuestMemory &memory, const DrawCall &call) {
+VkDescriptorSet VulkanRenderer::Impl::texture_descriptor(
+    const GuestMemory &memory, const DrawCall &call, bool &high_resolution_text) {
+    high_resolution_text = false;
     const perf::SplitScope split(perf::Split::Texture);
     Texture &texture = texture_for(memory, call);
     if (texture.replacement && pack) {
         // Until the image is decoded and on the GPU, the original is drawn.
         if (const VkDescriptorSet replaced = replacements.descriptor(*texture.replacement, *pack, frames)) {
             ++replaced_draws;
+            // An explicit HD replacement must sample its actual detail rather
+            // than being quantized onto the original PSP pixel grid.
+            high_resolution_text = call.through;
             return replaced;
         }
     }
     // The 2D interface, sharper (#164): only through-mode draws, never 3D,
     // and not a texture the pack has an image for, which is still loading.
     const bool packed = texture.replacement && pack && texture.replacement->state != Replacement::State::Failed;
-    if (call.through && texture.key != 0u && !packed)
-        if (const VkDescriptorSet sharper = ui_copy(memory, call, texture)) return sharper;
+    if (call.through && texture.key != 0u && !packed) {
+        // Selection is per draw, not just per sheet: mixed HUD atlases also
+        // contain panel and bar pieces that must keep the native sample grid.
+        static const bool selective_ui = [] {
+            const char *value = std::getenv("MHP2G_SELECTIVE_UI");
+            return value != nullptr && std::strcmp(value, "1") == 0;
+        }();
+        bool selected = false;
+        if (selective_ui && !ui::is_glyph_page(call.texture)) {
+            if (!texture.ui_selection_checked) {
+                texture.ui_selection_checked = true;
+                TexturePackOptions options;
+                options.ignore_address = true;
+                TexturePackKey sheet_key;
+                std::uint32_t covered_width = 0u, covered_height = 0u;
+                if (compute_texture_pack_key(memory, call.texture, 0u, options,
+                        sheet_key, covered_width, covered_height)) {
+                    texture.ui_sheet = ui::classify_ui_sheet(sheet_key.cache_key, sheet_key.data_hash,
+                        call.texture.width, call.texture.height);
+                    if (texture.ui_sheet != ui::SelectiveSheet::None && std::getenv("MHP2G_TRACE_UI") != nullptr)
+                        std::cout << "[ui-select] sheet " << format_texture_pack_key(sheet_key)
+                                  << " classified as " << static_cast<unsigned>(texture.ui_sheet) << "\n";
+                }
+            }
+            if (texture.ui_sheet != ui::SelectiveSheet::None && !call.vertices.empty()) {
+                ui::UiBounds bounds{call.vertices.front().texcoord[0], call.vertices.front().texcoord[1],
+                    call.vertices.front().texcoord[0], call.vertices.front().texcoord[1]};
+                bool finite = true;
+                for (const Vertex &v : call.vertices) {
+                    finite = finite && std::isfinite(v.texcoord[0]) && std::isfinite(v.texcoord[1]);
+                    bounds.u0 = std::min(bounds.u0, v.texcoord[0]);
+                    bounds.v0 = std::min(bounds.v0, v.texcoord[1]);
+                    bounds.u1 = std::max(bounds.u1, v.texcoord[0]);
+                    bounds.v1 = std::max(bounds.v1, v.texcoord[1]);
+                }
+                selected = finite && ui::select_ui_draw(texture.ui_sheet, bounds);
+            }
+        }
+        if (const VkDescriptorSet sharper = ui_copy(memory, call, texture, selected)) {
+            // Mode 3 is shared by reconstructed text and selected MMPX UI.
+            // A pending/failed copy never opts into high-resolution sampling.
+            high_resolution_text = selected ||
+                (settings::current().crisp_text && ui::is_glyph_page(call.texture));
+            return sharper;
+        }
+    }
     if (texture.descriptor == VK_NULL_HANDLE && texture.image != VK_NULL_HANDLE && frames >= texture.set_retry)
         attach_descriptor(texture);
     return texture.descriptor != VK_NULL_HANDLE ? texture.descriptor : white_texture.descriptor;
@@ -4410,17 +4464,38 @@ std::uint32_t VulkanRenderer::Impl::ui_scale() const {
     return static_cast<std::uint32_t>(std::clamp(std::lround(scale), 1l, 4l));
 }
 
-VkDescriptorSet VulkanRenderer::Impl::ui_copy(const GuestMemory &memory, const DrawCall &call, const Texture &texture) {
+VkDescriptorSet VulkanRenderer::Impl::ui_copy(
+    const GuestMemory &memory, const DrawCall &call, const Texture &texture, bool selected) {
     const settings::Settings &player = settings::current();
     const std::uint32_t scale = ui_scale();
-    if (scale < 2u) return VK_NULL_HANDLE;
     const TextureState &state = call.texture;
+    if (std::getenv("MHP2G_TRACE_UI") != nullptr) {
+        // Bounded by distinct texture layouts/settings, never printed per draw.
+        static std::vector<std::array<std::uint32_t, 8>> reported;
+        const std::array<std::uint32_t, 8> signature{state.address,
+            static_cast<std::uint32_t>(state.format), state.width, state.height,
+            state.buffer_width, state.swizzled ? 1u : 0u,
+            player.crisp_text ? 1u : 0u, scale};
+        if (reported.size() < 64u && std::find(reported.begin(), reported.end(), signature) == reported.end()) {
+            reported.push_back(signature);
+            std::cout << "[ui-gate] tex=0x" << std::hex << state.address << std::dec
+                      << " fmt=" << static_cast<unsigned>(state.format)
+                      << " size=" << state.width << "x" << state.height
+                      << " stride=" << state.buffer_width << " swizzled=" << state.swizzled
+                      << " crisp=" << player.crisp_text << " scale=" << scale
+                      << " glyph=" << ui::is_glyph_page(state)
+                      << " revision=" << ui::direct_glyph_revision(state) << "\n";
+        }
+    }
+    if (scale < 2u) return VK_NULL_HANDLE;
     const bool glyphs = player.crisp_text && ui::is_glyph_page(state);
     const bool mmpx =
-        !glyphs && player.ui_textures == settings::UiTextures::Mmpx && state.width <= 512u && state.height <= 512u;
+        !glyphs && (selected || player.ui_textures == settings::UiTextures::Mmpx) &&
+        state.width <= 512u && state.height <= 512u;
     if (!glyphs && !mmpx) return VK_NULL_HANDLE;
     const std::uint64_t key = texture.key ^ (static_cast<std::uint64_t>(scale) << 56u) ^
-        (glyphs ? 0x5A00000000000000ull : 0xA500000000000000ull);
+        (glyphs ? 0x5A00000000000000ull : 0xA500000000000000ull) ^
+        (glyphs ? ui::direct_glyph_revision(state) * 0x9E3779B97F4A7C15ull : 0ull);
     if (const auto found = ui_copies.find(key); found != ui_copies.end()) {
         found->second.last_used = texture_clock;
         return found->second.descriptor;
@@ -7397,7 +7472,7 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             ((call.blend.fixed_source + call.blend.fixed_destination) & 0x00FFFFFFu) == 0x00FFFFFFu)
             key.destination_factor = kFactorInverseConstant;
         key.equation = call.blend.equation;
-        key.depth_test = call.depth.test_enabled && !call.through;
+        key.depth_test = call.depth.test_enabled;
         key.depth_write = call.depth.write_enabled;
         key.depth_function = call.depth.function;
         key.cull = call.culling_enabled && !call.through && call.primitive != PrimitiveType::Sprites;
@@ -7470,11 +7545,15 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
                 (uv[2] * width + static_cast<float>(source.x)) / static_cast<float>(kPspWidth),
                 (uv[3] * height + static_cast<float>(source.y)) / static_cast<float>(kPspHeight)};
         } else {
-            texture_descriptor = impl.texture_descriptor(memory, call);
+            bool high_resolution_text = false;
+            texture_descriptor = impl.texture_descriptor(memory, call, high_resolution_text);
             // The 2D interface's textures sampled sharp bilinear (ge.frag),
             // with either UI texture mode, above x1 (#164).
             if (call.through && settings::current().ui_textures != settings::UiTextures::Off && impl.ui_scale() >= 2u)
                 push.texture_params[0] = 2.0f;
+            // Mode 3 identifies an actual reconstructed glyph or selectively
+            // upscaled UI descriptor, independent of global UI enhancement.
+            if (high_resolution_text) push.texture_params[0] = 3.0f;
         }
     }
     }

@@ -7,6 +7,8 @@ layout(location = 3) in float frag_fog;
 layout(location = 4) flat in vec4 frag_uv_rect;
 layout(location = 0) out vec4 out_color;
 
+layout(location = 5) in vec2 frag_psp_position;
+
 layout(set = 0, binding = 0) uniform sampler2D guest_texture;
 
 // False for pipelines of draws without an alpha test (texture_params.w 0):
@@ -54,8 +56,22 @@ vec2 sharp_bilinear(vec2 uv) {
 void main() {
     vec4 color = frag_color;
     if (push.texture_params.x > 0.5) {
-        vec2 uv = push.texture_params.x > 1.5 ? sharp_bilinear(frag_texcoord) : frag_texcoord;
-        vec4 texel = texture(guest_texture, clamp(uv, frag_uv_rect.xy, frag_uv_rect.zw));
+        // Mode 3: a successfully reconstructed, high-resolution glyph page.
+        // Everything else keeps the native PSP sample grid that avoids seams.
+        bool high_resolution_text = push.texture_params.x > 2.5;
+        vec2 uv = high_resolution_text ? sharp_bilinear(frag_texcoord) : frag_texcoord;
+        if (push.viewport.z > 0.5 && !high_resolution_text) {
+            // Sample at the original PSP pixel center, even at higher resolution.
+            vec2 delta = floor(frag_psp_position) + vec2(0.5)
+                    - frag_psp_position;
+            uv += dFdx(frag_texcoord)
+                * (delta.x / dFdx(frag_psp_position.x));
+            uv += dFdy(frag_texcoord)
+                * (delta.y / dFdy(frag_psp_position.y));
+        }
+        vec4 texel = texture(
+            guest_texture, clamp(uv, frag_uv_rect.xy, frag_uv_rect.zw));
+        
         int function = int(push.texture_params.y + 0.5);
         if (function == 0) {          // modulate
             color *= texel;

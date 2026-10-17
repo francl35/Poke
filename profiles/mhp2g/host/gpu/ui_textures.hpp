@@ -35,6 +35,12 @@ inline constexpr std::uint32_t kCellsPerPage = 132u;
 inline constexpr std::uint32_t kCellWidth = 20u;
 inline constexpr std::uint32_t kCellPitch = 22u;
 
+// MHP2G can write glyphs directly into a linear CLUT4 atlas. Record the
+// actual destination and placement before the HLE blit; no guest offsets or
+// return-address assumptions are needed. Invalid/unknown layouts are ignored.
+void note_direct_glyph(const GuestMemory &memory, std::uint32_t image, std::uint32_t code);
+[[nodiscard]] std::uint64_t direct_glyph_revision(const TextureState &texture);
+
 // Whether `texture` is one of the atlas's pages as the game draws them.
 [[nodiscard]] bool is_glyph_page(const TextureState &texture);
 

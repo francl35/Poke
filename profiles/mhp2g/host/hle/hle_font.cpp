@@ -5,6 +5,7 @@
 #include "hle_common.hpp"
 
 #include "fonts/game_font.hpp"
+#include "gpu/ui_textures.hpp"
 
 #include "psprecomp/common.hpp"
 
@@ -336,6 +337,11 @@ void register_font(HleRegistrar &hle) {
             const auto &m = rt.memory();
             fonts::note_glyph_pass(arg(ctx, 1), static_cast<std::int32_t>(m.load32(image + 4u)),
                 static_cast<std::int32_t>(m.load32(image + 8u)), ctx.gpr[31] == kGlyphImageCaller);
+            // Record the actual destination before the blit, so direct atlas
+            // writes can be reconstructed without game-specific object offsets.
+#ifdef MHP2G_HAS_RENDERER
+            gpu::ui::note_direct_glyph(rt.memory(), image, arg(ctx, 1));
+#endif
             blit_glyph(rt.memory(), image, arg(ctx, 1));
         }
         kernel().finish(ctx, 0u);

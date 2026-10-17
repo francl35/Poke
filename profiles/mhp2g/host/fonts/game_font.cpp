@@ -707,6 +707,42 @@ std::vector<std::uint8_t> glyph_cell(std::uint32_t code, int scale) {
     return cell;
 }
 
+GlyphBitmap render_at(std::uint32_t code, std::int32_t x64, std::int32_t y64, int scale) {
+    GlyphBitmap bitmap;
+    if (scale < 1 || scale > 4) return bitmap;
+    // Keep validation bit-identical to the HLE blitter, including subpixel
+    // placement and emboldening, instead of approximating its scale-1 output.
+    if (scale == 1) {
+        const int x = static_cast<int>(std::floor(static_cast<double>(x64) / 64.0));
+        const int y = static_cast<int>(std::floor(static_cast<double>(y64) / 64.0));
+        bitmap = render(code, static_cast<float>(x64 - x * 64) / 64.0f,
+                        static_cast<float>(y64 - y * 64) / 64.0f);
+        bitmap.x += x;
+        bitmap.y += y;
+        return bitmap;
+    }
+    const Layout &layout = layout_for(loaded_state(), code);
+    if (layout.face == nullptr || layout.metrics.width == 0) return bitmap;
+    const double ox = (static_cast<double>(x64) / 64.0 - layout.natural_x0) * scale;
+    const double oy = (static_cast<double>(y64) / 64.0 - layout.natural_y0) * scale;
+    const int whole_x = static_cast<int>(std::floor(ox));
+    const int whole_y = static_cast<int>(std::floor(oy));
+    const float fx = static_cast<float>(ox - whole_x), fy = static_cast<float>(oy - whole_y);
+    const float sx = layout.scale_x * scale, sy = layout.scale_y * scale;
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    stbtt_GetGlyphBitmapBoxSubpixel(&layout.face->info, layout.glyph, sx, sy, fx, fy, &x0, &y0, &x1, &y1);
+    bitmap.width = std::max(x1 - x0, 0);
+    bitmap.height = std::max(y1 - y0, 0);
+    bitmap.x = whole_x + x0;
+    bitmap.y = whole_y + y0;
+    if (bitmap.width == 0 || bitmap.height == 0) return bitmap;
+    bitmap.pixels.resize(static_cast<std::size_t>(bitmap.width) * bitmap.height);
+    stbtt_MakeGlyphBitmapSubpixel(&layout.face->info, bitmap.pixels.data(), bitmap.width, bitmap.height,
+        bitmap.width, sx, sy, fx, fy, layout.glyph);
+    if (layout.bold > 0) embolden(bitmap, layout.bold * scale);
+    return bitmap;
+}
+
 void set_game_atlas(std::uint32_t object) {
     atlas_object() = object;
 }

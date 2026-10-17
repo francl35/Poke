@@ -17,7 +17,7 @@ profile_dir="$(cd "$(dirname "$0")/.." && pwd)"
 repo_dir="$(cd "$profile_dir/../.." && pwd)"
 build_dir="${1:-$repo_dir/out/mhp2g}"
 jobs="${2:-2}"
-iso="$repo_dir/mhp2g-test-game/disc.iso"
+iso="$repo_dir/game/disc.iso"
 extract_dir="$profile_dir/analysis/overlays"
 library_dir="$build_dir/bin/overlays"
 
@@ -69,7 +69,7 @@ done
 built=0
 if [[ ${#targets[@]} -gt 0 ]]; then
     echo "building ${#targets[@]} overlay libraries with -j $jobs"
-    /usr/bin/cmake --build "$build_dir" -j "$jobs" --target "${targets[@]}" -- -k || true
+    cmake --build "$build_dir" -j "$jobs" --target "${targets[@]}" -- -k 0 || true
     for target in "${targets[@]}"; do
         if compgen -G "$library_dir/${target#overlay_}.*" > /dev/null; then
             built=$((built + 1))

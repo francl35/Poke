@@ -175,6 +175,7 @@ add_custom_target(mhp2g_version
 # FFmpeg decodes the game's music and its movies; by default it is built with
 # the project (see cmake/FFmpeg.cmake).
 include("${MHP2G_PROFILE_DIR}/cmake/FFmpeg.cmake")
+include("${MHP2G_PROFILE_DIR}/cmake/KTX2.cmake")
 
 # GE parsing, texture decoding and the audio mixer are backend independent and
 # always built; only the device the sink opens depends on SDL.
@@ -201,6 +202,7 @@ set(MHP2G_HOST_SOURCES
     host/input/touch_action.cpp
     host/input/touch_controls.cpp
     host/gpu/texture_pack.cpp
+    host/gpu/texture_pack_ktx.cpp
     host/gpu/texture_pack_import.cpp
     host/gpu/screenshot.cpp
     host/perf/frame_stats.cpp
@@ -321,6 +323,7 @@ if(MHP2G_RENDERER)
 endif()
 # The host only: the generated code never sees FFmpeg.
 mhp2g_use_ffmpeg(Poke)
+mhp2g_use_ktx2(Poke)
 target_include_directories(Poke PRIVATE
     "${MHP2G_PROFILE_DIR}/host"
     "${MHP2G_PROFILE_DIR}/third_party"
@@ -599,6 +602,7 @@ add_executable(mhp2g_texture_pack_tests
     tests/texture_pack_tests.cpp
     host/gpu/texture_decode.cpp
     host/gpu/texture_pack.cpp
+    host/gpu/texture_pack_ktx.cpp
     host/gpu/texture_pack_import.cpp
     host/platform/utf8_path.cpp)
 target_include_directories(mhp2g_texture_pack_tests PRIVATE
@@ -606,9 +610,20 @@ target_include_directories(mhp2g_texture_pack_tests PRIVATE
     "${MHP2G_PROFILE_DIR}/host/gpu"
     "${MHP2G_PROFILE_DIR}/third_party")
 target_link_libraries(mhp2g_texture_pack_tests PRIVATE psprecomp_core Threads::Threads)
+mhp2g_use_ktx2(mhp2g_texture_pack_tests)
 set_target_properties(mhp2g_texture_pack_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 if(PSPRECOMP_BUILD_TESTS)
     add_test(NAME mhp2g_texture_pack_tests COMMAND mhp2g_texture_pack_tests)
+endif()
+
+# Public synthetic codec/hash tests, with an optional user-owned KTX2 sample.
+add_executable(mhp2g_texture_pack_codec_tests
+    tests/texture_pack_codec_tests.cpp host/gpu/texture_pack_ktx.cpp)
+target_include_directories(mhp2g_texture_pack_codec_tests PRIVATE "${MHP2G_PROFILE_DIR}/host/gpu")
+mhp2g_use_ktx2(mhp2g_texture_pack_codec_tests)
+set_target_properties(mhp2g_texture_pack_codec_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(PSPRECOMP_BUILD_TESTS)
+    add_test(NAME mhp2g_texture_pack_codec_tests COMMAND mhp2g_texture_pack_codec_tests)
 endif()
 
 # Keyboard and mouse bindings: names, settings.ini spelling, the menu's
@@ -770,6 +785,7 @@ add_executable(mhp2g_path_tests
     host/fonts/game_font.cpp
     host/gpu/screenshot.cpp
     host/gpu/texture_pack.cpp
+    host/gpu/texture_pack_ktx.cpp
     host/gpu/texture_pack_import.cpp
     host/input/bindings.cpp
     host/input/chords.cpp
@@ -791,6 +807,7 @@ target_include_directories(mhp2g_path_tests PRIVATE
     "${MHP2G_PROFILE_DIR}/host/gpu"
     "${MHP2G_PROFILE_DIR}/third_party")
 target_link_libraries(mhp2g_path_tests PRIVATE psprecomp_core Threads::Threads)
+mhp2g_use_ktx2(mhp2g_path_tests)
 if(WIN32)
     target_link_libraries(mhp2g_path_tests PRIVATE shell32)
 endif()
@@ -966,6 +983,7 @@ target_include_directories(mhp2g_test_host PUBLIC
     "${CMAKE_CURRENT_BINARY_DIR}/generated_nids")
 target_link_libraries(mhp2g_test_host PUBLIC psprecomp_core Threads::Threads ${CMAKE_DL_LIBS})
 mhp2g_use_ffmpeg(mhp2g_test_host)
+mhp2g_use_ktx2(mhp2g_test_host)
 if(WIN32)
     target_link_libraries(mhp2g_test_host PUBLIC ws2_32 iphlpapi shell32)
 endif()
@@ -1023,6 +1041,7 @@ if(MHP2G_RENDERER_TESTS)
         "${CMAKE_CURRENT_BINARY_DIR}/generated_nids")
     target_link_libraries(mhp2g_renderer_ui_tests PRIVATE psprecomp_core SDL3::SDL3 Vulkan::Vulkan Threads::Threads ${CMAKE_DL_LIBS})
     mhp2g_use_ffmpeg(mhp2g_renderer_ui_tests)
+    mhp2g_use_ktx2(mhp2g_renderer_ui_tests)
     if(WIN32)
         target_link_libraries(mhp2g_renderer_ui_tests PRIVATE ws2_32 iphlpapi shell32)
     endif()

@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-// HD texture packs in the replacement format PPSSPP defined: a folder of PNG
+// HD texture packs in the replacement format PPSSPP defined: a folder of PNG/KTX2
 // files and a textures.ini that maps texture hashes to them.
 //
 //   [options]
@@ -86,7 +86,16 @@ struct TexturePackKey {
 // "0000000022585cbda625131a"
 [[nodiscard]] std::string format_texture_pack_key(const TexturePackKey &key);
 
-enum class TexturePackHash : std::uint8_t { Xxh32, Xxh64 };
+enum class TexturePackHash : std::uint8_t { Xxh32, Xxh64, Quick };
+
+[[nodiscard]] constexpr const char *texture_pack_hash_name(TexturePackHash hash) {
+    switch (hash) {
+    case TexturePackHash::Quick: return "quick";
+    case TexturePackHash::Xxh32: return "xxh32";
+    case TexturePackHash::Xxh64: return "xxh64";
+    }
+    return "unknown";
+}
 
 // What [options] says, plus the parts of the other sections that change a
 // texture's key.

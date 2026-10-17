@@ -164,6 +164,7 @@ layout(location = 3) out float frag_fog;
 // (in_normal.z, in_position.w), which through-mode vertices do not use
 // otherwise; see clamp_through_quads() in vulkan_renderer.cpp.
 layout(location = 4) flat out vec4 frag_uv_rect;
+layout(location = 5) out vec2 frag_psp_position;
 
 layout(push_constant) uniform Push {
     mat4 transform;      // WVP, or identity for through vertices
@@ -269,6 +270,7 @@ void main() {
 #ifdef GE_RAW_VERTICES
     decode_raw_vertex();
 #endif
+    frag_psp_position = in_position.xy;
     frag_texcoord = in_texcoord * push.uv_transform.xy + push.uv_transform.zw;
     frag_color = in_color;
     frag_specular = vec3(0.0);

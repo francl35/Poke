@@ -84,6 +84,10 @@ bool ready();
 // Renders `code` shifted right by shift_x and down by shift_y, both in [0, 1).
 [[nodiscard]] GlyphBitmap render(std::uint32_t code, float shift_x, float shift_y);
 
+// A glyph at an absolute 26.6 position in a directly written atlas.
+// x/y in the result are absolute pixels in the scale-times-larger page.
+[[nodiscard]] GlyphBitmap render_at(std::uint32_t code, std::int32_t x64, std::int32_t y64, int scale);
+
 // Sharper text at a higher internal resolution (issue #164). The game copies
 // each glyph image into a cell of its atlas and draws the text from there, so
 // the renderer draws the atlas again `scale` times as large, from the same

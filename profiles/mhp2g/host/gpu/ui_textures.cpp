@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstdlib>
+#include <iostream>
 
 namespace mhp2g::gpu::ui {
 namespace {
@@ -47,9 +49,133 @@ bool palette_of(const GuestMemory &memory, const TextureState &texture, std::arr
     return true;
 }
 
+
+// Renderer/HLE access is serialized by the host, as with the existing font
+// pass recorder. Store only bounded metadata, not an upscaled copy per page.
+struct DirectPass {
+    std::uint32_t code{};
+    std::int32_t x64{}, y64{};
+};
+struct DirectPage {
+    std::vector<std::uint8_t> base;
+    std::vector<std::uint8_t> expected;
+    std::vector<DirectPass> passes;
+    std::uint64_t font_generation{};
+    std::uint64_t revision{};
+};
+std::unordered_map<std::uint32_t, DirectPage> direct_pages;
+std::uint64_t next_direct_revision{};
+constexpr std::uint32_t kDirectSide = 256u;
+
+bool read_direct_page(const GuestMemory &memory, std::uint32_t address, std::vector<std::uint8_t> &out) {
+    if (!memory.contains(address, 32768u)) return false;
+    out.resize(65536u);
+    for (std::uint32_t i = 0; i < 32768u; ++i) {
+        const auto b = memory.load8(address + i);
+        out[i * 2u] = b & 15u;
+        out[i * 2u + 1u] = b >> 4u;
+    }
+    return true;
+}
+
+void merge_direct(std::vector<std::uint8_t> &image, int side, const fonts::GlyphBitmap &glyph) {
+    for (int y = 0; y < glyph.height; ++y) {
+        const int py = glyph.y + y;
+        if (py < 0 || py >= side) continue;
+        for (int x = 0; x < glyph.width; ++x) {
+            const int px = glyph.x + x;
+            if (px < 0 || px >= side) continue;
+            auto &pixel = image[static_cast<std::size_t>(py) * side + px];
+            pixel = std::max(pixel, static_cast<std::uint8_t>(
+                glyph.pixels[static_cast<std::size_t>(y) * glyph.width + x] >> 4u));
+        }
+    }
+}
+
+const DirectPage *direct_page(const TextureState &texture) {
+    // Direct font writes are linear. Swizzled/copy-to-another-buffer paths
+    // keep the original until explicitly supported and verified.
+    if (texture.format != TextureFormat::Clut4 || texture.swizzled || texture.width != 256u ||
+        texture.height != 256u || texture.buffer_width != 256u)
+        return nullptr;
+    const auto found = direct_pages.find(texture.address);
+    return found == direct_pages.end() ? nullptr : &found->second;
+}
+
+bool direct_glyph_page(const GuestMemory &memory, const TextureState &texture, int scale,
+    std::vector<std::uint32_t> &out, GlyphPageReport &report) {
+    const DirectPage *page = direct_page(texture);
+    if (page == nullptr || scale < 2 || scale > 4) return false;
+    report.cells = static_cast<std::uint32_t>(page->passes.size());
+    std::vector<std::uint8_t> current;
+    // No stale reconstruction after the guest clears/reuses the atlas, or
+    // after an untracked writer changes it. Never alter guest memory here.
+    if (page->font_generation != fonts::generation() || !read_direct_page(memory, texture.address, current) ||
+        current != page->expected) {
+        report.mismatched = report.cells;
+        return false;
+    }
+    std::array<std::uint32_t, 16> palette{};
+    if (!palette_of(memory, texture, palette) || page->passes.empty()) return false;
+    const int side = static_cast<int>(kDirectSide) * scale;
+    std::vector<std::uint8_t> ink(static_cast<std::size_t>(side) * side);
+    // Unknown content is preserved at native resolution. Known HLE glyph
+    // passes are rasterized again from font outlines at the requested scale.
+    for (int y = 0; y < side; ++y)
+        for (int x = 0; x < side; ++x)
+            ink[static_cast<std::size_t>(y) * side + x] =
+                page->base[static_cast<std::size_t>(y / scale) * kDirectSide + x / scale];
+    for (const DirectPass &pass : page->passes) {
+        const auto glyph = fonts::render_at(pass.code, pass.x64, pass.y64, scale);
+        merge_direct(ink, side, glyph);
+        if (!glyph.pixels.empty()) ++report.redrawn;
+    }
+    if (report.redrawn == 0u) return false;
+    out.resize(ink.size());
+    for (std::size_t i = 0; i < ink.size(); ++i) out[i] = palette[ink[i]];
+    return true;
+}
+
 } // namespace
 
+void note_direct_glyph(const GuestMemory &memory, std::uint32_t image, std::uint32_t code) {
+    if (!memory.contains(image, 24u) || memory.load32(image) != 0u ||
+        memory.load16(image + 12u) != 256u || memory.load16(image + 14u) != 256u ||
+        memory.load16(image + 16u) != 128u)
+        return;
+    const std::uint32_t address = memory.load32(image + 20u);
+    if (address == 0u) return;
+    std::vector<std::uint8_t> before;
+    if (!read_direct_page(memory, address, before)) return;
+    if (!direct_pages.contains(address) && direct_pages.size() >= 8u) direct_pages.clear();
+    DirectPage &page = direct_pages[address];
+    // A clear, a different writer, a font reload, or the metadata limit starts
+    // a new recording from the actual guest pixels. No old passes survive.
+    if (page.expected != before || page.font_generation != fonts::generation() || page.passes.size() >= 1024u) {
+        page.base = before;
+        page.expected = before;
+        page.passes.clear();
+        page.font_generation = fonts::generation();
+    }
+    DirectPass pass{code, static_cast<std::int32_t>(memory.load32(image + 4u)),
+                         static_cast<std::int32_t>(memory.load32(image + 8u))};
+    const auto native = fonts::render_at(pass.code, pass.x64, pass.y64, 1);
+    if (native.pixels.empty()) return;
+    page.passes.push_back(pass);
+    merge_direct(page.expected, 256, native);
+    page.revision = ++next_direct_revision;
+    if (page.passes.size() == 1u && std::getenv("MHP2G_TRACE_UI") != nullptr)
+        std::cout << "[ui] recording direct font page 0x" << std::hex << address << std::dec
+                  << " (256x256 CLUT4, native pixels verified before reconstruction)\n";
+}
+
+std::uint64_t direct_glyph_revision(const TextureState &texture) {
+    const auto *page = direct_page(texture);
+    return page == nullptr ? 0u : page->revision;
+}
+
 bool is_glyph_page(const TextureState &texture) {
+    if (const auto *page = direct_page(texture); page != nullptr && !page->passes.empty()) return true;
     const std::uint32_t atlas = fonts::game_atlas();
     if (atlas == 0u || texture.format != TextureFormat::Clut4 || texture.width != 256u || texture.height != 256u ||
         texture.buffer_width != 256u)
@@ -63,6 +189,8 @@ bool is_glyph_page(const TextureState &texture) {
 bool glyph_page(const GuestMemory &memory, const TextureState &texture, int scale, std::vector<std::uint32_t> &out,
     GlyphPageReport &report) {
     report = {};
+    if (direct_page(texture) != nullptr)
+        return direct_glyph_page(memory, texture, scale, out, report);
     if (!is_glyph_page(texture) || scale < 2) return false;
     const std::uint32_t atlas = fonts::game_atlas();
     const std::uint32_t page = (texture.address - atlas - kAtlasPages) / kAtlasPageBytes;
@@ -121,7 +249,8 @@ bool glyph_page(const GuestMemory &memory, const TextureState &texture, int scal
         ++report.redrawn;
     }
     // A page that is not what it was traced to be is left alone.
-    return report.mismatched * 4u <= report.cells;
+    return report.redrawn != 0u &&
+       report.mismatched * 4u <= report.cells;
 }
 
 Upscaler::~Upscaler() {
