@@ -3,6 +3,8 @@
 Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation project
 
 ### To Do tasks
+- [ ] game weapons ui gauge and specific ui scalling
+- [ ] ui elements wrong place colliding map
 - [ ] FOV slider
 - [ ] Reduce hub monster life for solo 
 - [ ] Change Poke menu to use mhfu menu theme
@@ -11,6 +13,7 @@ Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation projec
 - [ ] Add full character customisation from home 
 
 ### Completed tasks ✓
+- [x] ui scalling when changing items
 - [x] Command options for improvement (crisp text, textures, maps and menu) 
 - [x] UI size adjustment 
 - [x] kcx2 format texture pack support
