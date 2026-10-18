@@ -420,7 +420,7 @@ void Menu::video() {
         settings::save();
     }
     {
-        static const char *const kHudSizes[] = {"Original (100%)", "Medium (50%)", "Small (33%)"};
+        static const char *const kHudSizes[] = {"Original (100%)", "Medium (75%)", "Small (50%)"};
         const int current = static_cast<int>(s.hud_size);
         if (const int delta = choice_row("HUD size", kHudSizes[current],
                 options_for("video.hud_size",
@@ -432,7 +432,7 @@ void Menu::video() {
         }
     }
     {
-        static const char *const kMapSizes[] = {"Original (100%)", "Medium (50%)", "Small (33%)"};
+        static const char *const kMapSizes[] = {"Original (100%)", "Medium (75%)", "Small (50%)"};
         const int current = static_cast<int>(s.map_size);
         if (const int delta = choice_row("Map size", kMapSizes[current],
                 options_for("video.map_size",
