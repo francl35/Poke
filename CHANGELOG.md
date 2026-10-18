@@ -12,6 +12,10 @@ release dates, or commit identifiers are inferred here.
 
 ### Development checkpoint — 2026-10-18
 
+- Add Video > HUD size: Original (100%), Medium (50%), and Small (33.33%).
+  Scale recognized normal quest HUD groups about their corner anchors without
+  changing texture enhancement. Preserve sampling coordinates and transform
+  clipping alongside placement; broader HUD layouts remain pending testing.
 - Add selective MMPX upscaling for quest maps using the observed 256x256,
   swizzled CLUT8, stride-160 VRAM layout. Match the layout rather than one
   area's texture hash, and use enhanced sampling only after its copy is ready.
@@ -51,7 +55,8 @@ release dates, or commit identifiers are inferred here.
   remove the duplicate vertex UV assignment, and use game/out/mhp2g defaults.
 - [ ] Test the complete current checkpoint on Steam Deck, including saved
   options, copied user data, argument-free startup, and multiple quest maps.
-- [ ] Add a separate UI size/scaling control in Video for macOS and Linux.
+- [x] Add saved quest HUD sizing in Video for macOS and Linux; recognition of
+  additional HUD layouts remains a follow-up task.
 - [ ] Package a clickable macOS app and a Linux/Steam Deck distribution
   (Flatpak planned), including runtime libraries and required notices.
 - [ ] Investigate FUComplete compatibility separately: its boot patches disable

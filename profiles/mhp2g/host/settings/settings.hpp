@@ -35,6 +35,7 @@ enum class PerfDisplay { Off, Overlay, OverlayAndLog, Log };
 // How the game's 2D textures are drawn at a high internal resolution
 // (gpu/ui_textures.hpp): as they are, sharp bilinear, or doubled with MMPX.
 enum class UiTextures { Off, Sharp, Mmpx };
+enum class HudSize { Original, Medium, Small };
 enum class RightStick { Camera, DPad, Off };
 // The on-screen controls' layout: the PSP's buttons (touch_controls.hpp), or
 // the action-style one (touch_action.hpp).
@@ -60,6 +61,9 @@ struct Settings {
     Aspect aspect{Aspect::Original};
     bool sharp_screen{};             // nearest instead of linear scaling to the window
     bool sharp_textures{};           // nearest instead of linear texture sampling
+    HudSize hud_size{HudSize::Original}; // health/name and item display size only
+    HudSize map_size{HudSize::Original}; // map display size, independent of HUD size and upscaling
+    std::int32_t fov_offset_degrees{}; // relative vertical FOV; zero preserves the game projection
     bool selective_ui{true};         // enhance recognized UI sheets, preserving native HUD panels
     bool upscale_maps{true};         // enhance recognized quest map surfaces
     bool gpu_decode{};               // opt-in raw vertex decoding; CPU remains the compatibility default

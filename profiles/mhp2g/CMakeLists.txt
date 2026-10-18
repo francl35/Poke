@@ -514,6 +514,14 @@ if(PSPRECOMP_BUILD_TESTS)
     add_test(NAME mhp2g_aspect_tests COMMAND mhp2g_aspect_tests)
 endif()
 
+# Screen-space HUD classification and corner transforms, without game data.
+add_executable(mhp2g_hud_layout_tests tests/hud_layout_tests.cpp)
+target_include_directories(mhp2g_hud_layout_tests PRIVATE "${MHP2G_PROFILE_DIR}/host")
+set_target_properties(mhp2g_hud_layout_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(PSPRECOMP_BUILD_TESTS)
+    add_test(NAME mhp2g_hud_layout_tests COMMAND mhp2g_hud_layout_tests)
+endif()
+
 # Each platform's settings defaults.
 add_executable(mhp2g_settings_tests
     tests/settings_defaults_tests.cpp

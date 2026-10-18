@@ -1,4 +1,5 @@
 #include "settings/settings.hpp"
+#include "camera/fov.hpp"
 
 #include "install/user_data.hpp"
 #include "platform/utf8_path.hpp"
@@ -125,6 +126,8 @@ const Names<FrameRate> kFrameRates{{{FrameRate::Fps30, "30"}, {FrameRate::Fps45,
 const Names<GpuCompat> kGpuCompats{{{GpuCompat::Auto, "auto"}, {GpuCompat::On, "on"}, {GpuCompat::Off, "off"}}};
 const Names<UiTextures> kUiTextures{
     {{UiTextures::Off, "off"}, {UiTextures::Sharp, "sharp"}, {UiTextures::Mmpx, "mmpx"}}};
+const Names<HudSize> kHudSizes{
+    {{HudSize::Original, "original"}, {HudSize::Medium, "medium"}, {HudSize::Small, "small"}}};
 
 // Written by earlier versions: 1 typed the name into the window, which the
 // on-screen keyboard now covers.
@@ -208,6 +211,15 @@ const std::vector<Field> &fields() {
             [](const Settings &s) { return kAspects.format(s.aspect); }, nullptr},
         BOOL_FIELD("video.sharp_screen", sharp_screen),
         BOOL_FIELD("video.sharp_textures", sharp_textures),
+        {"video.fov_offset_degrees", nullptr,
+            [](Settings &s, const std::string &t) { return camera::fov::parse_offset(t, s.fov_offset_degrees); },
+            [](const Settings &s) { return std::to_string(s.fov_offset_degrees); }, nullptr},
+        {"video.hud_size", nullptr,
+            [](Settings &s, const std::string &t) { return kHudSizes.parse(t, s.hud_size); },
+            [](const Settings &s) { return kHudSizes.format(s.hud_size); }, nullptr},
+        {"video.map_size", nullptr,
+            [](Settings &s, const std::string &t) { return kHudSizes.parse(t, s.map_size); },
+            [](const Settings &s) { return kHudSizes.format(s.map_size); }, nullptr},
         {"video.selective_ui", "MHP2G_SELECTIVE_UI",
             [](Settings &s, const std::string &t) { return parse_bool(t, s.selective_ui); },
             [](const Settings &s) { return std::string(s.selective_ui ? "1" : "0"); },

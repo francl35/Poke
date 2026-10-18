@@ -3,10 +3,12 @@
 #include "frame_interpolation.hpp"
 #include "frame_pacing.hpp"
 #include "game_hud.hpp"
+#include "camera/fov.hpp"
 #include "replacement_textures.hpp"
 #include "mmpx.hpp"
 #include "ui_textures.hpp"
 #include "ui_selection.hpp"
+#include "hud_layout.hpp"
 #include "texture_decode.hpp"
 #include "triangle_indices.hpp"
 #include "texture_pack.hpp"
@@ -134,6 +136,7 @@ struct PushConstants {
 static_assert(sizeof(PushConstants) == 128u, "PushConstants must fit the guaranteed push constant size");
 constexpr float kPushFog = 1.0f;
 constexpr float kPushLighting = 2.0f;
+constexpr float kPushHudTransform = 4.0f;
 
 struct GpuVertex {
     float x{}, y{}, z{}, w{1.0f};
@@ -1583,6 +1586,8 @@ struct VulkanRenderer::Impl {
     std::array<float, 16> cached_transform{};
     bool view_world_valid{};
     bool transform_valid{};
+    camera::fov::Cache fov_cache;
+    std::int32_t fov_reported_offset{1000};
     std::uint64_t environment_version{}; // 0: none written this frame
     std::uint32_t environment_offset{};
     ObjectBlock last_object{};
@@ -1857,6 +1862,7 @@ struct VulkanRenderer::Impl {
     // effect at the next begin_frame().
     std::unique_ptr<TexturePack> pack;
     std::unique_ptr<TextureDumper> dumper;
+    ui::HudLayout hud_layout;
     ReplacementTextures replacements;
     bool pack_wanted{};
     bool pack_applied{};
@@ -7315,6 +7321,18 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
     Impl::FramebufferTexture framebuffer_source{};
     float fit_x = 1.0f, fit_y = 1.0f;
     bool fitted = false;
+    ui::HudAnchor hud_anchor{};
+    const auto display_factor = [](settings::HudSize size) {
+        return size == settings::HudSize::Medium ? 0.5f :
+            size == settings::HudSize::Small ? 1.0f / 3.0f : 1.0f;
+    };
+    const float hud_choice_factor = display_factor(settings::current().hud_size);
+    const auto map_size = settings::current().map_size;
+    const float map_choice_factor =
+        map_size == settings::HudSize::Medium ? 0.75f :
+        map_size == settings::HudSize::Small  ? 0.5f :
+                                            1.0f;
+    float hud_factor = 1.0f; // selected per group below; shared by placement and clipping
 
     {
     const perf::SplitScope split_framebuffer(perf::Split::Framebuffer);
@@ -7323,6 +7341,45 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
         call.texture.enabled && !call.clear_mode && !no_fb_textures
             ? impl.find_framebuffer_texture(memory, call.texture)
             : Impl::FramebufferTexture{};
+
+    // Classify only untransformed screen-space UI rendered to the displayed
+    // surface. Keep vertices and their sampling coordinates unchanged; the
+    // vertex shader applies the display-size transform after UV setup.
+    if ((hud_choice_factor != 1.0f || map_choice_factor != 1.0f) &&
+        call.through && !raw && !call.clear_mode &&
+        framebuffer_source.target == nullptr && impl.shows(call.target.color_address)) {
+        ui::HudProbe probe;
+        const GpuVertex &first = impl.scratch.front();
+        probe.screen = {first.x, first.y, first.x, first.y};
+        probe.uv = {first.u, first.v, first.u, first.v};
+        bool zero_depth = true;
+        for (const GpuVertex &vertex : impl.scratch) {
+            zero_depth = zero_depth && vertex.z == 0.0f;
+            probe.screen.left = std::min(probe.screen.left, vertex.x);
+            probe.screen.right = std::max(probe.screen.right, vertex.x);
+            probe.screen.top = std::min(probe.screen.top, vertex.y);
+            probe.screen.bottom = std::max(probe.screen.bottom, vertex.y);
+            probe.uv.left = std::min(probe.uv.left, vertex.u);
+            probe.uv.right = std::max(probe.uv.right, vertex.u);
+            probe.uv.top = std::min(probe.uv.top, vertex.v);
+            probe.uv.bottom = std::max(probe.uv.bottom, vertex.v);
+        }
+        probe.textured = call.texture.enabled;
+        probe.texture_address = call.texture.address;
+        probe.width = call.texture.width;
+        probe.height = call.texture.height;
+        probe.glyph_page = call.texture.enabled && ui::is_glyph_page(call.texture);
+        const std::uint32_t address = call.texture.address & 0x0FFFFFFFu;
+        probe.map_surface = call.texture.enabled && call.texture.format == TextureFormat::Clut8 &&
+            call.texture.swizzled && call.texture.width == 256u && call.texture.height == 256u &&
+            (call.texture.buffer_width & 0x7FFu) == 160u &&
+            address >= 0x04000000u && address < 0x04200000u;
+        if (zero_depth) {
+            hud_anchor = impl.hud_layout.classify(impl.frames, call.target.color_address, probe);
+            hud_factor = hud_anchor.group == ui::HudGroup::Map ? map_choice_factor : hud_choice_factor;
+            if (hud_factor == 1.0f) hud_anchor = {};
+        }
+    }
 
     // interface-fit block goes here too
     if (call.through && !call.clear_mode && framebuffer_source.target == nullptr &&
@@ -7522,9 +7579,32 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
         }
 
         push.transform = impl.cached_transform;
+        if (!call.through && !call.clear_mode && impl.shows(call.target.color_address)) {
+            const std::int32_t offset = settings::current().fov_offset_degrees;
+            push.transform = impl.fov_cache.apply(push.transform, call.projection, offset);
+            if (std::getenv("MHP2G_TRACE_FOV") != nullptr && impl.fov_reported_offset != offset) {
+                const auto info = camera::fov::analyze(call.projection, offset);
+                if (info.valid) {
+                    impl.fov_reported_offset = offset;
+                    std::cout << "[fov] native vertical=" << info.native_degrees
+                              << " degrees, offset=" << offset
+                              << ", rendered=" << info.adjusted_degrees << " degrees\n";
+                }
+            }
+        }
     }
     push.viewport = {static_cast<float>(kPspWidth), static_cast<float>(kPspHeight), call.through ? 1.0f : 0.0f,
         (fogged ? kPushFog : 0.0f) + (lit ? kPushLighting : 0.0f)};
+    if (hud_anchor) {
+        float ax = hud_anchor.x, ay = hud_anchor.y;
+        if (fitted) {
+            ax = 0.5f * kPspWidth + (ax - 0.5f * kPspWidth) * fit_x;
+            ay = 0.5f * kPspHeight + (ay - 0.5f * kPspHeight) * fit_y;
+        }
+        push.transform = {hud_factor, 0, 0, 0, 0, hud_factor, 0, 0,
+            0, 0, 1, 0, (1.0f - hud_factor) * ax, (1.0f - hud_factor) * ay, 0, 1};
+        push.viewport[3] += kPushHudTransform;
+    }
     push.view_z = {view_world[2], view_world[6], view_world[10], view_world[14]};
     push.texture_params = {call.texture.enabled ? 1.0f : 0.0f, static_cast<float>(call.texture.function),
         static_cast<float>(call.alpha_test.enabled ? call.alpha_test.reference : 0u),
@@ -7666,6 +7746,12 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
     // with it, so a list the interface clips still clips at its own edges.
     float edges[4]{
         static_cast<float>(sx1), static_cast<float>(sy1), static_cast<float>(sx2 + 1u), static_cast<float>(sy2 + 1u)};
+    if (hud_anchor) {
+        edges[0] = hud_anchor.apply_x(edges[0], hud_factor);
+        edges[2] = hud_anchor.apply_x(edges[2], hud_factor);
+        edges[1] = hud_anchor.apply_y(edges[1], hud_factor);
+        edges[3] = hud_anchor.apply_y(edges[3], hud_factor);
+    }
     if (fitted) {
         const float centre_x = 0.5f * static_cast<float>(kPspWidth);
         const float centre_y = 0.5f * static_cast<float>(kPspHeight);
@@ -8426,7 +8512,8 @@ void VulkanRenderer::Impl::replay(VkCommandBuffer commands, std::uint32_t slot, 
             const interpolation::DrawSummary &from = older.summaries[drawn.first_draw];
             const interpolation::Matrix eye = interpolation::multiply(
                 interpolation::rigid_at(camera_motion, t), interpolation::multiply(from.view, from.world));
-            state.push.transform = interpolation::multiply(from.projection, eye);
+            state.push.transform = fov_cache.apply(interpolation::multiply(from.projection, eye),
+                from.projection, settings::current().fov_offset_degrees);
             state.push.view_z = {eye[2], eye[6], eye[10], eye[14]};
             transform_valid = false;
             view_pair = projection_pair = world_pair = Pair{};
@@ -8466,7 +8553,8 @@ void VulkanRenderer::Impl::replay(VkCommandBuffer commands, std::uint32_t slot, 
                 transform = interpolation::multiply(projection, view_world);
                 transform_valid = true;
             }
-            state.push.transform = transform;
+            state.push.transform = fov_cache.apply(transform, projection,
+                settings::current().fov_offset_degrees);
             state.push.view_z = {view_world[2], view_world[6], view_world[10], view_world[14]};
             // A texture that scrolls moves its offset a little each frame;
             // a flipbook jumps to its next cell, and a wrap by the whole

@@ -326,6 +326,16 @@ void test_crisp_text() {
     check(defaults_for(Platform::Desktop).crisp_text && defaults_for(Platform::Android).crisp_text,
         "crisp text defaults on");
     const Settings fresh = from_entries({});
+    check(fresh.hud_size == HudSize::Original && fresh.map_size == HudSize::Original,
+        "HUD and map sizes default independently to original");
+    const Settings separate = from_entries({{"video.hud_size", "small"}, {"video.map_size", "original"}});
+    check(separate.hud_size == HudSize::Small && separate.map_size == HudSize::Original,
+        "map original is independent of small HUD");
+    const Settings map_only = from_entries({{"video.hud_size", "original"}, {"video.map_size", "medium"}});
+    check(map_only.hud_size == HudSize::Original && map_only.map_size == HudSize::Medium,
+        "medium map is independent of original HUD");
+    check(from_entries({{"video.hud_size", "medium"}}).hud_size == HudSize::Medium, "medium HUD setting parses");
+    check(from_entries({{"video.hud_size", "invalid"}}).hud_size == HudSize::Original, "invalid HUD size keeps default");
     check(fresh.selective_ui && fresh.upscale_maps && !fresh.gpu_decode &&
             fresh.ui_textures == UiTextures::Off,
         "selective enhancement defaults on, global enhancement and GPU decoding off");
@@ -344,12 +354,15 @@ void test_crisp_text() {
     chosen.selective_ui = false;
     chosen.upscale_maps = false;
     chosen.gpu_decode = true;
+    chosen.hud_size = HudSize::Small;
+    chosen.map_size = HudSize::Medium;
     chosen.crisp_text = false;
     chosen.game_directory = "/home/player/My Games/MHP2G";
     const Entries written = to_entries(chosen);
     check(written.at("settings.version") == "3", "writes settings schema 3");
     const Settings again = from_entries(written);
     check(!again.crisp_text && !again.selective_ui && !again.upscale_maps && again.gpu_decode &&
+            again.hud_size == HudSize::Small && again.map_size == HudSize::Medium &&
             again.game_directory == chosen.game_directory,
         "enhancement choices and game directory survive a round trip");
     previous["text.crisp"] = "1";

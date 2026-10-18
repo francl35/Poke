@@ -27,6 +27,7 @@
 #include "adhoc/session.hpp"
 #include "audio/audio_sink.hpp"
 #include "camera/free_camera.hpp"
+#include "camera/fov.hpp"
 #include "gpu/screenshot.hpp"
 #include "gpu/game_hud.hpp"
 #include "gpu/vulkan_renderer.hpp"
@@ -386,6 +387,22 @@ void Menu::video() {
             settings::save();
         }
     }
+    {
+        static const char *const kFovLabels[] = {
+            "-15 degrees", "-10 degrees", "-5 degrees", "Original", "+5 degrees",
+            "+10 degrees", "+15 degrees", "+20 degrees", "+25 degrees", "+30 degrees"};
+        const auto &values = camera::fov::kOffsets;
+        const auto found = std::find(values.begin(), values.end(), s.fov_offset_degrees);
+        const int current = found == values.end() ? 3 : static_cast<int>(found - values.begin());
+        if (const int delta = choice_row("Field of view", kFovLabels[current],
+                options_for("video.fov_offset_degrees",
+                    "Adds degrees to the game's current vertical field of view. Negative narrows the view; "
+                    "positive widens it. Original preserves the game projection. HUD and map sizes are separate. "
+                    "Wider views may expose objects hidden by the game's unchanged visibility culling."))) {
+            s.fov_offset_degrees = values[static_cast<std::size_t>(cycle(current, delta, static_cast<int>(values.size())))];
+            settings::save();
+        }
+    }
     if (choice_row("Scaling filter", s.sharp_screen ? "Sharp" : "Smooth",
             options_for("video.sharp_screen",
                 "How the finished picture is scaled to the window: smooth "
@@ -401,6 +418,29 @@ void Menu::video() {
         s.sharp_textures = !s.sharp_textures;
         renderer().set_sharp_textures(s.sharp_textures);
         settings::save();
+    }
+    {
+        static const char *const kHudSizes[] = {"Original (100%)", "Medium (50%)", "Small (33%)"};
+        const int current = static_cast<int>(s.hud_size);
+        if (const int delta = choice_row("HUD size", kHudSizes[current],
+                options_for("video.hud_size",
+                    "Display size of the recognized normal quest HUD: health/name group and item selector. "
+                    "Groups keep their corner margins. Texture quality, resolution and menus are unchanged. "
+                    "Unrecognized layouts retain their original size."))) {
+            s.hud_size = static_cast<settings::HudSize>(cycle(current, delta, 3));
+            settings::save();
+        }
+    }
+    {
+        static const char *const kMapSizes[] = {"Original (100%)", "Medium (50%)", "Small (33%)"};
+        const int current = static_cast<int>(s.map_size);
+        if (const int delta = choice_row("Map size", kMapSizes[current],
+                options_for("video.map_size",
+                    "Display size of recognized quest maps and their markers. Independent of HUD size "
+                    "and Quest map upscaling, which controls image quality. The map keeps its corner margins."))) {
+            s.map_size = static_cast<settings::HudSize>(cycle(current, delta, 3));
+            settings::save();
+        }
     }
     if (toggle_row("Selective UI upscaling", s.selective_ui,
             options_for("video.selective_ui",
@@ -635,9 +675,12 @@ void Menu::video() {
         restore("video.fullscreen", s.fullscreen, d.fullscreen);
         restore("video.window_scale", s.window_scale, d.window_scale);
         restore("video.aspect", s.aspect, d.aspect);
+        restore("video.fov_offset_degrees", s.fov_offset_degrees, d.fov_offset_degrees);
         restore("video.sharp_screen", s.sharp_screen, d.sharp_screen);
         restore("video.sharp_textures", s.sharp_textures, d.sharp_textures);
         restore("video.ui_textures", s.ui_textures, d.ui_textures);
+        restore("video.hud_size", s.hud_size, d.hud_size);
+        restore("video.map_size", s.map_size, d.map_size);
         restore("video.selective_ui", s.selective_ui, d.selective_ui);
         restore("video.upscale_maps", s.upscale_maps, d.upscale_maps);
         restore("video.gpu_decode", s.gpu_decode, d.gpu_decode);

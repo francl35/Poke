@@ -281,7 +281,12 @@ void main() {
         frag_uv_rect = vec4(rect.xy * push.uv_transform.xy + push.uv_transform.zw,
                             rect.zw * push.uv_transform.xy + push.uv_transform.zw);
         // Screen-space vertices: pixels to clip space.
-        vec2 ndc = vec2(in_position.x / push.viewport.x, in_position.y / push.viewport.y) * 2.0 - 1.0;
+        // HUD sizing changes raster placement only. frag_psp_position and
+        // UVs retain the original sampling grid used to suppress atlas seams.
+        vec2 screen_position = in_position.xy;
+        if ((int(push.viewport.w + 0.5) & 4) != 0)
+            screen_position = (push.transform * vec4(screen_position, 0.0, 1.0)).xy;
+        vec2 ndc = screen_position / push.viewport.xy * 2.0 - 1.0;
         gl_Position = vec4(ndc, clamp(in_position.z / 65535.0, 0.0, 1.0), 1.0);
     } else {
         int enables = int(push.viewport.w + 0.5);
