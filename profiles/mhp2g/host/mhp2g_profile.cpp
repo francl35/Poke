@@ -72,6 +72,9 @@ void install_profile(Runtime &runtime, const psprecomp::Elf32Image &elf, const P
     const auto module = elf.find_module_info(runtime.memory(), kLoadBase);
     if (!module) throw psprecomp::Error("PSP module info not found in executable");
 
+#if defined(MHP2G_AOT_ELF_SHA256)
+    std::cout << "[aot] corpus generated from ELF SHA-256: " << MHP2G_AOT_ELF_SHA256 << "\n";
+#endif
     kernel().install(runtime, module->gp, load_image_end(elf));
     install_overlay_support(runtime);
 

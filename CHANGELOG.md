@@ -10,6 +10,26 @@ release dates, or commit identifiers are inferred here.
 
 ## Unreleased — planned 0.1.0
 
+### FUComplete development checkpoint — 2026-10-18
+
+- Add selectable `MHP2G_GENERATED_DIR` and optional compiled ELF SHA-256 provenance.
+  Preserve the stock profile corpus default while generating FUComplete main code
+  independently under `out/mhfuc/generated`.
+- Add a pinned FUComplete ELF build helper with archive NOP-site validation,
+  generator/source fingerprint reuse, guarded output ownership and corpus backups.
+  Bundle KTX2 by default instead of disabling it for the old startup experiment.
+- Add a normal FUComplete launcher with separate game/save, settings and overlay
+  paths, and a macOS command launcher without personal absolute paths.
+- Recognize the wider idle and L-held FUComplete item-selector layouts, preserving
+  the existing HUD anchor and conservative menu exclusions.
+- Correct the one-texel V mismatch for the exact sharpness draw on an uploaded
+  `ddeab148` replacement. Leave native texture sampling and geometry unchanged.
+- Remove temporary startup, HUD-classification and sharpness comparison probes;
+  retain functional source changes and game-data-free regression tests.
+- Document setup, builds, overlay limitations, settings, saves and verification.
+  Normal save/write and subsequent load succeeded in the developer's macOS log.
+  FUComplete Steam Deck/Linux verification and complete feature coverage remain open.
+
 ### Development checkpoint — 2026-10-18
 
 - Add Video > HUD size: Original (100%), Medium (50%), and Small (33.33%).
@@ -59,9 +79,10 @@ release dates, or commit identifiers are inferred here.
   additional HUD layouts remains a follow-up task.
 - [ ] Package a clickable macOS app and a Linux/Steam Deck distribution
   (Flatpak planned), including runtime libraries and required notices.
-- [ ] Investigate FUComplete compatibility separately: its boot patches disable
-  DATA.BIN decryption and modify executable/overlay code. Diagnostic logging
-  is development work, not a completed compatibility fix.
+- [x] Establish an isolated, pinned FUComplete native main build with working
+  startup, tested UI fixes and normal save/load on macOS.
+- [ ] Validate the FUComplete branch on Steam Deck/Linux, compile changed overlays,
+  and audit remaining FUComplete feature/import and archive-mod compatibility.
 - [ ] Add version display in menus/logs later; this checkpoint adds no such UI.
 
 

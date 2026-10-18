@@ -9,6 +9,7 @@
 #include "ui_textures.hpp"
 #include "ui_selection.hpp"
 #include "hud_layout.hpp"
+#include "sharpness_replacement_uv.hpp"
 #include "texture_decode.hpp"
 #include "triangle_indices.hpp"
 #include "texture_pack.hpp"
@@ -1873,7 +1874,7 @@ struct VulkanRenderer::Impl {
     std::uint64_t replaced_draws{}; // this second, for MHP2G_TRACE_TEXTURE_PACK
     void apply_texture_pack();
     [[nodiscard]] VkDescriptorSet texture_descriptor(
-        const GuestMemory &memory, const DrawCall &call, bool &high_resolution_text);
+        const GuestMemory &memory, const DrawCall &call, bool &high_resolution_text, float &replacement_v_offset);
     std::uint64_t texture_clock{};
     // texture_key results for the display list being walked, by the state that
     // feeds the key; cleared by begin_display_list().
@@ -4397,8 +4398,9 @@ VulkanRenderer::Impl::Texture &VulkanRenderer::Impl::texture_for(const GuestMemo
 }
 
 VkDescriptorSet VulkanRenderer::Impl::texture_descriptor(
-    const GuestMemory &memory, const DrawCall &call, bool &high_resolution_text) {
+    const GuestMemory &memory, const DrawCall &call, bool &high_resolution_text, float &replacement_v_offset) {
     high_resolution_text = false;
+    replacement_v_offset = 0.0f;
     const perf::SplitScope split(perf::Split::Texture);
     Texture &texture = texture_for(memory, call);
     if (texture.replacement && pack) {
@@ -4408,6 +4410,22 @@ VkDescriptorSet VulkanRenderer::Impl::texture_descriptor(
             // An explicit HD replacement must sample its actual detail rather
             // than being quantized onto the original PSP pixel grid.
             high_resolution_text = call.through;
+            // Only an uploaded replacement may need this atlas adjustment.
+            // An unloaded/failed image and the native PSP texture keep guest UVs.
+            if (call.through && call.texture.format == TextureFormat::Clut8 &&
+                texture.replacement->file.stem() == "ddeab148" && !call.vertices.empty()) {
+                const Vertex &first = call.vertices.front();
+                std::array<float,4> screen{first.position[0], first.position[1], first.position[0], first.position[1]};
+                std::array<float,4> uv{first.texcoord[0], first.texcoord[1], first.texcoord[0], first.texcoord[1]};
+                for (const Vertex &v : call.vertices) {
+                    screen[0]=std::min(screen[0],v.position[0]); screen[1]=std::min(screen[1],v.position[1]);
+                    screen[2]=std::max(screen[2],v.position[0]); screen[3]=std::max(screen[3],v.position[1]);
+                    uv[0]=std::min(uv[0],v.texcoord[0]); uv[1]=std::min(uv[1],v.texcoord[1]);
+                    uv[2]=std::max(uv[2],v.texcoord[0]); uv[3]=std::max(uv[3],v.texcoord[1]);
+                }
+                replacement_v_offset = ui::sharpness_replacement_v_offset(true,
+                    call.texture.width, call.texture.height, screen, uv);
+            }
             return replaced;
         }
     }
@@ -7641,7 +7659,9 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
                 (uv[3] * height + static_cast<float>(source.y)) / static_cast<float>(kPspHeight)};
         } else {
             bool high_resolution_text = false;
-            texture_descriptor = impl.texture_descriptor(memory, call, high_resolution_text);
+            float replacement_v_offset = 0.0f;
+            texture_descriptor = impl.texture_descriptor(memory, call, high_resolution_text, replacement_v_offset);
+            push.uv_transform[3] += replacement_v_offset;
             // The 2D interface's textures sampled sharp bilinear (ge.frag),
             // with either UI texture mode, above x1 (#164).
             if (call.through && settings::current().ui_textures != settings::UiTextures::Off && impl.ui_scale() >= 2u)

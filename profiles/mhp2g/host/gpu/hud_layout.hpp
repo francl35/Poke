@@ -81,11 +81,21 @@ public:
         if (map_ && draw.textured && draw.width == 256u && draw.height == 256u &&
             !draw.glyph_page && inside(b, map_bounds_))
             return map_anchor_;
-        // This exact panel opener belongs to the normal item selector. Start
-        // menu panels and centered quest messages use different positions.
-        if (hud_sheet && same(b, {328, 208, 344, 216}) && same(draw.uv, {0, 208, 16, 216}))
-            items_ = true;
-        if (items_ && inside(b, {328, 200, 472, 260}) &&
+        // Recognize only traced item-selector openers on the quest HUD sheet.
+        // FUComplete widens the idle panel by 16 pixels on the left; holding L
+        // moves its top up by 8 pixels and extends its bottom to 264.
+        // Keep per-layout bounds instead of widening every quest/menu draw.
+        if (hud_sheet && same(draw.uv, {0, 208, 16, 216})) {
+            if (same(b, {328, 208, 344, 216})) {
+                items_ = true;
+                item_bounds_ = {328, 200, 472, 260};
+            } else if (same(b, {312, 208, 328, 216}) ||
+                       same(b, {312, 200, 328, 208})) {
+                items_ = true;
+                item_bounds_ = {312, 200, 472, 264};
+            }
+        }
+        if (items_ && inside(b, item_bounds_) &&
             (!draw.textured || hud_sheet || draw.glyph_page ||
                 (draw.width == 16u && draw.height == 8u) ||
                 (draw.width == 256u && draw.height == 256u)))
@@ -110,7 +120,7 @@ private:
     std::uint64_t frame_{~0ull};
     std::uint32_t target_{}, hud_texture_{};
     bool clock_{}, items_{}, map_{};
-    HudRect map_bounds_{};
+    HudRect map_bounds_{}, item_bounds_{};
     HudAnchor map_anchor_{};
 };
 

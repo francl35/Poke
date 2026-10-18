@@ -9,6 +9,18 @@ What works on each platform, as last checked by hand. Each row is a part of the 
 | ❌ | Does not work yet |
 | ❔ | Not checked on this platform |
 
+## Poke FUComplete checkpoint (2026-10-18)
+
+The `feature/fucomplete` branch reuses the MHP2G host with a separate pinned main
+corpus. See [FUComplete](FUCOMPLETE.md) for the reviewed ELF hash and exact scope.
+Apple Silicon macOS: developer-reported startup/gameplay, textures, crisp text,
+FOV, item HUD scaling and sharpness replacement alignment work. A normal-run log
+shows a successful encrypted save followed by load from the same normal folder.
+Evidence predates the cleanup commit; record its resulting hash after retesting.
+FUComplete on Linux/Steam Deck, full game coverage and all patched features remain
+unverified. Existing platform tables below describe the inherited upstream game,
+not a FUComplete compatibility claim.
+
 ## Game
 
 | | macOS (Apple Silicon) | Linux | Steam Deck | Windows | Android (emulator only, device test pending [#127]) |

@@ -12,6 +12,7 @@ Read the documents relevant to the task before changing code, testing, packaging
 
 | Document | Read it for |
 | --- | --- |
+| [FUCOMPLETE.md](docs/FUCOMPLETE.md) | Isolated Poke FUComplete build, data paths, compatibility and validation |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Framework/profile boundaries, generated execution, interpreter fallback, overlays and native fast paths |
 | [BUILDING.md](docs/BUILDING.md) | Platform prerequisites, build steps, incremental work and reuse across checkouts |
 | [BUILD_SYSTEM.md](docs/BUILD_SYSTEM.md) | Build locks, Ninja dependency logs, compiler caching and expensive rebuilds |

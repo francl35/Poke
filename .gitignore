@@ -92,3 +92,8 @@ __pycache__/
 /psp_report*.csv
 /psp_report*.json
 /tools/*.bak
+
+# Isolated local game variants and FUComplete runtime data
+/game/
+/game-*/
+/mhfuc/

@@ -1,16 +1,23 @@
 set(MHP2G_PROFILE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
+# Independent executable variants may use the same host with different AOT code.
+# The default keeps existing developer builds on their original corpus.
+set(MHP2G_GENERATED_DIR "${MHP2G_PROFILE_DIR}/generated" CACHE PATH
+    "Directory of generated main-executable C++ sources for this build")
+get_filename_component(MHP2G_GENERATED_DIR "${MHP2G_GENERATED_DIR}" ABSOLUTE BASE_DIR "${PROJECT_SOURCE_DIR}")
+set(MHP2G_AOT_ELF_SHA256 "" CACHE STRING "Optional provenance hash of the ELF used to generate this corpus")
+
 # The AOT corpus is derived from the user's executable and is not committed.
 # Until scripts/generate.sh has produced it, link an empty registry instead.
 if(PSPRECOMP_COVERAGE)
     # Public coverage never compiles the user's game-derived corpus.
     set(MHP2G_GENERATED)
 else()
-    file(GLOB MHP2G_GENERATED CONFIGURE_DEPENDS "${MHP2G_PROFILE_DIR}/generated/*.cpp")
+    file(GLOB MHP2G_GENERATED CONFIGURE_DEPENDS "${MHP2G_GENERATED_DIR}/*.cpp")
 endif()
 if(MHP2G_GENERATED)
     list(LENGTH MHP2G_GENERATED MHP2G_GENERATED_COUNT)
-    message(STATUS "mhp2g: ${MHP2G_GENERATED_COUNT} generated AOT units")
+    message(STATUS "mhp2g: ${MHP2G_GENERATED_COUNT} generated AOT units from ${MHP2G_GENERATED_DIR}")
     if(MSVC)
         if(PSPRECOMP_GENERATED_OPT_LEVEL STREQUAL "0")
             set(MHP2G_GENERATED_OPTIONS "/Od;/bigobj")
@@ -280,7 +287,7 @@ endif()
 add_library(mhp2g_generated OBJECT ${MHP2G_GENERATED})
 target_include_directories(mhp2g_generated PRIVATE
     "${PROJECT_SOURCE_DIR}/include"
-    "${MHP2G_PROFILE_DIR}/generated")
+    "${MHP2G_GENERATED_DIR}")
 set_target_properties(mhp2g_generated PROPERTIES JOB_POOL_COMPILE psprecomp_generated)
 
 # An Android app is a shared library, libmain.so, that SDL's Java activity
@@ -327,7 +334,14 @@ mhp2g_use_ktx2(Poke)
 target_include_directories(Poke PRIVATE
     "${MHP2G_PROFILE_DIR}/host"
     "${MHP2G_PROFILE_DIR}/third_party"
-    "${MHP2G_PROFILE_DIR}/generated")
+    "${MHP2G_GENERATED_DIR}")
+if(MHP2G_AOT_ELF_SHA256)
+    string(LENGTH "${MHP2G_AOT_ELF_SHA256}" mhp2g_aot_hash_length)
+    if(NOT mhp2g_aot_hash_length EQUAL 64 OR NOT MHP2G_AOT_ELF_SHA256 MATCHES "^[0-9a-fA-F]+$")
+        message(FATAL_ERROR "MHP2G_AOT_ELF_SHA256 must be a 64-digit hexadecimal SHA-256")
+    endif()
+    target_compile_definitions(Poke PRIVATE MHP2G_AOT_ELF_SHA256="${MHP2G_AOT_ELF_SHA256}")
+endif()
 target_link_libraries(Poke PRIVATE psprecomp_core ${CMAKE_DL_LIBS})
 if(WIN32)
     # The ad hoc client's and server's sockets, and the list of interfaces;
@@ -1092,4 +1106,21 @@ if(MHP2G_RENDERER_TESTS)
             PASS_REGULAR_EXPRESSION "replay check at frame.*: 0 of"
             FAIL_REGULAR_EXPRESSION "FAIL:;\\[gpu-decode-check\\].*differs;\\[direct-check\\] draw.*differ;replay check at frame.*: [1-9][0-9]* of")
     endif()
+endif()
+
+# Public, game-data-free regressions for FUComplete presentation fixes.
+if(PSPRECOMP_BUILD_TESTS)
+    foreach(fuc_test hud_item_layout sharpness_replacement_uv)
+        add_executable(mhp2g_${fuc_test}_tests tests/${fuc_test}_tests.cpp)
+        target_include_directories(mhp2g_${fuc_test}_tests PRIVATE "${MHP2G_PROFILE_DIR}/host")
+        if(MSVC)
+            target_compile_options(mhp2g_${fuc_test}_tests PRIVATE /UNDEBUG)
+        else()
+            target_compile_options(mhp2g_${fuc_test}_tests PRIVATE -UNDEBUG)
+        endif()
+        set_target_properties(mhp2g_${fuc_test}_tests PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+        add_test(NAME mhp2g_${fuc_test}_tests COMMAND mhp2g_${fuc_test}_tests)
+        set_tests_properties(mhp2g_${fuc_test}_tests PROPERTIES TIMEOUT 15)
+    endforeach()
 endif()

@@ -9,6 +9,23 @@ Poke is a **derivative of [TeamGDB/Yakumo](https://github.com/TeamGDB/Yakumo)**.
 
 This fork focuses on adapting that technology to MHP2G. The inherited MHP3rd profile remains in the repository; its presence does not mean that Poke's MHP2G build is a release of the original Yakumo project.
 
+## FUComplete branch
+
+The `feature/fucomplete` branch adds an isolated FUComplete development build.
+It reuses the MHP2G host profile but generates native main code from the reviewed
+FUComplete executable, with its own build, overlays, settings and saves. It also
+contains the tested expanded item-selector scaling and a targeted HD sharpness
+atlas alignment fix.
+
+**Start with [FUComplete build and run instructions](docs/FUCOMPLETE.md).**
+Use `mhfuc/` for game links and saves, `out/mhfuc/` for the build, and
+`python3 run_fuc.py` for normal play. The MHP2G instructions below describe the
+stock build and must not be used to generate FUComplete into the stock corpus.
+
+This is a source development branch, not a packaged release. Apple Silicon macOS
+has been tested manually; this FUComplete checkpoint still needs Steam Deck/Linux
+verification. No game files, texture packs, generated game code or saves are included.
+
 ## Current status
 
 **Work in progress — not a general release.**
