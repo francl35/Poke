@@ -140,7 +140,9 @@ constexpr const char *kRetiredTriggerProfileKey = "input.trigger_profile";
 //          text.crisp=1 into every file they saved, chosen or not, so a file
 //          without a version gets the new default.
 constexpr const char *kVersionKey = "settings.version";
-constexpr int kVersion = 2;
+//   3      Persistent selective UI/maps/GPU decoding; crisp text defaults on.
+//          Existing version-2 text.crisp choices are retained.
+constexpr int kVersion = 3;
 constexpr std::string_view kBindPrefix = "input.bind.";
 constexpr std::string_view kPadPrefix = "input.pad.";
 
@@ -206,6 +208,21 @@ const std::vector<Field> &fields() {
             [](const Settings &s) { return kAspects.format(s.aspect); }, nullptr},
         BOOL_FIELD("video.sharp_screen", sharp_screen),
         BOOL_FIELD("video.sharp_textures", sharp_textures),
+        {"video.selective_ui", "MHP2G_SELECTIVE_UI",
+            [](Settings &s, const std::string &t) { return parse_bool(t, s.selective_ui); },
+            [](const Settings &s) { return std::string(s.selective_ui ? "1" : "0"); },
+            [](Settings &s, const char *t) { s.selective_ui = variable_flag(t); }},
+        {"video.upscale_maps", "MHP2G_UPSCALE_MAPS",
+            [](Settings &s, const std::string &t) { return parse_bool(t, s.upscale_maps); },
+            [](const Settings &s) { return std::string(s.upscale_maps ? "1" : "0"); },
+            [](Settings &s, const char *t) { s.upscale_maps = variable_flag(t); }},
+        {"video.gpu_decode", "MHP2G_GPU_DECODE",
+            [](Settings &s, const std::string &t) { return parse_bool(t, s.gpu_decode); },
+            [](const Settings &s) { return std::string(s.gpu_decode ? "1" : "0"); },
+            [](Settings &s, const char *t) { s.gpu_decode = variable_flag(t); }},
+        {"startup.game_directory", nullptr,
+            [](Settings &s, const std::string &t) { s.game_directory = t; return true; },
+            [](const Settings &s) { return s.game_directory; }, nullptr},
         {"video.texture_pack", "MHP2G_TEXTURE_PACK",
             [](Settings &s, const std::string &t) { return parse_bool(t, s.texture_pack); },
             [](const Settings &s) { return std::string(s.texture_pack ? "1" : "0"); },
@@ -827,8 +844,7 @@ void load(State &s) {
     // Dropped from what the file held too, so a run whose environment
     // decides Sharp text does not write the old default back as chosen.
     if (upgrade(s.file))
-        std::cout << "[settings] text.crisp from an earlier version dropped: Sharp text is off by default now; "
-                     "turn it on in Video if you want it\n";
+        std::cout << "[settings] legacy text.crisp default dropped; using the current default\n";
     read_entries(s.values, s.file);
     for (const Field &field : all_fields()) {
         if (field.variable == nullptr) continue;

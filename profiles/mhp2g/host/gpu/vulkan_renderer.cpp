@@ -668,6 +668,7 @@ struct VulkanRenderer::Impl {
         // texture is not decoded again for every draw.
         std::uint64_t set_retry{};
         bool ui_selection_checked{};
+        bool map_selection_reported{};
         ui::SelectiveSheet ui_sheet{ui::SelectiveSheet::None};
     };
     // Sharper copies of 2D textures (ui_textures.hpp), by texture key, mode
@@ -4410,10 +4411,7 @@ VkDescriptorSet VulkanRenderer::Impl::texture_descriptor(
     if (call.through && texture.key != 0u && !packed) {
         // Selection is per draw, not just per sheet: mixed HUD atlases also
         // contain panel and bar pieces that must keep the native sample grid.
-        static const bool selective_ui = [] {
-            const char *value = std::getenv("MHP2G_SELECTIVE_UI");
-            return value != nullptr && std::strcmp(value, "1") == 0;
-        }();
+        const bool selective_ui = settings::current().selective_ui;
         bool selected = false;
         if (selective_ui && !ui::is_glyph_page(call.texture)) {
             if (!texture.ui_selection_checked) {
@@ -4443,6 +4441,27 @@ VkDescriptorSet VulkanRenderer::Impl::texture_descriptor(
                     bounds.v1 = std::max(bounds.v1, v.texcoord[1]);
                 }
                 selected = finite && ui::select_ui_draw(texture.ui_sheet, bounds);
+            }
+        }
+        // Quest maps are copied into a swizzled CLUT8 VRAM surface. Select
+        // the observed storage layout, not the Snowy Mountains content hash,
+        // so other areas using the same map surface are eligible as well.
+        // Controlled by the saved map-enhancement setting; other layouts stay native.
+        const bool upscale_maps = settings::current().upscale_maps;
+        const TextureState &map_state = call.texture;
+        const std::uint32_t map_address = map_state.address & 0x0FFFFFFFu;
+        const bool map_layout = upscale_maps &&
+            map_state.format == TextureFormat::Clut8 && map_state.swizzled &&
+            map_state.width == 256u && map_state.height == 256u &&
+            (map_state.buffer_width & 0x7FFu) == 160u &&
+            map_address >= 0x04000000u && map_address < 0x04200000u;
+        if (map_layout) {
+            selected = true;
+            if (!texture.map_selection_reported && std::getenv("MHP2G_TRACE_UI") != nullptr) {
+                texture.map_selection_reported = true;
+                std::cout << "[ui-map] selected tex=" << "0x" << std::hex << map_state.address << std::dec
+                          << " 256x256 CLUT8 swizzled stride=160 scale=" << ui_scale()
+                          << " (MMPX; native sampling until copy is ready)\n";
             }
         }
         if (const VkDescriptorSet sharper = ui_copy(memory, call, texture, selected)) {
@@ -6772,15 +6791,11 @@ void VulkanRenderer::upload_frame(std::uint32_t display_address, const std::uint
 
 bool VulkanRenderer::gpu_decode() const {
     if (!impl_ || !impl_->ready || !impl_->gpu_decode_available) return false;
-    // Off unless MHP2G_GPU_DECODE=1 asks for it: on the Steam Deck (radv)
-    // the raw vertex path hung the GPU (ring gfx timeout) at the character
-    // select screen, and the CPU decode did not. Also off for the paths and
-    // traces that need decoded vertices.
-    static const bool off = [] {
-        if (std::getenv("MHP2G_CHECK_GPU_DECODE") != nullptr) return false;
-        const char *text = std::getenv("MHP2G_GPU_DECODE");
-        return text == nullptr || std::strcmp(text, "1") != 0;
-    }();
+    // CPU decoding remains the compatibility default: the raw vertex path
+    // previously triggered a radv GPU timeout on Deck. The saved option can
+    // enable it, while the explicit comparison diagnostic still forces it on.
+    const bool off = !settings::current().gpu_decode &&
+        std::getenv("MHP2G_CHECK_GPU_DECODE") == nullptr;
     static const bool needs_vertices = std::getenv("MHP2G_NO_DIRECT_VERTICES") != nullptr ||
         std::getenv("MHP2G_CHECK_DIRECT_VERTICES") != nullptr || std::getenv("MHP2G_TRACE_GE") != nullptr ||
         std::getenv("MHP2G_TRACE_3D") != nullptr || std::getenv("MHP2G_TRACE_SPRITES") != nullptr ||

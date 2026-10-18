@@ -11,11 +11,36 @@
 #include <array>
 #include <chrono>
 #include <cstring>
+#include <cstdlib>
 #include <ctime>
 #include <iostream>
 
 namespace mhp2g {
 namespace {
+
+// Optional, bounded observations only: do not alter guest code or dispatch.
+bool boot_trace_enabled() {
+    static const bool enabled = std::getenv("MHP2G_TRACE_BOOT") != nullptr;
+    return enabled;
+}
+
+void trace_boot_code(Runtime &rt, const AllegrexContext &ctx) {
+    if (!boot_trace_enabled()) return;
+    static unsigned reports = 0;
+    if (reports++ >= 32u) return;
+    std::cerr << "[boot-trace] icache ra=" << psprecomp::hex32(ctx.gpr[31])
+              << " a0=" << psprecomp::hex32(ctx.gpr[4])
+              << " a1=" << psprecomp::hex32(ctx.gpr[5]);
+    // Addresses observed in this game's black-screen log, not patch targets.
+    for (const std::uint32_t address : {0x08876874u, 0x08868F64u, 0x089B4384u}) {
+        std::cerr << " word@" << psprecomp::hex32(address) << "=";
+        if (rt.memory().contains(address, 4u))
+            std::cerr << psprecomp::hex32(rt.memory().load32(address));
+        else
+            std::cerr << "unmapped";
+    }
+    std::cerr << "\n";
+}
 
 // Epoch the virtual PSP clock starts at, so guest wall time advances with it.
 std::uint64_t boot_unix_us() {
@@ -40,6 +65,7 @@ void register_utils(HleRegistrar &hle) {
     // The guest flushes the instruction cache after copying code into an overlay
     // slot, which is the profile's cue to re-check which overlay is loaded.
     const auto flush_icache = [](Runtime &rt, AllegrexContext &ctx) {
+        trace_boot_code(rt, ctx);
         // An overlay has finished loading: patches that write outside it go in first.
         // MHP2G bring-up:
         // MHP3rd-derived overlay/mod code patching is intentionally disabled
@@ -102,6 +128,20 @@ void register_process(HleRegistrar &hle) {
             const char *text = reinterpret_cast<const char *>(header.data() + i + 0x0Au);
             name.assign(text, strnlen(text, 28u));
             break;
+        }
+        if (boot_trace_enabled()) {
+            static unsigned reports = 0;
+            if (reports++ < 32u) {
+                std::cerr << "[boot-trace] LoadModuleByID fd=" << arg(ctx, 0)
+                          << " bytes=" << count << " name=" << name
+                          << " ra=" << psprecomp::hex32(ctx.gpr[31])
+                          << " flags=" << psprecomp::hex32(arg(ctx, 1))
+                          << " options=" << psprecomp::hex32(arg(ctx, 2))
+                          << " header=";
+                for (std::size_t i = 0; i < 4u && i < count; ++i)
+                    std::cerr << psprecomp::hex32(header[i]) << " ";
+                std::cerr << "(HLE acknowledges only; module image is not loaded)\n";
+            }
         }
         const auto uid = static_cast<std::uint32_t>(kernel().allocate_uid());
         log_once("module:" + name, "[module] loaded stock module " + name + " (HLE)");

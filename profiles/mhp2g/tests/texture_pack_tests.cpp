@@ -3,8 +3,8 @@
 // another release, the checks made before copying (the hash, key and file
 // counts, missing images), and the copy, the swap and the backup it makes.
 //
-//   mhp3rd_texture_pack_tests
-//   mhp3rd_texture_pack_tests --check <folder>
+//   mhp2g_texture_pack_tests
+//   mhp2g_texture_pack_tests --check <folder>
 //
 // The second form prints what the menu's import would find in a folder, for
 // example a real pack, and reads nothing but that folder.
@@ -25,12 +25,12 @@
 #include <string>
 #include <thread>
 
-using namespace mhp3rd::gpu;
+using namespace mhp2g::gpu;
 namespace fs = std::filesystem;
 
 // The decoder asks whether its buffer reuse is being measured against the old
 // path; these checks link no frame statistics, so it never is.
-bool mhp3rd::perf::alternate_off(NewPath) {
+bool mhp2g::perf::alternate_off(NewPath) {
     return false;
 }
 
@@ -80,7 +80,7 @@ struct Scratch {
     fs::path root;
     Scratch() {
         std::random_device random;
-        root = fs::temp_directory_path() / ("mhp3rd_texture_pack_tests_" + std::to_string(random()));
+        root = fs::temp_directory_path() / ("mhp2g_texture_pack_tests_" + std::to_string(random()));
         fs::create_directories(root);
     }
     ~Scratch() {
@@ -252,9 +252,9 @@ void test_copy(const fs::path &root) {
 void test_location(const fs::path &root) {
     const fs::path textures = root / "textures";
 #if defined(_WIN32)
-    _putenv_s("MHP3RD_TEXTURE_PACK", "");
+    _putenv_s("mhp2g_TEXTURE_PACK", "");
 #else
-    unsetenv("MHP3RD_TEXTURE_PACK");
+    unsetenv("mhp2g_TEXTURE_PACK");
 #endif
     TexturePackLocation l = texture_pack_location(textures, kGame, "");
     check(l.source == TexturePackLocation::Source::Installed && l.folder == textures / kGame,
@@ -263,14 +263,14 @@ void test_location(const fs::path &root) {
     check(l.source == TexturePackLocation::Source::InPlace && l.folder == fs::path("/somewhere/pack"),
         "a pack used in place is read from its folder");
 #if !defined(_WIN32)
-    setenv("MHP3RD_TEXTURE_PACK", "1", 1);
+    setenv("mhp2g_TEXTURE_PACK", "1", 1);
     l = texture_pack_location(textures, kGame, "/somewhere/pack");
-    check(l.source == TexturePackLocation::Source::InPlace, "MHP3RD_TEXTURE_PACK=1 names no folder");
-    setenv("MHP3RD_TEXTURE_PACK", "/elsewhere", 1);
+    check(l.source == TexturePackLocation::Source::InPlace, "mhp2g_TEXTURE_PACK=1 names no folder");
+    setenv("mhp2g_TEXTURE_PACK", "/elsewhere", 1);
     l = texture_pack_location(textures, kGame, "/somewhere/pack");
     check(l.source == TexturePackLocation::Source::Variable && l.folder == fs::path("/elsewhere"),
-        "a folder in MHP3RD_TEXTURE_PACK wins");
-    unsetenv("MHP3RD_TEXTURE_PACK");
+        "a folder in mhp2g_TEXTURE_PACK wins");
+    unsetenv("mhp2g_TEXTURE_PACK");
 #endif
 }
 

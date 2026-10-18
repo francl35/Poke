@@ -60,6 +60,10 @@ struct Settings {
     Aspect aspect{Aspect::Original};
     bool sharp_screen{};             // nearest instead of linear scaling to the window
     bool sharp_textures{};           // nearest instead of linear texture sampling
+    bool selective_ui{true};         // enhance recognized UI sheets, preserving native HUD panels
+    bool upscale_maps{true};         // enhance recognized quest map surfaces
+    bool gpu_decode{};               // opt-in raw vertex decoding; CPU remains the compatibility default
+    std::string game_directory;      // last supported explicit game directory, for argument-free launches
     bool texture_pack{true};         // draw an installed HD texture pack's images instead of the game's
     std::string texture_pack_folder; // a pack used where it is instead of textures/<disc id>; empty: none
     bool unthrottled{};              // let emulated time run ahead of real time
@@ -75,9 +79,9 @@ struct Settings {
     // Text
     std::string font;              // the game's text font: path, "#face" for a collection; empty: the default
     std::uint32_t font_weight{1u}; // columns the game's glyphs are thickened by, 0 to kMaxFontWeight
-    // Draw the game's glyph atlas again at the internal resolution. Off by
-    // default on every platform since settings.version 2 (#210, #212).
-    bool crisp_text{};
+    // Reconstruct known glyph pages at the internal resolution. Missing saved
+    // choices default on; explicit choices in existing files are preserved.
+    bool crisp_text{true};
     UiTextures ui_textures{UiTextures::Off};
 
     // Audio

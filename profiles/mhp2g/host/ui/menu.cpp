@@ -402,13 +402,31 @@ void Menu::video() {
         renderer().set_sharp_textures(s.sharp_textures);
         settings::save();
     }
+    if (toggle_row("Selective UI upscaling", s.selective_ui,
+            options_for("video.selective_ui",
+                "Above x1, enhances recognized item, equipment and menu textures with MMPX. HUD panels and bars keep native sampling; installed HD replacements take priority."))) {
+        s.selective_ui = !s.selective_ui;
+        settings::save();
+    }
+    if (toggle_row("Quest map upscaling", s.upscale_maps,
+            options_for("video.upscale_maps",
+                "Above x1, enhances recognized quest map textures with MMPX. Applies to map surfaces using the supported layout, including collapsed and expanded views."))) {
+        s.upscale_maps = !s.upscale_maps;
+        settings::save();
+    }
+    if (toggle_row("GPU vertex decoding", s.gpu_decode,
+            options_for("video.gpu_decode",
+                "Uses the GPU to decode eligible vertices. CPU decoding is the compatibility default; some Steam Deck drivers have shown GPU timeouts with this enabled. Unsupported paths keep CPU decoding."))) {
+        s.gpu_decode = !s.gpu_decode;
+        settings::save();
+    }
     {
         static const char *const kModes[] = {"Off", "Sharp bilinear", "MMPX"};
         const int current = static_cast<int>(s.ui_textures);
-        if (const int delta = choice_row("UI textures", kModes[current],
+        if (const int delta = choice_row("Global UI enhancement", kModes[current],
                 options_for("video.ui_textures",
-                    "Above x1, how the game's 2D interface (HUD, menus, icons) is drawn; the 3D world is "
-                    "not touched. Off: as before. Sharp bilinear: crisp pixels at any scale, without blur. "
+                    "Above x1, enhances the whole 2D interface and can introduce HUD seams. Selective UI and map "
+                    "upscaling are independent. Off keeps other UI native. Sharp bilinear: crisp pixels at any scale. "
                     "MMPX: the textures doubled by a pixel-art upscaler that rounds curves and diagonals, "
                     "then drawn sharp."))) {
             s.ui_textures = static_cast<settings::UiTextures>(cycle(current, delta, 3));
@@ -417,8 +435,9 @@ void Menu::video() {
     }
     {
         RowOptions o = options_for("video.texture_pack",
-            "Draws an HD texture pack in PPSSPP's format from textures/NPJB40001 in the data "
-            "folder instead of the game's textures.");
+            "Draws an installed HD pack instead of original textures. Packs are detected in "
+            "textures/ULJM05500, or directly in textures when it contains textures.ini. "
+            "Import texture pack can select another folder without command-line options.");
         // The footer shows the note under the description: what is loaded,
         // or where the pack was looked for.
         if (o.note.empty()) {
@@ -619,6 +638,10 @@ void Menu::video() {
         restore("video.sharp_screen", s.sharp_screen, d.sharp_screen);
         restore("video.sharp_textures", s.sharp_textures, d.sharp_textures);
         restore("video.ui_textures", s.ui_textures, d.ui_textures);
+        restore("video.selective_ui", s.selective_ui, d.selective_ui);
+        restore("video.upscale_maps", s.upscale_maps, d.upscale_maps);
+        restore("video.gpu_decode", s.gpu_decode, d.gpu_decode);
+        restore("text.crisp", s.crisp_text, d.crisp_text);
         restore("video.texture_pack", s.texture_pack, d.texture_pack);
         restore("video.gpu_compat", s.gpu_compat, d.gpu_compat);
         restore("video.present_mode", s.present_mode, d.present_mode);

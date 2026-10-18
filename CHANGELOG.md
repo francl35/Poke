@@ -10,6 +10,56 @@ release dates, or commit identifiers are inferred here.
 
 ## Unreleased — planned 0.1.0
 
+### Development checkpoint — 2026-10-18
+
+- Add selective MMPX upscaling for quest maps using the observed 256x256,
+  swizzled CLUT8, stride-160 VRAM layout. Match the layout rather than one
+  area's texture hash, and use enhanced sampling only after its copy is ready.
+  This is MMPX enhancement of original artwork, not an HD map replacement.
+- Add saved Video controls for selective UI upscaling, quest map upscaling,
+  and GPU vertex decoding. Keep the existing crisp-text and texture-pack
+  controls; changes are saved immediately to the active settings.ini.
+- Enable crisp text, selective UI, map enhancement, and texture packs for
+  new or unspecified choices. Keep global UI enhancement and GPU decoding
+  off by default. Preserve existing explicit settings, including crisp text Off.
+- Advance the settings schema to version 3 and retain environment variables
+  as optional, temporary overrides rather than required launch configuration.
+- Detect packs in textures/ULJM05500 and also directly in textures when it
+  contains textures.ini. Saved pack-folder choices take precedence; a valid
+  game-specific textures.ini takes precedence over the flat-layout fallback.
+- Remember a supported explicit game-folder launch for subsequent launches
+  without a game-directory argument. Preserve that folder's own save location;
+  no saves are copied or merged by this feature.
+- Change the MHP2G per-user organization from Yakumo to Poke. The normal macOS
+  root becomes ~/Library/Application Support/Poke/MHP2G; Linux follows the
+  platform's per-user directory under Poke/MHP2G. MHP3rd paths are unchanged.
+  Existing MHP2G data was copied manually; automatic migration is not implemented.
+- Add documentation for persistent Video settings and Steam Deck building/testing.
+- Confirm the simpler English-patched ISO reaches gameplay with the supported
+  original executable and existing overlays in the user's test. This does not
+  establish compatibility with every translation or with FUComplete.
+
+### Task status for this checkpoint
+
+- [x] Selective quest-map enhancement: working in the user's test.
+- [x] Persistent Video options: working in the user's test; the previous saved
+  crisp-text Off choice was preserved and then enabled through the menu.
+- [x] Settings defaults/round-trip checks and pack-discovery checks passed in
+  standalone validation; full platform application testing remains separate.
+- [x] MHP2G data-folder rename to Poke and manual copy instructions provided.
+- [x] Earlier review fixes: guard the direct-font hook for headless builds,
+  remove the duplicate vertex UV assignment, and use game/out/mhp2g defaults.
+- [ ] Test the complete current checkpoint on Steam Deck, including saved
+  options, copied user data, argument-free startup, and multiple quest maps.
+- [ ] Add a separate UI size/scaling control in Video for macOS and Linux.
+- [ ] Package a clickable macOS app and a Linux/Steam Deck distribution
+  (Flatpak planned), including runtime libraries and required notices.
+- [ ] Investigate FUComplete compatibility separately: its boot patches disable
+  DATA.BIN decryption and modify executable/overlay code. Diagnostic logging
+  is development work, not a completed compatibility fix.
+- [ ] Add version display in menus/logs later; this checkpoint adds no such UI.
+
+
 ### Added
 
 - Reconstruct directly written 256 × 256 CLUT4 font pages from HLE glyph

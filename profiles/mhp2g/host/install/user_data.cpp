@@ -17,7 +17,7 @@
 namespace mhp2g::install {
 namespace {
 
-constexpr const char *kOrganization = "Yakumo";
+constexpr const char *kOrganization = "Poke";
 constexpr const char *kApplication = "MHP2G";
 
 std::string trim(const std::string &text) {

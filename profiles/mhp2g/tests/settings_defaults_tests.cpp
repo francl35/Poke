@@ -6,7 +6,7 @@
 #include <string>
 
 namespace {
-using namespace mhp3rd::settings;
+using namespace mhp2g::settings;
 
 int failures{};
 
@@ -52,7 +52,7 @@ void test_this_build() {
 
 // Controls written by earlier versions, and presets through settings.ini.
 void test_control_presets() {
-    using namespace mhp3rd;
+    using namespace mhp2g;
     Settings fresh = from_entries({});
     check(fresh.control_preset.shipped == input::Preset::Default && fresh.user_presets.empty() &&
             fresh.controls == input::layout(input::Preset::Default),
@@ -125,7 +125,7 @@ void test_control_presets() {
 // two chords at most, user presets without the preset they were made from.
 // Everything reads the same, and what is cleared stays cleared.
 void test_controls_from_the_previous_version() {
-    using namespace mhp3rd;
+    using namespace mhp2g;
     const auto action = [](input::Action a) { return static_cast<std::size_t>(a); };
     Entries previous = to_entries(from_entries({}));
     previous["input.preset"] = "user:Mine";
@@ -210,7 +210,7 @@ Entries as_main_wrote(Entries entries) {
 }
 
 void test_controls_from_main() {
-    using namespace mhp3rd;
+    using namespace mhp2g;
     const auto action = [](input::Action a) { return static_cast<std::size_t>(a); };
     for (std::size_t p = 0; p < input::kPresets; ++p) {
         const auto preset = static_cast<input::Preset>(p);
@@ -321,25 +321,39 @@ void test_layered_armor() {
     check(again.layered_pieces == read.layered_pieces && again.layered_armor, "the choices survive a round trip");
 }
 
-// Sharp text is off by default. v0.6.5 and v0.6.6 wrote text.crisp=1 into
-// every settings.ini they saved, so a file without settings.version gets the
-// new default; from version 2 on, the file's value is the player's.
+// Fresh defaults and migration must not override explicit player choices.
 void test_crisp_text() {
-    check(!defaults_for(Platform::Desktop).crisp_text && !defaults_for(Platform::Android).crisp_text,
-        "Sharp text is off by default on every platform");
-    Entries earlier = to_entries(from_entries({}));
+    check(defaults_for(Platform::Desktop).crisp_text && defaults_for(Platform::Android).crisp_text,
+        "crisp text defaults on");
+    const Settings fresh = from_entries({});
+    check(fresh.selective_ui && fresh.upscale_maps && !fresh.gpu_decode &&
+            fresh.ui_textures == UiTextures::Off,
+        "selective enhancement defaults on, global enhancement and GPU decoding off");
+    Entries previous{{"settings.version", "2"}, {"text.crisp", "0"},
+        {"video.ui_textures", "off"}, {"video.texture_pack", "0"}};
+    const Settings kept = from_entries(previous);
+    check(!kept.crisp_text && !kept.texture_pack && kept.ui_textures == UiTextures::Off,
+        "existing explicit choices survive the new defaults");
+    check(kept.selective_ui && kept.upscale_maps,
+        "missing new choices get their defaults");
+    Entries earlier = to_entries(fresh);
     earlier.erase("settings.version");
     earlier["text.crisp"] = "1";
-    check(!from_entries(earlier).crisp_text, "text.crisp=1 from an earlier version is its default, not a choice");
-    Settings chosen = from_entries({});
-    chosen.crisp_text = true;
+    check(from_entries(earlier).crisp_text, "legacy text uses the new default");
+    Settings chosen = fresh;
+    chosen.selective_ui = false;
+    chosen.upscale_maps = false;
+    chosen.gpu_decode = true;
+    chosen.crisp_text = false;
+    chosen.game_directory = "/home/player/My Games/MHP2G";
     const Entries written = to_entries(chosen);
-    check(written.count("settings.version") == 1u && written.at("settings.version") == "2",
-        "every file written says its version");
-    check(from_entries(written).crisp_text, "Sharp text turned on now stays on");
-    Entries off = written;
-    off["text.crisp"] = "0";
-    check(!from_entries(off).crisp_text, "and off stays off");
+    check(written.at("settings.version") == "3", "writes settings schema 3");
+    const Settings again = from_entries(written);
+    check(!again.crisp_text && !again.selective_ui && !again.upscale_maps && again.gpu_decode &&
+            again.game_directory == chosen.game_directory,
+        "enhancement choices and game directory survive a round trip");
+    previous["text.crisp"] = "1";
+    check(from_entries(previous).crisp_text, "version-2 explicit on remains on");
 }
 
 int main() {

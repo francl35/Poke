@@ -1,4 +1,5 @@
 #include "mhp2g_profile.hpp"
+#include "settings/settings.hpp"
 
 #include "app_paths.hpp"
 #include "platform/utf8_path.hpp"
@@ -231,6 +232,20 @@ std::optional<GameFiles> locate_game(const Options &options) {
     if (const std::filesystem::path dir = mhp2g::environment_path("MHP2G_GAME_DIR"); !dir.empty())
         return files_in_game_directory(dir);
 
+    if (!options.install) {
+        const std::string &saved = mhp2g::settings::current().game_directory;
+        if (!saved.empty()) {
+            const std::filesystem::path dir = mhp2g::path_from_utf8(saved);
+            std::error_code ec;
+            if (std::filesystem::is_regular_file(dir / "EBOOT.ELF", ec) &&
+                std::filesystem::is_regular_file(dir / "disc.iso", ec)) {
+                std::cout << "[startup] using saved game directory " << saved << "\n";
+                return files_in_game_directory(dir);
+            }
+            std::cerr << "[startup] saved game directory unavailable; trying installed game data\n";
+        }
+    }
+
     const std::filesystem::path checkout_game_dir = checkout_game_directory();
     const std::filesystem::path data_dir = install::user_data_directory();
     bool run_setup = options.install;
@@ -284,6 +299,12 @@ int install_from_command_line(const Options &options) {
     } catch (const install::InstallError &e) {
         std::cerr << "Setup failed: " << e.what() << "\n";
         return 1;
+    }
+    // An explicit installation supersedes the remembered developer directory.
+    auto &player = mhp2g::settings::current();
+    if (!player.game_directory.empty()) {
+        player.game_directory.clear();
+        mhp2g::settings::save();
     }
     std::cout << "Game data is ready in " << install::path_to_utf8(data_dir) << ". Start Yakumo to play.\n";
     return 0;
@@ -478,6 +499,21 @@ int main(int argc, char **argv) {
         if (runtime.function_count() == 0u) {
             std::cout << "No generated functions are linked. Run profiles/mhp2g/scripts/generate.sh and rebuild.\n";
             return 3;
+        }
+
+        // Once a supported directory has passed ELF/profile setup, remember
+        // it for normal argument-free launches. --install uses the installer
+        // instead and clears this preference after successful setup.
+        if (options.game_dir && sha256 == mhp2g::install::kExecutableSha256 && !paths.disc_image.empty()) {
+            const std::string dir = mhp2g::path_to_utf8(std::filesystem::absolute(*options.game_dir).lexically_normal());
+            auto &player = mhp2g::settings::current();
+            if (player.game_directory != dir) {
+                player.game_directory = dir;
+                mhp2g::settings::save();
+            }
+        } else if (options.install && !mhp2g::settings::current().game_directory.empty()) {
+            mhp2g::settings::current().game_directory.clear();
+            mhp2g::settings::save();
         }
 
         runtime.run(elf.runtime_entry(mhp2g::kLoadBase), configured_max_dispatches());

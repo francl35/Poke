@@ -205,7 +205,16 @@ TexturePackLocation texture_pack_location(
             return {path_from_utf8(value), TexturePackLocation::Source::Variable};
     }
     if (!in_place.empty()) return {path_from_utf8(in_place), TexturePackLocation::Source::InPlace};
-    return {textures_root / game_id, TexturePackLocation::Source::Installed};
+    // Prefer the game-specific install. Also accept the existing flat pack
+    // layout without requiring MHP2G_TEXTURE_PACK or moving the user's files.
+    std::error_code ec;
+    const fs::path installed = textures_root / game_id;
+    if (!fs::is_regular_file(installed / "textures.ini", ec)) {
+        ec.clear();
+        if (fs::is_regular_file(textures_root / "textures.ini", ec))
+            return {textures_root, TexturePackLocation::Source::InPlace};
+    }
+    return {installed, TexturePackLocation::Source::Installed};
 }
 
 TexturePackCheck check_texture_pack(const fs::path &chosen, const std::string &game_id) {
