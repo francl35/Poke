@@ -3,15 +3,15 @@
 // conflicts, packs), importing, the DATA.BIN obfuscation, a synthetic archive
 // served with replaced, grown and patched files, and the patch format.
 //
-//   mhp3rd_mods_tests
-//   mhp3rd_mods_tests --check-disc <image.iso>
+//   mhp2g_mods_tests
+//   mhp2g_mods_tests --check-disc <image.iso>
 //
 // The second form reads the real DATA.BIN directory from a disc image (read
 // only) and checks that it parses and encodes back to the same bytes, and that
 // a layout with a grown entry re-keys the entries after it consistently.
 #include "mods/file_overlay.hpp"
-#include "mods/mhp3rd_data_bin.hpp"
-#include "mods/mhp3rd_mod_format.hpp"
+#include "mods/mhp2g_data_bin.hpp"
+#include "mods/mhp2g_mod_format.hpp"
 #include "mods/mod_import.hpp"
 #include "mods/mod_ini.hpp"
 #include "mods/mod_library.hpp"
@@ -28,9 +28,9 @@
 #include <string>
 #include <vector>
 
-using namespace mhp3rd::mods;
+using namespace mhp2g::mods;
 namespace fs = std::filesystem;
-namespace p3 = mhp3rd::mods::p3rd;
+namespace archive = mhp2g::mods::legacy_archive;
 using Bytes = std::vector<std::uint8_t>;
 
 namespace {
@@ -101,7 +101,7 @@ void make_mod(const fs::path &folder, const std::string &info, const std::vector
 }
 
 void test_format(const fs::path &root) {
-    const p3::ModFolderFormat format(6043u);
+    const archive::ModFolderFormat format(6043u);
     const fs::path mods = root / "format";
     make_mod(mods / "file_hd",
         "Name=\"File HD\"\nAuthor=\"Someone\"\nFiles=\"a.pac;B.PAC\"\nTarget=\"0601;05d2\"\n"
@@ -176,7 +176,7 @@ void test_format(const fs::path &root) {
 }
 
 void test_library(const fs::path &root) {
-    const p3::ModFolderFormat format(6043u);
+    const archive::ModFolderFormat format(6043u);
     const fs::path mods = root / "library";
     make_mod(mods / "a", "Name=\"A\"\nFiles=\"x.pac;y.pac\"\nTarget=\"0001;0002\"\nType=\"File\"\nVersion=\"HD\"\n",
         {"x.pac", "y.pac"});
@@ -253,7 +253,7 @@ void test_library(const fs::path &root) {
 }
 
 void test_import(const fs::path &root) {
-    const p3::ModFolderFormat format(6043u);
+    const archive::ModFolderFormat format(6043u);
     const fs::path downloads = root / "downloads";
     const fs::path mods = root / "import_mods";
     make_mod(downloads / "single", "Name=\"One\"\nType=\"Pack\"\nModList=\"x\"\n");
@@ -280,39 +280,39 @@ void test_import(const fs::path &root) {
 void test_cipher() {
     const Bytes plain = pattern(10007, 3);
     Bytes data = plain;
-    p3::encrypt(data, 0x12345u, 0u);
+    archive::encrypt(data, 0x12345u, 0u);
     check(data != plain, "cipher: encrypting changes the bytes");
     Bytes pieces = plain;
     // Any split into pieces, even unaligned, gives the same bytes.
     std::size_t at = 0u;
     for (const std::size_t size : {3u, 1u, 4096u, 5u, 131u}) {
-        p3::encrypt(std::span(pieces).subspan(at, size), 0x12345u, at);
+        archive::encrypt(std::span(pieces).subspan(at, size), 0x12345u, at);
         at += size;
     }
-    p3::encrypt(std::span(pieces).subspan(at), 0x12345u, at);
+    archive::encrypt(std::span(pieces).subspan(at), 0x12345u, at);
     check(pieces == data, "cipher: a keystream started at any byte matches");
     Bytes back = data;
-    p3::decrypt(back, 0x12345u, 0u);
+    archive::decrypt(back, 0x12345u, 0u);
     check(back == plain, "cipher: decrypting restores the bytes");
     Bytes moved = data;
-    p3::transcode(moved, 0x12345u, 0x12400u, 0u);
+    archive::transcode(moved, 0x12345u, 0x12400u, 0u);
     Bytes expected = plain;
-    p3::encrypt(expected, 0x12400u, 0u);
+    archive::encrypt(expected, 0x12400u, 0u);
     check(moved == expected, "cipher: re-keying equals decrypting and encrypting again");
     Bytes zero = plain;
-    p3::encrypt(zero, 0u, 0u);
+    archive::encrypt(zero, 0u, 0u);
     Bytes seeded = plain;
-    p3::encrypt(seeded, 0x10000u, 0u); // low half 0: its default seed
+    archive::encrypt(seeded, 0x10000u, 0u); // low half 0: its default seed
     check(zero != seeded, "cipher: each half has its own default seed");
     const std::uint8_t psmf[] = {'P', 'S', 'M', 'F', '0'};
-    check(p3::verbatim_magic(psmf) && !p3::verbatim_magic(std::span(psmf, 3)), "cipher: verbatim entries by magic");
+    check(archive::verbatim_magic(psmf) && !archive::verbatim_magic(std::span(psmf, 3)), "cipher: verbatim entries by magic");
 }
 
 // A small archive: a directory of 2 blocks and five entries. Entry 1 has an
 // exact size; entry 3 is stored verbatim.
 struct Archive {
     std::vector<Bytes> plain;
-    p3::Directory directory;
+    archive::Directory directory;
     Bytes bytes;
 };
 
@@ -324,48 +324,48 @@ Archive make_archive() {
     for (std::size_t i = 0; i < sizes.size(); ++i) {
         a.plain.push_back(pattern(sizes[i], static_cast<std::uint32_t>(10 + i)));
         a.directory.blocks.push_back(block);
-        block += static_cast<std::uint32_t>((sizes[i] + p3::kBlock - 1u) / p3::kBlock);
+        block += static_cast<std::uint32_t>((sizes[i] + archive::kBlock - 1u) / archive::kBlock);
     }
     std::memcpy(a.plain[3].data(), "PSMF", 4u);
     a.directory.blocks.push_back(block);
     a.directory.sizes = {{1u, 3000u}, {4u, 1000u}};
     // The trailer: whatever is left of the two directory blocks.
     const std::size_t tables = (a.directory.blocks.size() + 4u) * 4u;
-    a.directory.trailer = pattern(2u * p3::kBlock - tables, 99);
+    a.directory.trailer = pattern(2u * archive::kBlock - tables, 99);
     a.bytes = a.directory.encode();
-    a.bytes.resize(static_cast<std::size_t>(block) * p3::kBlock, 0u);
+    a.bytes.resize(static_cast<std::size_t>(block) * archive::kBlock, 0u);
     for (std::size_t i = 0; i < sizes.size(); ++i) {
         Bytes stored = a.plain[i];
-        if (i != 3u) p3::encrypt(stored, a.directory.blocks[i], 0u);
-        std::copy(stored.begin(), stored.end(), a.bytes.begin() + a.directory.blocks[i] * p3::kBlock);
+        if (i != 3u) archive::encrypt(stored, a.directory.blocks[i], 0u);
+        std::copy(stored.begin(), stored.end(), a.bytes.begin() + a.directory.blocks[i] * archive::kBlock);
     }
     return a;
 }
 
 // What the game would get for entry `i` reading `view` through `directory`.
-Bytes game_reads(p3::ArchiveView &view, const p3::Directory &directory, std::uint32_t i) {
+Bytes game_reads(archive::ArchiveView &view, const archive::Directory &directory, std::uint32_t i) {
     Bytes out(static_cast<std::size_t>(directory.size(i)));
-    view.read(static_cast<std::uint64_t>(directory.blocks[i]) * p3::kBlock, out);
-    if (!p3::verbatim_magic(out)) p3::decrypt(out, directory.blocks[i], 0u);
+    view.read(static_cast<std::uint64_t>(directory.blocks[i]) * archive::kBlock, out);
+    if (!archive::verbatim_magic(out)) archive::decrypt(out, directory.blocks[i], 0u);
     return out;
 }
 
 void test_archive(const fs::path &root) {
     const Archive a = make_archive();
-    const std::optional<p3::Directory> parsed =
-        p3::Directory::parse(std::span(a.bytes).first(2u * p3::kBlock), a.bytes.size());
+    const std::optional<archive::Directory> parsed =
+        archive::Directory::parse(std::span(a.bytes).first(2u * archive::kBlock), a.bytes.size());
     check(parsed && parsed->blocks == a.directory.blocks && parsed->sizes == a.directory.sizes,
         "archive: the directory parses");
-    check(parsed && parsed->encode() == Bytes(a.bytes.begin(), a.bytes.begin() + 2 * p3::kBlock),
+    check(parsed && parsed->encode() == Bytes(a.bytes.begin(), a.bytes.begin() + 2 * archive::kBlock),
         "archive: and encodes back to the same bytes");
-    const p3::Directory &disc = *parsed;
+    const archive::Directory &disc = *parsed;
     const auto raw = [&a](std::uint64_t offset, std::span<std::uint8_t> out) -> std::size_t {
         if (offset >= a.bytes.size()) return 0u;
         const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(out.size(), a.bytes.size() - offset));
         std::copy_n(a.bytes.begin() + static_cast<std::ptrdiff_t>(offset), count, out.begin());
         return count;
     };
-    p3::ArchiveView view(disc, raw);
+    archive::ArchiveView view(disc, raw);
     check(game_reads(view, disc, 2) == a.plain[2], "archive: without mods the view is the disc");
 
     // Replacements: entry 1 grows past its blocks, entry 4 shrinks.
@@ -386,18 +386,18 @@ void test_archive(const fs::path &root) {
     r.patches[2] = {{"m", root / "archive" / "patch"}};
     FileOverlay overlay(
         {[&view](FileId file) { return view.original(file); }, [&disc](FileId file) { return disc.size(file); },
-            [](FileId, Bytes &bytes, const fs::path &path) { return p3::apply_patch(bytes, path); }});
+            [](FileId, Bytes &bytes, const fs::path &path) { return archive::apply_patch(bytes, path); }});
     overlay.set(r);
-    const auto layout = std::make_shared<const p3::Layout>(p3::Layout::build(disc, overlay.sizes()));
-    const p3::Directory &d = layout->directory;
+    const auto layout = std::make_shared<const archive::Layout>(archive::Layout::build(disc, overlay.sizes()));
+    const archive::Directory &d = layout->directory;
     check(d.blocks[2] == disc.blocks[2] + 1u && d.blocks.back() == disc.blocks.back() + 1u,
         "archive: a grown entry moves the ones after it");
     check(d.size(1) == 5000u && d.size(4) == 700u, "archive: the size table takes the new sizes");
     view.set(layout, &overlay);
-    check(view.size() == disc.archive_bytes() + p3::kBlock, "archive: the archive grows");
-    Bytes dir(2u * p3::kBlock);
+    check(view.size() == disc.archive_bytes() + archive::kBlock, "archive: the archive grows");
+    Bytes dir(2u * archive::kBlock);
     view.read(0u, dir);
-    const std::optional<p3::Directory> served = p3::Directory::parse(dir, view.size());
+    const std::optional<archive::Directory> served = archive::Directory::parse(dir, view.size());
     check(served && served->blocks == d.blocks && served->sizes == d.sizes, "archive: the game gets the new directory");
     check(game_reads(view, d, 1) == grown, "archive: a grown replacement reads back whole");
     check(game_reads(view, d, 4) == small, "archive: a smaller one too");
@@ -409,23 +409,27 @@ void test_archive(const fs::path &root) {
     // The game reads in pieces; so does this.
     Bytes piecewise(static_cast<std::size_t>(d.size(1)));
     for (std::size_t at = 0; at < piecewise.size(); at += 1024u)
-        view.read(static_cast<std::uint64_t>(d.blocks[1]) * p3::kBlock + at,
+        view.read(static_cast<std::uint64_t>(d.blocks[1]) * archive::kBlock + at,
             std::span(piecewise).subspan(at, std::min<std::size_t>(1024u, piecewise.size() - at)));
-    p3::decrypt(piecewise, d.blocks[1], 0u);
+    archive::decrypt(piecewise, d.blocks[1], 0u);
     check(piecewise == grown, "archive: reading in pieces gives the same bytes");
 
     // A replacement that is not a whole number of blocks where the disc has
     // no exact size is padded.
-    const p3::Layout padded = p3::Layout::build(disc, {{2u, 100u}});
-    check(padded.padded.contains(2u) && padded.directory.size(2) == 3u * p3::kBlock && !padded.moved(disc),
+    const archive::Layout padded = archive::Layout::build(disc, {{2u, 100u}});
+    check(padded.padded.contains(2u) && padded.directory.size(2) == 3u * archive::kBlock && !padded.moved(disc),
         "archive: a size the table cannot hold is padded to the blocks");
 }
 
 void test_patches(const fs::path &root) {
+    // Synthetic overlay inside the patch parser's 0x08000000..0x0A000000
+    // RAM range. This is a fixture address, not a live game-layout constant.
+    constexpr std::uint32_t kOverlayLoad = 0x08910000u;
+    constexpr std::uint32_t kUncachedMirror = 0x40000000u;
     // A code overlay: MWo3, id, load address, code and data sizes.
     Bytes overlay(64u + 0x100u + 0x40u, 0u);
     std::memcpy(overlay.data(), "MWo3", 4u);
-    put32(overlay, 8u, 0x0A055E80u);
+    put32(overlay, 8u, kOverlayLoad);
     put32(overlay, 12u, 0x100u);
     put32(overlay, 16u, 0x40u);
     Bytes patch;
@@ -434,15 +438,15 @@ void test_patches(const fs::path &root) {
         append32(patch, static_cast<std::uint32_t>(payload.size()) | (run ? 0x80000000u : 0u));
         patch.insert(patch.end(), payload.begin(), payload.end());
     };
-    block(0x0A055E80u + 64u + 0x100u + 4u, {1, 2, 3, 4}); // data section
-    block(0x4A055E80u + 64u, {9, 9, 9, 9});               // code, through the uncached mirror
+    block(kOverlayLoad + 64u + 0x100u + 4u, {1, 2, 3, 4}); // data section
+    block((kOverlayLoad | kUncachedMirror) + 64u, {9, 9, 9, 9});               // code, through the uncached mirror
     block(0x08801000u, {5, 6});                           // elsewhere in memory
     block(0x08900000u, {7}, true);                        // code to run
     append32(patch, 0xFFFFFFFFu);
     append32(patch, 0u);
-    block(0x0A055E80u + 64u, {0xEE}); // after the end marker: ignored
+    block(kOverlayLoad + 64u, {0xEE}); // after the end marker: ignored
     write(root / "patches" / "p", patch);
-    PatchOutcome outcome = p3::apply_patch(overlay, root / "patches" / "p");
+    PatchOutcome outcome = archive::apply_patch(overlay, root / "patches" / "p");
     check(overlay[64u + 0x100u + 4u] == 1u && overlay[64u + 0x103u + 4u] == 4u, "patch: an overlay's data by address");
     check(overlay[64u] == 9u, "patch: its code, through a mirror address");
     check(outcome.applied == 2u && outcome.after_load.size() == 1u && outcome.after_load[0].address == 0x08801000u,
@@ -455,7 +459,7 @@ void test_patches(const fs::path &root) {
     block(0x08801000u, {1});
     block(0x1000u, {1});
     write(root / "patches" / "q", patch); // no end marker, as the manager installs it
-    outcome = p3::apply_patch(data, root / "patches" / "q");
+    outcome = archive::apply_patch(data, root / "patches" / "q");
     check(data[0x20] == 0xABu && data[0x21] == 0xCDu && outcome.applied == 1u, "patch: an offset into a data file");
     check(outcome.problems.size() == 2u && outcome.after_load.empty(),
         "patch: memory writes and blocks past the end of a data file are refused");
@@ -505,7 +509,7 @@ int check_disc(const char *image) {
         }
     }
     const Bytes head = sector(lba, 17);
-    const std::optional<p3::Directory> directory = p3::Directory::parse(head, size);
+    const std::optional<archive::Directory> directory = archive::Directory::parse(head, size);
     check(directory.has_value(), "disc: DATA.BIN's directory parses");
     if (!directory) return 1;
     std::printf("     %zu entries, %zu exact sizes, %u directory blocks, %zu trailer bytes\n", directory->entries(),
@@ -513,7 +517,7 @@ int check_disc(const char *image) {
     const Bytes encoded = directory->encode();
     check(encoded == Bytes(head.begin(), head.begin() + static_cast<std::ptrdiff_t>(encoded.size())),
         "disc: the directory encodes back to the bytes on the disc");
-    const p3::Layout grown = p3::Layout::build(*directory, {{0x0FEEu, directory->size(0x0FEE) + 300u * 1024u}});
+    const archive::Layout grown = archive::Layout::build(*directory, {{0x0FEEu, directory->size(0x0FEE) + 300u * 1024u}});
     check(grown.moved(*directory) && grown.directory.blocks[0x0FEF] == directory->blocks[0x0FEF] + 150u,
         "disc: growing an entry moves the ones after it");
     return failures == 0 ? 0 : 1;

@@ -11,7 +11,7 @@
 #include <sstream>
 #include <system_error>
 
-namespace mhp2g::mods::p3rd {
+namespace mhp2g::mods::legacy_archive {
 namespace {
 
 namespace fs = std::filesystem;
@@ -286,7 +286,7 @@ std::optional<Mod> ModFolderFormat::read(const fs::path &folder) const {
         reader.file_changes(*ini, kInfo, version, FileChange::Kind::Patch);
     } else if (iequals(type, "Code")) {
         mod.type = "Code";
-        reader.unusable("A code mod runs its own PSP code inside the game. Yakumo runs the game as recompiled "
+        reader.unusable("A code mod runs its own PSP code inside the game. Poke runs the game as recompiled "
                         "native code, so it cannot load these yet.");
     } else if (iequals(type, "Pack")) {
         mod.type = "Pack";
@@ -404,4 +404,4 @@ PatchOutcome apply_patch(std::vector<std::uint8_t> &bytes, const fs::path &patch
     return outcome;
 }
 
-} // namespace mhp2g::mods::p3rd
+} // namespace mhp2g::mods::legacy_archive

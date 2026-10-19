@@ -6,8 +6,10 @@
 // host read too (the character, the game's text, the equipment kinds) is in
 // game/game_data.hpp.
 //
-// Every address here was traced in the running game (NPJB-40001, the one
-// executable Yakumo supports); docs/DEBUG_MENU.md says how each was found.
+// These addresses were inherited from the upstream NPJB-40001 layout.
+// This cleanup does not verify them for MHP2G/FUComplete. The original
+// tracing notes are in docs/DEBUG_MENU.md; do not infer compatibility from
+// the namespace or synthetic tests.
 // Nothing here writes on its own: debug_tools.cpp calls these at the flip.
 //
 // Pure functions over a Ram, so the unit tests run them on a buffer.
@@ -27,7 +29,7 @@ namespace mhp2g::debug {
 
 using game::Ram;
 
-namespace p3rd {
+namespace legacy_layout {
 
 // The character, the text and the equipment kinds.
 using namespace ::mhp2g::game;
@@ -158,7 +160,7 @@ struct Monster {
 [[nodiscard]] std::uint32_t money(const Ram &ram);
 void set_money(Ram &ram, std::uint32_t zenny);
 
-} // namespace p3rd
+} // namespace legacy_layout
 
 // Console commands for the game's own structures; false for an unknown one.
 bool game_command(

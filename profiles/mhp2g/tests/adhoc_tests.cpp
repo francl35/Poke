@@ -19,8 +19,8 @@
 
 namespace {
 
-using namespace mhp3rd::adhoc;
-using namespace mhp3rd::adhoc::net;
+using namespace mhp2g::adhoc;
+using namespace mhp2g::adhoc::net;
 using Clock = std::chrono::steady_clock;
 
 int failures = 0;

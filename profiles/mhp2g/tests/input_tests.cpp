@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace {
-using namespace mhp3rd::input;
+using namespace mhp2g::input;
 int failures{};
 
 void check(bool condition, const char *message) {

@@ -1,3 +1,6 @@
+// Address provenance below is upstream NPJB-40001; this naming cleanup
+// does not independently verify those values for MHP2G/FUComplete.
+
 #include "camera/free_camera.hpp"
 
 #include "gpu/ge_state.hpp"

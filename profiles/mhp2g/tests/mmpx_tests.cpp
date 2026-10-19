@@ -11,7 +11,7 @@
 
 namespace {
 
-using mhp3rd::gpu::ui::mmpx_2x;
+using mhp2g::gpu::ui::mmpx_2x;
 
 int failures{};
 

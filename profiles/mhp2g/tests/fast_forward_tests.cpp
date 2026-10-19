@@ -5,7 +5,7 @@
 #include <iostream>
 
 namespace {
-using namespace mhp3rd::fast_forward;
+using namespace mhp2g::fast_forward;
 
 int failures{};
 

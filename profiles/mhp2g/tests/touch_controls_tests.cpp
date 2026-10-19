@@ -6,7 +6,7 @@
 #include <iostream>
 
 namespace {
-using namespace mhp3rd::input::touch;
+using namespace mhp2g::input::touch;
 
 int failures{};
 

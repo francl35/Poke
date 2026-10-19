@@ -2,8 +2,8 @@
 // primitives against their published test vectors, PARAM.SFO round trips,
 // and the encryption, hashing and folder layout round trips.
 //
-//   mhp3rd_savedata_tests
-//   mhp3rd_savedata_tests --check <save folder> <data file name> <game key, 32 hex digits> [plaintext out]
+//   mhp2g_savedata_tests
+//   mhp2g_savedata_tests --check <save folder> <data file name> <game key, 32 hex digits> [plaintext out]
 //
 // The second form checks a save made elsewhere, for example one copied from
 // a PSP: the PARAM.SFO hashes, the data file's hash, and that the decrypted

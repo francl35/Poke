@@ -145,8 +145,8 @@ std::vector<Quest> board_quests(
 
 std::string start_blocked(const Ram &ram) {
     if (!game::character_loaded(ram)) return "no character loaded";
-    if (p3rd::on_quest(ram)) return "a quest is already running";
-    if (game::read_text(ram, p3rd::kTaskSlot + 32u) != "lobby_task.ovl") return "not in the village";
+    if (legacy_layout::on_quest(ram)) return "a quest is already running";
+    if (game::read_text(ram, legacy_layout::kTaskSlot + 32u) != "lobby_task.ovl") return "not in the village";
     const std::string map = game::read_text(ram, kMapSlot + 32u);
     if (map.rfind("P_v00a00", 0) != 0u && map.rfind("P_v00a01", 0) != 0u)
         return "only in the village or the Guild Hall (not in the house, on the farm or at the hot spring)";
@@ -165,13 +165,13 @@ std::string start(Ram &ram, const Quest &quest) {
     if (!village_quest(quest.id) && !hall_quest(quest.id))
         return "not started, only village and Guild Hall quests can be started: " + label;
     const bool hall = quest.board() == Board::Hall;
-    const std::uint32_t zenny = p3rd::money(ram);
+    const std::uint32_t zenny = legacy_layout::money(ram);
     if (zenny < quest.fee)
         return "not started, the fee is " + money_text(quest.fee) + " and the hunter has " + money_text(zenny) + ": " +
             label;
 
     // What the counter does when the quest is accepted: the fee, the id.
-    p3rd::set_money(ram, zenny - quest.fee);
+    legacy_layout::set_money(ram, zenny - quest.fee);
     const std::uint32_t c = character(ram);
     ram.store16(c + kQuestIdOffset, quest.id);
 
@@ -192,7 +192,7 @@ std::string start(Ram &ram, const Quest &quest) {
     char minutes[16];
     std::snprintf(minutes, sizeof(minutes), "%u min", quest.time_limit / 1800u);
     return "started " + label + ", " + (hall ? "Guild Hall " : "village ") + std::to_string(quest.stars) + " star, " +
-        minutes + ", fee " + money_text(quest.fee) + " paid (zenny now " + std::to_string(p3rd::money(ram)) + ")";
+        minutes + ", fee " + money_text(quest.fee) + " paid (zenny now " + std::to_string(legacy_layout::money(ram)) + ")";
 }
 
 } // namespace mhp2g::debug::quests

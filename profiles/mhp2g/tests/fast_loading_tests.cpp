@@ -6,7 +6,7 @@
 #include <iostream>
 
 namespace {
-using namespace mhp3rd::fast_loading;
+using namespace mhp2g::fast_loading;
 
 int failures{};
 

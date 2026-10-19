@@ -17,9 +17,9 @@
 #include <vector>
 
 namespace {
-using namespace mhp3rd::debug;
-using mhp3rd::game::BufferRam;
-namespace game = mhp3rd::debug::p3rd;
+using namespace mhp2g::debug;
+using mhp2g::game::BufferRam;
+namespace game = mhp2g::debug::legacy_layout;
 int failures{};
 
 void check(bool condition, const char *message) {

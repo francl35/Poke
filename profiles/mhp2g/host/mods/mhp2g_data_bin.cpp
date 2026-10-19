@@ -4,7 +4,7 @@
 #include <array>
 #include <cstring>
 
-namespace mhp2g::mods::p3rd {
+namespace mhp2g::mods::legacy_archive {
 namespace {
 
 // The byte substitution applied after the XOR step when encrypting, as
@@ -561,4 +561,4 @@ std::size_t ArchiveView::read(std::uint64_t offset, std::span<std::uint8_t> out,
     return done;
 }
 
-} // namespace mhp2g::mods::p3rd
+} // namespace mhp2g::mods::legacy_archive

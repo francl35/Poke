@@ -5,8 +5,9 @@
 // kinds with their name tables. The developer tools (host/debug) and the Mods
 // page (equipment_models.hpp) both read these; everything here only reads.
 //
-// Every address was traced in the running game (NPJB-40001, the one executable
-// Yakumo supports); docs/DEBUG_MENU.md and docs/EQUIPMENT_MODS.md say how.
+// These addresses were inherited from the upstream NPJB-40001 layout.
+// This cleanup does not verify them for MHP2G/FUComplete. The original
+// tracing notes are in docs/DEBUG_MENU.md and docs/EQUIPMENT_MODS.md.
 //
 // Pure functions over a Ram, so the unit tests run them on a buffer.
 

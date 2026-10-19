@@ -11,7 +11,7 @@
 #include <vector>
 
 // Timing instrumentation is outside the GE contract under test.
-namespace mhp3rd::perf {
+namespace mhp2g::perf {
 bool alternate_off(NewPath) {
     return false;
 }
@@ -24,7 +24,7 @@ std::uint64_t split_ticks() noexcept {
 void add_split(Split, std::uint64_t) noexcept {}
 }
 namespace {
-using namespace mhp3rd::gpu;
+using namespace mhp2g::gpu;
 int failures{};
 constexpr std::uint32_t list = 0x08001000u, vertices = 0x08008000u, indices = 0x08009000u;
 void expect(bool ok, const char *message) {
@@ -433,7 +433,7 @@ void checked_decode_progress_contract() {
 
 }
 int main() {
-    const bool checked = std::getenv("MHP3RD_CHECK_DECODE") != nullptr;
+    const bool checked = std::getenv("MHP2G_CHECK_DECODE") != nullptr;
     std::ostringstream diagnostics;
     auto *original_output = checked ? std::cout.rdbuf(diagnostics.rdbuf()) : nullptr;
     control_flow();

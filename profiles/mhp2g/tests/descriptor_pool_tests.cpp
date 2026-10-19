@@ -14,7 +14,7 @@
 
 namespace {
 
-using mhp3rd::gpu::DescriptorPools;
+using mhp2g::gpu::DescriptorPools;
 
 int failures{};
 

@@ -12,7 +12,7 @@
 
 namespace {
 namespace fs = std::filesystem;
-using namespace mhp3rd::install;
+using namespace mhp2g::install;
 
 int failures{};
 
@@ -49,7 +49,7 @@ void test_portable_detection(const fs::path &root) {
 
     write(exe / kPortableMarkerFile, "");
     check(portable_data_directory(exe, false, false) == exe / "data", "portable.txt switches portable mode on");
-    check(portable_data_directory(exe, false, true).empty(), "MHP3RD_PORTABLE=0 switches it off again");
+    check(portable_data_directory(exe, false, true).empty(), "MHP2G_PORTABLE=0 switches it off again");
     fs::remove(exe / kPortableMarkerFile);
 
     fs::create_directories(exe / "data");

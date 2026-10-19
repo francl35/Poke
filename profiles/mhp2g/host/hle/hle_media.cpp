@@ -37,7 +37,7 @@
 #include "ui/ui.hpp"
 #if defined(MHP2G_ANDROID_APP)
 #include "platform/android_fatal.hpp"
-#include "yakumo_version.hpp"
+#include "poke_version.hpp"
 #endif
 #endif
 
@@ -985,12 +985,12 @@ gpu::VulkanRenderer *ensure_renderer() {
         // log; then close.
         std::cerr << "Renderer: unavailable (" << error << ")\n";
         const std::string device = renderer->device_summary();
-        const std::string text = "Yakumo cannot draw on this device's GPU:\n\n" + error + "\n\n" +
+        const std::string text = "Poke cannot draw on this device's GPU:\n\n" + error + "\n\n" +
             (device.empty() ? std::string("No GPU chosen yet") : device) + "\n" + android::system_summary() + "\n" +
-            std::string(kYakumoVersion) +
-            "\n\nPlease report it at github.com/TeamGDB/Yakumo/issues with a screenshot and "
+            std::string(kPokeVersion) +
+            "\n\nPlease report it at github.com/francl35/Poke/issues with a screenshot and "
             "the log.";
-        android::fatal_error("Yakumo: graphics error", text, 4);
+        android::fatal_error("Poke: graphics error", text, 4);
 #else
         std::cerr << "Renderer: unavailable (" << error << "); running headless\n";
         return nullptr;

@@ -10,7 +10,7 @@
 #include "settings/settings.hpp"
 #include "save_data/save_transfer.hpp"
 #include "ui/ui.hpp"
-#include "yakumo_version.hpp"
+#include "poke_version.hpp"
 #if defined(MHP2G_ANDROID_APP)
 #include "platform/android_documents.hpp"
 #endif
@@ -480,7 +480,7 @@ void review_screen(bool back) {
         const std::string label = replacing > 0 ? "Replace and import"
             : importable == 1                   ? "Import this save"
                                                 : "Import these saves";
-        std::string description = "Copies the save" + std::string(importable == 1 ? "" : "s") + " into Yakumo.";
+        std::string description = "Copies the save" + std::string(importable == 1 ? "" : "s") + " into Poke.";
         if (replacing > 0)
             description += " The save" + std::string(replacing == 1 ? " it replaces is" : "s they replace are") +
                 " not deleted: " + (replacing == 1 ? "it moves" : "they move") +
@@ -652,7 +652,7 @@ void reminder_screen(bool back) {
     const std::vector<std::string> names = sd::saves_to_back_up(sd::memory_stick());
     section("Back up your saves");
     ImGui::Indent(px(16.0f));
-    paragraph(s.reminder_reason.empty() ? "This is the first start of Yakumo " + sd::release_of(kYakumoVersion) +
+    paragraph(s.reminder_reason.empty() ? "This is the first start of Poke " + sd::release_of(kPokeVersion) +
                 ". Before you play, make a copy of your saves: a new version, an import or a crash while "
                 "saving could damage them, and a backup is the only way to get them back."
                                         : s.reminder_reason);
@@ -733,7 +733,7 @@ void save_rows() {
     settings::Settings &settings = settings::current();
     if (toggle_row("Remind me to back up after updates", settings.backup_reminder,
             {false, {},
-                "On: the first time a new version of Yakumo starts, it asks you to back up your saves, with a "
+                "On: the first time a new version of Poke starts, it asks you to back up your saves, with a "
                 "button that does it for you."})) {
         settings.backup_reminder = !settings.backup_reminder;
         settings::save();
@@ -810,7 +810,7 @@ Reminder check_reminder() {
     for (const char *scripted : {"MHP2G_INPUT_SCRIPT", "MHP2G_INPUT_LIVE", "MHP2G_AUTO_CONFIRM"})
         if (const char *value = std::getenv(scripted); value != nullptr && *value != '\0') return Reminder::Done;
     settings::Settings &settings = settings::current();
-    const std::string release = sd::release_of(kYakumoVersion);
+    const std::string release = sd::release_of(kPokeVersion);
     if (!settings.backup_reminder || settings.backup_reminded == release) return Reminder::Done;
     if (sd::saves_to_back_up(sd::memory_stick()).empty()) {
         // Nothing to back up yet: the next release reminds.
@@ -845,7 +845,7 @@ bool run_backup_reminder() {
     reminder() = Reminder::Done;
     if (!requested) s.reminder_reason.clear();
     std::cout << "[saves] reminding to back up the saves"
-              << (requested ? "" : " at the first start of " + sd::release_of(kYakumoVersion)) << std::endl;
+              << (requested ? "" : " at the first start of " + sd::release_of(kPokeVersion)) << std::endl;
     s.reminding = true;
     // Not go(): no ImGui window is open to scroll yet.
     s.stage = Stage::Reminder;
@@ -857,7 +857,7 @@ bool run_backup_reminder() {
             const bool back = layer.take_back() ||
                 ImGui::IsKeyPressed(
                     layer.confirm_south() ? ImGuiKey_GamepadFaceRight : ImGuiKey_GamepadFaceDown, false);
-            begin_panel("##backup", "Yakumo", "Paused", true);
+            begin_panel("##backup", "Poke", "Paused", true);
             begin_content();
             const bool open = save_screen(back);
             begin_footer();
@@ -872,7 +872,7 @@ bool run_backup_reminder() {
     s.focus_row = false;
     if (window_open && !requested) {
         settings::Settings &settings = settings::current();
-        settings.backup_reminded = sd::release_of(kYakumoVersion);
+        settings.backup_reminded = sd::release_of(kPokeVersion);
         settings::save();
     }
     std::cout << "[saves] reminder closed" << (s.backed_up.ok ? "" : " without a backup") << std::endl;

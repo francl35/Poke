@@ -20,7 +20,7 @@
 //   does, is taken as one mod.
 //
 // Game-specific: the machinery that uses this is in mod_library.hpp.
-namespace mhp2g::mods::p3rd {
+namespace mhp2g::mods::legacy_archive {
 
 class ModFolderFormat final : public ModFormat {
 public:
@@ -62,4 +62,4 @@ struct OverlayImage {
 };
 [[nodiscard]] std::optional<OverlayImage> overlay_image(const std::vector<std::uint8_t> &bytes);
 
-} // namespace mhp2g::mods::p3rd
+} // namespace mhp2g::mods::legacy_archive

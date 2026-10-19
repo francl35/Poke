@@ -27,7 +27,7 @@ namespace {
 
 // The preview line: English as the patched game shows it, and some of the
 // Japanese it still has.
-constexpr char32_t kPreviewText[] = U"Urgent Quest  Yukumo Chief  1500z  装備 アイテム";
+constexpr char32_t kPreviewText[] = U"Urgent Quest  Pokke Chief  1500z  装備 アイテム";
 // Text height in PSP pixels of most of the game's text.
 constexpr float kPreviewTextSize = 14.0f;
 constexpr int kPreviewWidth = 1024;

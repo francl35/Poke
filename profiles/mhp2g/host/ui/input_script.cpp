@@ -182,7 +182,7 @@ void run_joystick(const std::string &argument) {
         std::string name;
         std::getline(in, name);
         name = trim(name);
-        if (name.empty()) name = "Yakumo test joystick " + std::to_string(number);
+        if (name.empty()) name = "Poke test joystick " + std::to_string(number);
         SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
         SDL_VirtualJoystickDesc desc;
         SDL_INIT_INTERFACE(&desc);
@@ -483,7 +483,7 @@ void attach_pad(State &s) {
     desc.axis_mask = (1u << SDL_GAMEPAD_AXIS_COUNT) - 1u;
     desc.button_mask = (1u << SDL_GAMEPAD_BUTTON_COUNT) - 1u;
     // The renderer gives the game this pad over a real one by its name.
-    desc.name = "Yakumo input script";
+    desc.name = "Poke input script";
     const SDL_JoystickID id = SDL_AttachVirtualJoystick(&desc);
     if (id == 0) {
         std::cout << "[script] cannot attach a virtual gamepad: " << SDL_GetError() << std::endl;

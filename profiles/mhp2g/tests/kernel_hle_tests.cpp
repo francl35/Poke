@@ -29,15 +29,15 @@ void check(bool condition, const char *contract) {
 }
 void memory_contracts() {
     psprecomp::Runtime runtime(64u * 1024u * 1024u);
-    mhp3rd::Kernel kernel;
+    mhp2g::Kernel kernel;
     kernel.install(runtime, 0u, 0x08804123u);
     const auto total = kernel.free_memory();
-    check(total == mhp3rd::kUserMemoryEnd - 0x08805000u, "image end rounds up to page");
-    check(static_cast<unsigned>(kernel.allocate_block("zero", 0, 0, 0)) == mhp3rd::error::kIllegalArgument,
+    check(total == mhp2g::kUserMemoryEnd - 0x08805000u, "image end rounds up to page");
+    check(static_cast<unsigned>(kernel.allocate_block("zero", 0, 0, 0)) == mhp2g::error::kIllegalArgument,
         "zero allocation rejected");
-    check(static_cast<unsigned>(kernel.allocate_block("bad", 5, 256, 0)) == mhp3rd::error::kIllegalMemblockType,
+    check(static_cast<unsigned>(kernel.allocate_block("bad", 5, 256, 0)) == mhp2g::error::kIllegalMemblockType,
         "unknown partition type rejected");
-    check(static_cast<unsigned>(kernel.allocate_block("bad", 3, 256, 384)) == mhp3rd::error::kIllegalArgument,
+    check(static_cast<unsigned>(kernel.allocate_block("bad", 3, 256, 384)) == mhp2g::error::kIllegalArgument,
         "alignment must be a power of two");
     const auto low = kernel.allocate_block("low", 0, 1, 0);
     const auto high = kernel.allocate_block("high", 1, 257, 0);
@@ -45,10 +45,10 @@ void memory_contracts() {
     check(kernel.find_block(low)->address == 0x08805000u && kernel.find_block(low)->size == 256u,
         "low allocation rounds size");
     check(
-        kernel.find_block(high)->address == mhp3rd::kUserMemoryEnd - 512u, "high allocation starts at upper boundary");
+        kernel.find_block(high)->address == mhp2g::kUserMemoryEnd - 512u, "high allocation starts at upper boundary");
     const auto middle = kernel.allocate_block("middle", 2, 512, 0x0900017fu);
     check(middle > 0 && kernel.find_block(middle)->address == 0x09000100u, "fixed allocation rounds address down");
-    check(static_cast<unsigned>(kernel.allocate_block("overlap", 2, 256, 0x09000100u)) == mhp3rd::error::kNoMemory,
+    check(static_cast<unsigned>(kernel.allocate_block("overlap", 2, 256, 0x09000100u)) == mhp2g::error::kNoMemory,
         "overlapping fixed allocations fail");
     const auto aligned = kernel.allocate_block("aligned", 3, 256, 4096);
     const auto aligned_high = kernel.allocate_block("aligned-high", 4, 256, 4096);
@@ -59,11 +59,11 @@ void memory_contracts() {
         check(kernel.free_block(uid) == 0, "free succeeds in shuffled order");
     check(kernel.free_memory() == total, "all free fragments coalesce without losing bytes");
     check(kernel.find_block(low) == nullptr &&
-            static_cast<unsigned>(kernel.free_block(low)) == mhp3rd::error::kIllegalMemblock,
+            static_cast<unsigned>(kernel.free_block(low)) == mhp2g::error::kIllegalMemblock,
         "double free rejected");
     const auto whole = kernel.allocate_block("whole", 0, total, 0);
     check(whole > 0 && kernel.free_memory() == 0, "coalesced range accepts entire region");
-    check(static_cast<unsigned>(kernel.allocate_block("exhausted", 0, 256, 0)) == mhp3rd::error::kNoMemory,
+    check(static_cast<unsigned>(kernel.allocate_block("exhausted", 0, 256, 0)) == mhp2g::error::kNoMemory,
         "exhaustion rejected");
     check(kernel.free_block(whole) == 0, "entire region can be returned");
 }
@@ -72,29 +72,29 @@ public:
     static constexpr std::uint32_t text = 0x08810000u;
     static constexpr std::uint32_t output = 0x08811000u;
     psprecomp::Runtime runtime{64u * 1024u * 1024u};
-    mhp3rd::Kernel &kernel = mhp3rd::kernel();
+    mhp2g::Kernel &kernel = mhp2g::kernel();
     psprecomp::AllegrexContext &ctx = runtime.cpu();
     std::map<std::pair<std::string, std::string>, std::uint32_t> nids;
     unsigned return_address = 0x08822000u;
     Fixture() {
-        kernel = mhp3rd::Kernel{};
+        kernel = mhp2g::Kernel{};
         kernel.install(runtime, 0x08801000u, 0x08820000u);
         const char *csv_path = std::getenv("PSPRECOMP_TEST_NIDS_CSV");
         runtime.nids().load_csv(csv_path ? csv_path : PSPRECOMP_TEST_NIDS_CSV);
         for (const auto &symbol : runtime.nids().all()) nids[{symbol.library, symbol.name}] = symbol.nid;
-        mhp3rd::HleRegistrar hle(runtime);
-        mhp3rd::register_threadman(hle);
-        mhp3rd::register_sysmem(hle);
-        mhp3rd::register_system(hle);
+        mhp2g::HleRegistrar hle(runtime);
+        mhp2g::register_threadman(hle);
+        mhp2g::register_sysmem(hle);
+        mhp2g::register_system(hle);
         kernel.start_loader_thread(ctx, 0x08820000u, 0);
         string(text, "contract");
     }
     ~Fixture() {
-        kernel = mhp3rd::Kernel{};
+        kernel = mhp2g::Kernel{};
         psprecomp::set_runtime_starvation_hook(nullptr, 0);
     }
     void string(std::uint32_t address, std::string_view value) {
-        mhp3rd::write_cstring(runtime.memory(), address, value, 512);
+        mhp2g::write_cstring(runtime.memory(), address, value, 512);
     }
     std::uint32_t call(std::string library, std::string name, std::initializer_list<std::uint32_t> args = {}) {
         for (unsigned i = 0; i < 8; ++i) ctx.set_gpr(i + 4, 0);
@@ -118,24 +118,24 @@ void common_hle_contracts() {
     Fixture f;
     auto &memory = f.runtime.memory();
     f.string(Fixture::text, "prefix-suffix");
-    check(mhp3rd::read_cstring(memory, 0).empty(), "null guest string is empty");
-    check(mhp3rd::read_cstring(memory, Fixture::text, 6) == "prefix", "guest string obeys maximum length");
+    check(mhp2g::read_cstring(memory, 0).empty(), "null guest string is empty");
+    check(mhp2g::read_cstring(memory, Fixture::text, 6) == "prefix", "guest string obeys maximum length");
     memory.store8(Fixture::output, 0x5a);
-    mhp3rd::write_cstring(memory, Fixture::output, "ignored", 0);
-    mhp3rd::write_cstring(memory, 0, "ignored", 8);
+    mhp2g::write_cstring(memory, Fixture::output, "ignored", 0);
+    mhp2g::write_cstring(memory, 0, "ignored", 8);
     check(memory.load8(Fixture::output) == 0x5a, "zero capacity leaves guest memory untouched");
-    mhp3rd::write_cstring(memory, Fixture::output, "longer", 4);
-    check(mhp3rd::read_cstring(memory, Fixture::output) == "lon" && memory.load8(Fixture::output + 3) == 0,
+    mhp2g::write_cstring(memory, Fixture::output, "longer", 4);
+    check(mhp2g::read_cstring(memory, Fixture::output) == "lon" && memory.load8(Fixture::output + 3) == 0,
         "guest string truncation always includes terminator");
-    mhp3rd::write_cstring(memory, Fixture::output, "longer", 1);
+    mhp2g::write_cstring(memory, Fixture::output, "longer", 1);
     check(memory.load8(Fixture::output) == 0, "one-byte capacity writes an empty terminated string");
-    mhp3rd::store64(memory, Fixture::output, 0xfedcba9876543210ull);
+    mhp2g::store64(memory, Fixture::output, 0xfedcba9876543210ull);
     check(memory.load32(Fixture::output) == 0x76543210 && memory.load32(Fixture::output + 4) == 0xfedcba98,
         "64-bit store uses little-endian word ordering");
     f.ctx.set_gpr(6, 0x76543210);
     f.ctx.set_gpr(7, 0xfedcba98);
-    check(mhp3rd::arg64(f.ctx, 2) == 0xfedcba9876543210ull, "EABI paired arguments preserve all 64 bits");
-    mhp3rd::HleRegistrar hle(f.runtime);
+    check(mhp2g::arg64(f.ctx, 2) == 0xfedcba9876543210ull, "EABI paired arguments preserve all 64 bits");
+    mhp2g::HleRegistrar hle(f.runtime);
     check(!hle.try_add("missing-public-library", "missing-public-name", [](auto &, auto &) {}) && hle.count() == 0,
         "unknown optional binding leaves registrar empty");
     bool rejected = false;
@@ -156,42 +156,42 @@ void scheduler_contracts() {
     auto &k = f.kernel;
     auto &ctx = f.ctx;
     const auto loader = k.current_uid();
-    check(ctx.gpr[28] == 0x08801000u && ctx.gpr[31] == mhp3rd::kThreadExitStub,
+    check(ctx.gpr[28] == 0x08801000u && ctx.gpr[31] == mhp2g::kThreadExitStub,
         "loader starts with GP and exit trampoline");
     check(f.runtime.memory().load32(ctx.gpr[26] + 0xC0) == static_cast<unsigned>(loader),
         "thread control block identifies current thread");
     for (auto entry : {0u, 0x08824001u})
         check(
-            static_cast<unsigned>(k.create_thread("invalid", entry, 0x30, 4096, 0, 0)) == mhp3rd::error::kIllegalEntry,
+            static_cast<unsigned>(k.create_thread("invalid", entry, 0x30, 4096, 0, 0)) == mhp2g::error::kIllegalEntry,
             "bad entry rejected");
     for (auto priority : {0u, 128u})
         check(static_cast<unsigned>(k.create_thread("invalid", 0x08824000, priority, 4096, 0, 0)) ==
-                mhp3rd::error::kIllegalPriority,
+                mhp2g::error::kIllegalPriority,
             "bad priority rejected");
     check(static_cast<unsigned>(k.create_thread("invalid", 0x08824000, 0x30, 511, 0, 0)) ==
-            mhp3rd::error::kIllegalStackSize,
+            mhp2g::error::kIllegalStackSize,
         "undersized stack rejected");
     check(
-        static_cast<unsigned>(k.start_thread(ctx, -1, 0, 0)) == mhp3rd::error::kUnknownThid, "unknown start rejected");
+        static_cast<unsigned>(k.start_thread(ctx, -1, 0, 0)) == mhp2g::error::kUnknownThid, "unknown start rejected");
     const auto high = k.create_thread("high", 0x08824000, 0x10, 4096, 0, 0x1234);
     f.string(Fixture::output, "arguments");
     check(k.start_thread(ctx, high, 10, Fixture::output) == 0, "start copies arguments");
     const auto *t = k.find_thread(high);
-    check(t->context.gpr[4] == 10 && mhp3rd::read_cstring(f.runtime.memory(), t->context.gpr[5]) == "arguments",
+    check(t->context.gpr[4] == 10 && mhp2g::read_cstring(f.runtime.memory(), t->context.gpr[5]) == "arguments",
         "thread argument bytes and size retained");
-    check(static_cast<unsigned>(k.start_thread(ctx, high, 0, 0)) == mhp3rd::error::kNotDormant,
+    check(static_cast<unsigned>(k.start_thread(ctx, high, 0, 0)) == mhp2g::error::kNotDormant,
         "running thread cannot start twice");
     check(
-        static_cast<unsigned>(k.delete_thread(high)) == mhp3rd::error::kNotDormant, "active thread cannot be deleted");
+        static_cast<unsigned>(k.delete_thread(high)) == mhp2g::error::kNotDormant, "active thread cannot be deleted");
     ctx.set_gpr(31, 0x08823000);
     k.finish(ctx, 42);
     check(k.current_uid() == high && ctx.pc == 0x08824000, "higher priority thread preempts on import completion");
     check(k.find_thread(loader)->context.pc == 0x08823000 && k.find_thread(loader)->context.gpr[2] == 42,
         "preemption saves return address and result");
-    check(static_cast<unsigned>(k.terminate_thread(ctx, high, false)) == mhp3rd::error::kIllegalThid,
+    check(static_cast<unsigned>(k.terminate_thread(ctx, high, false)) == mhp2g::error::kIllegalThid,
         "cannot terminate current thread");
     k.delay_current(ctx, 2500, 77);
-    check(k.current_uid() == loader && k.find_thread(high)->status == mhp3rd::ThreadStatus::Waiting,
+    check(k.current_uid() == loader && k.find_thread(high)->status == mhp2g::ThreadStatus::Waiting,
         "delay yields to ready loader");
     k.delay_current(ctx, 3000);
     check(k.now_us() == 2500 && k.current_uid() == high && ctx.gpr[2] == 77,
@@ -201,10 +201,10 @@ void scheduler_contracts() {
         "exit status retained and next timed thread resumes");
     check(k.delete_thread(high) == 0 && k.find_thread(high) == nullptr,
         "dormant thread deletion removes stack and identity");
-    check(static_cast<unsigned>(k.delete_thread(high)) == mhp3rd::error::kUnknownThid, "repeated thread delete fails");
-    check(static_cast<unsigned>(k.change_priority(ctx, -1, 1)) == mhp3rd::error::kUnknownThid,
+    check(static_cast<unsigned>(k.delete_thread(high)) == mhp2g::error::kUnknownThid, "repeated thread delete fails");
+    check(static_cast<unsigned>(k.change_priority(ctx, -1, 1)) == mhp2g::error::kUnknownThid,
         "unknown priority target rejected");
-    check(static_cast<unsigned>(k.change_priority(ctx, 0, 128)) == mhp3rd::error::kIllegalPriority,
+    check(static_cast<unsigned>(k.change_priority(ctx, 0, 128)) == mhp2g::error::kIllegalPriority,
         "out of range changed priority rejected");
     check(k.change_priority(ctx, 0, 0) == 0, "zero priority inherits current priority");
     check(f.thread("sceKernelGetThreadId") == static_cast<unsigned>(loader), "thread HLE returns live identity");
@@ -220,7 +220,7 @@ void scheduler_contracts() {
     check(f.thread("sceKernelWakeupThread", {static_cast<unsigned>(loader)}) == 0 &&
             f.thread("sceKernelSleepThreadCB") == 0,
         "callback-aware sleep consumes wake token");
-    check(f.thread("sceKernelWakeupThread", {0xFFFFFFFFu}) == mhp3rd::error::kUnknownThid,
+    check(f.thread("sceKernelWakeupThread", {0xFFFFFFFFu}) == mhp2g::error::kUnknownThid,
         "wake unknown thread rejected");
     check(f.thread("sceKernelDelayThread", {50}) == 0 && k.now_us() == 3050, "delay HLE charges exact virtual time");
     check(
@@ -240,24 +240,24 @@ void scheduler_contracts() {
 void semaphore_contracts() {
     Fixture f;
     for (auto args : {std::array<unsigned, 2>{0, 0}, {2, 1}, {0xFFFFFFFFu, 1}})
-        check(f.thread("sceKernelCreateSema", {Fixture::text, 0, args[0], args[1]}) == mhp3rd::error::kIllegalCount,
+        check(f.thread("sceKernelCreateSema", {Fixture::text, 0, args[0], args[1]}) == mhp2g::error::kIllegalCount,
             "invalid semaphore counts rejected");
     const auto uid = f.thread("sceKernelCreateSema", {Fixture::text, 0, 1, 3});
     check(static_cast<int>(uid) > 0, "semaphore creation succeeds");
     check(f.thread("sceKernelPollSema", {uid, 1}) == 0 && f.kernel.semaphores.at(uid).count == 0,
         "poll consumes available count");
-    check(f.thread("sceKernelPollSema", {uid, 1}) == mhp3rd::error::kSemaZero, "empty poll does not wait");
-    check(f.thread("sceKernelPollSema", {uid, 0}) == mhp3rd::error::kIllegalCount, "zero poll count rejected");
-    check(f.thread("sceKernelSignalSema", {uid, 4}) == mhp3rd::error::kSemaOverflow, "overflow leaves count unchanged");
+    check(f.thread("sceKernelPollSema", {uid, 1}) == mhp2g::error::kSemaZero, "empty poll does not wait");
+    check(f.thread("sceKernelPollSema", {uid, 0}) == mhp2g::error::kIllegalCount, "zero poll count rejected");
+    check(f.thread("sceKernelSignalSema", {uid, 4}) == mhp2g::error::kSemaOverflow, "overflow leaves count unchanged");
     check(f.kernel.semaphores.at(uid).count == 0, "overflow preserves state");
     check(f.thread("sceKernelSignalSema", {uid, 2}) == 0 && f.thread("sceKernelWaitSema", {uid, 1, 0}) == 0,
         "immediate wait consumes signal");
-    check(f.thread("sceKernelWaitSema", {uid, 0, 0}) == mhp3rd::error::kIllegalCount &&
-            f.thread("sceKernelWaitSema", {uid, 4, 0}) == mhp3rd::error::kIllegalCount,
+    check(f.thread("sceKernelWaitSema", {uid, 0, 0}) == mhp2g::error::kIllegalCount &&
+            f.thread("sceKernelWaitSema", {uid, 4, 0}) == mhp2g::error::kIllegalCount,
         "wait validates requested count");
     f.runtime.memory().store32(Fixture::output, 250);
     const auto start = f.kernel.now_us();
-    check(f.thread("sceKernelWaitSema", {uid, 2, Fixture::output}) == mhp3rd::error::kWaitTimeout,
+    check(f.thread("sceKernelWaitSema", {uid, 2, Fixture::output}) == mhp2g::error::kWaitTimeout,
         "semaphore wait times out deterministically");
     check(f.kernel.now_us() == start + 250 && f.runtime.memory().load32(Fixture::output) == 0 &&
             f.kernel.semaphores.at(uid).waiters.empty(),
@@ -270,10 +270,10 @@ void semaphore_contracts() {
         "signal wakes and preempts to higher priority waiter");
     check(f.kernel.semaphores.at(uid).count == 0, "wake consumes full requested count");
     f.thread("sceKernelWaitSema", {uid, 1, 0});
-    check(f.thread("sceKernelDeleteSema", {uid}) == mhp3rd::error::kWaitDelete && f.kernel.current_uid() == loader,
+    check(f.thread("sceKernelDeleteSema", {uid}) == mhp2g::error::kWaitDelete && f.kernel.current_uid() == loader,
         "delete wakes waiter with deletion result");
     for (const auto *name : {"sceKernelDeleteSema", "sceKernelSignalSema", "sceKernelWaitSema", "sceKernelPollSema"})
-        check(f.thread(name, {uid, 1, 0}) == mhp3rd::error::kUnknownSemid, "deleted semaphore returns unknown UID");
+        check(f.thread(name, {uid, 1, 0}) == mhp2g::error::kUnknownSemid, "deleted semaphore returns unknown UID");
 }
 
 void event_flag_contracts() {
@@ -282,14 +282,14 @@ void event_flag_contracts() {
     check(f.thread("sceKernelPollEventFlag", {uid, 3, 0, Fixture::output}) == 0 &&
             f.runtime.memory().load32(Fixture::output) == 3,
         "AND match returns full pattern");
-    check(f.thread("sceKernelPollEventFlag", {uid, 6, 0, Fixture::output}) == mhp3rd::error::kEvfCond &&
+    check(f.thread("sceKernelPollEventFlag", {uid, 6, 0, Fixture::output}) == mhp2g::error::kEvfCond &&
             f.runtime.memory().load32(Fixture::output) == 3,
         "failed poll returns unchanged pattern");
     check(f.thread("sceKernelPollEventFlag", {uid, 6, 1, 0}) == 0, "OR mode succeeds on any requested bit");
     for (auto mode : {2u, 0x30u})
-        check(f.thread("sceKernelPollEventFlag", {uid, 1, mode, 0}) == mhp3rd::error::kIllegalMode,
+        check(f.thread("sceKernelPollEventFlag", {uid, 1, mode, 0}) == mhp2g::error::kIllegalMode,
             "invalid clear/match mode rejected");
-    check(f.thread("sceKernelPollEventFlag", {uid, 0, 0, 0}) == mhp3rd::error::kEvfIllegalPattern,
+    check(f.thread("sceKernelPollEventFlag", {uid, 0, 0, 0}) == mhp2g::error::kEvfIllegalPattern,
         "zero pattern rejected");
     check(f.thread("sceKernelPollEventFlag", {uid, 1, 0x20, 0}) == 0 && f.kernel.event_flags.at(uid).pattern == 2,
         "clear requested bits preserves unrelated bits");
@@ -300,13 +300,13 @@ void event_flag_contracts() {
         "set ORs and clear ANDs pattern");
     check(f.thread("sceKernelWaitEventFlag", {uid, 2, 0, 0, 0}) == 0, "matching wait completes immediately");
     f.runtime.memory().store32(Fixture::output, 50);
-    check(f.thread("sceKernelWaitEventFlag", {uid, 8, 0, 0, Fixture::output}) == mhp3rd::error::kWaitTimeout &&
+    check(f.thread("sceKernelWaitEventFlag", {uid, 8, 0, 0, Fixture::output}) == mhp2g::error::kWaitTimeout &&
             f.kernel.event_flags.at(uid).waiters.empty(),
         "event timeout removes queue entry");
     const auto loader = f.kernel.current_uid();
     f.helper();
     f.thread("sceKernelWaitEventFlag", {uid, 8, 0x20, Fixture::output, 0});
-    check(f.thread("sceKernelWaitEventFlag", {uid, 8, 0, 0, 0}) == mhp3rd::error::kEvfMulti,
+    check(f.thread("sceKernelWaitEventFlag", {uid, 8, 0, 0, 0}) == mhp2g::error::kEvfMulti,
         "single-waiter flag rejects second blocking waiter");
     f.thread("sceKernelSetEventFlag", {uid, 8});
     check(f.kernel.current_uid() == loader && f.ctx.gpr[2] == 0 && f.runtime.memory().load32(Fixture::output) == 14 &&
@@ -314,26 +314,26 @@ void event_flag_contracts() {
         "signal delivers output then clears matching bits");
     f.thread("sceKernelWaitEventFlag", {uid, 8, 0, 0, 0});
     f.thread("sceKernelDeleteEventFlag", {uid});
-    check(f.kernel.current_uid() == loader && f.ctx.gpr[2] == mhp3rd::error::kWaitDelete,
+    check(f.kernel.current_uid() == loader && f.ctx.gpr[2] == mhp2g::error::kWaitDelete,
         "event deletion cancels waiter");
     for (const auto *name :
         {"sceKernelDeleteEventFlag", "sceKernelSetEventFlag", "sceKernelClearEventFlag", "sceKernelPollEventFlag"})
-        check(f.thread(name, {uid, 1}) == mhp3rd::error::kUnknownEvfid, "deleted event flag rejects operations");
+        check(f.thread(name, {uid, 1}) == mhp2g::error::kUnknownEvfid, "deleted event flag rejects operations");
 }
 
 void mutex_contracts() {
     Fixture f;
     const auto uid = f.thread("sceKernelCreateMutex", {Fixture::text, 0, 0});
     check(
-        f.thread("sceKernelLockMutex", {uid, 0, 0}) == mhp3rd::error::kIllegalCount, "mutex zero lock count rejected");
+        f.thread("sceKernelLockMutex", {uid, 0, 0}) == mhp2g::error::kIllegalCount, "mutex zero lock count rejected");
     check(f.thread("sceKernelLockMutex", {uid, 1, 0}) == 0, "unowned mutex locks");
-    check(f.thread("sceKernelLockMutex", {uid, 1, 0}) == mhp3rd::error::kMutexRecursiveNotAllowed,
+    check(f.thread("sceKernelLockMutex", {uid, 1, 0}) == mhp2g::error::kMutexRecursiveNotAllowed,
         "nonrecursive re-lock rejected");
-    check(f.thread("sceKernelUnlockMutex", {uid, 0}) == mhp3rd::error::kIllegalCount, "zero unlock count rejected");
-    check(f.thread("sceKernelUnlockMutex", {uid, 2}) == mhp3rd::error::kMutexUnlockUnderflow,
+    check(f.thread("sceKernelUnlockMutex", {uid, 0}) == mhp2g::error::kIllegalCount, "zero unlock count rejected");
+    check(f.thread("sceKernelUnlockMutex", {uid, 2}) == mhp2g::error::kMutexUnlockUnderflow,
         "unlock underflow preserves ownership");
     check(f.thread("sceKernelUnlockMutex", {uid, 1}) == 0 &&
-            f.thread("sceKernelUnlockMutex", {uid, 1}) == mhp3rd::error::kMutexUnlocked,
+            f.thread("sceKernelUnlockMutex", {uid, 1}) == mhp2g::error::kMutexUnlocked,
         "balanced unlock clears ownership");
     const auto recursive = f.thread("sceKernelCreateMutex", {Fixture::text, 0x200, 2});
     check(f.thread("sceKernelLockMutex", {recursive, 3, 0}) == 0 && f.kernel.mutexes.at(recursive).lock_count == 5,
@@ -357,7 +357,7 @@ void mutex_contracts() {
     check(f.thread("sceKernelDeleteMutex", {uid}) == 0 && f.thread("sceKernelDeleteMutex", {recursive}) == 0,
         "mutex deletion succeeds");
     for (const auto *name : {"sceKernelLockMutex", "sceKernelUnlockMutex", "sceKernelDeleteMutex"})
-        check(f.thread(name, {uid, 1, 0}) == mhp3rd::error::kMutexNotFound, "deleted mutex rejects operations");
+        check(f.thread(name, {uid, 1, 0}) == mhp2g::error::kMutexNotFound, "deleted mutex rejects operations");
 }
 void interrupt_and_host_wait_contracts() {
     Fixture f;
@@ -381,18 +381,18 @@ void interrupt_and_host_wait_contracts() {
     k.finish(ctx, 77);
     check(k.in_interrupt() && ctx.pc == 0x08826000 && ctx.gpr[4] == 2 && ctx.gpr[5] == 9 && ctx.gpr[6] == 0x7654,
         "callback receives count, latest notification and common data");
-    check(ctx.gpr[29] == mhp3rd::kInterruptStackTop - 0x40 && ctx.gpr[31] == mhp3rd::kInterruptReturnStub,
+    check(ctx.gpr[29] == mhp2g::kInterruptStackTop - 0x40 && ctx.gpr[31] == mhp2g::kInterruptReturnStub,
         "interrupt uses reserved stack and trampoline");
     check(!k.deliver_callbacks(), "nested callback delivery suppressed");
     k.delay_current(ctx, 1);
-    check(ctx.gpr[2] == mhp3rd::error::kCanNotWait, "interrupt handler cannot block");
+    check(ctx.gpr[2] == mhp2g::error::kCanNotWait, "interrupt handler cannot block");
     k.interrupt_return_stub(ctx);
     check(!k.in_interrupt() && ctx.gpr[16] == 0x12345678 && ctx.gpr[2] == 77 && ctx.pc == 0x08827000,
         "interrupt restores saved registers and import result");
     check(f.thread("sceKernelDeleteCallback", {cb}) == 0 &&
-            f.thread("sceKernelDeleteCallback", {cb}) == mhp3rd::error::kUnknownCbid,
+            f.thread("sceKernelDeleteCallback", {cb}) == mhp2g::error::kUnknownCbid,
         "callback deletion validates identity");
-    check(f.call("InterruptManager", "sceKernelEnableSubIntr", {30, 4}) == mhp3rd::error::kIllegalArgument,
+    check(f.call("InterruptManager", "sceKernelEnableSubIntr", {30, 4}) == mhp2g::error::kIllegalArgument,
         "missing interrupt cannot enable");
     check(f.call("InterruptManager", "sceKernelRegisterSubIntrHandler", {30, 4, 0x08828000, 123}) == 0 &&
             f.call("InterruptManager", "sceKernelEnableSubIntr", {30, 4}) == 0,
@@ -405,7 +405,7 @@ void interrupt_and_host_wait_contracts() {
         "vblank delivers guest handler and host hook");
     k.interrupt_return_stub(ctx);
     check(f.call("InterruptManager", "sceKernelReleaseSubIntrHandler", {30, 4}) == 0 &&
-            f.call("InterruptManager", "sceKernelReleaseSubIntrHandler", {30, 4}) == mhp3rd::error::kIllegalArgument,
+            f.call("InterruptManager", "sceKernelReleaseSubIntrHandler", {30, 4}) == mhp2g::error::kIllegalArgument,
         "interrupt release rejects repeated delete");
     unsigned calls = 0;
     k.wait_host(ctx, std::nullopt, [&](bool timeout) -> std::optional<unsigned> {
@@ -425,7 +425,7 @@ void interrupt_and_host_wait_contracts() {
         [](bool timeout) -> std::optional<unsigned> { return timeout ? std::optional<unsigned>(23) : std::nullopt; });
     check(ctx.gpr[2] == 23 && k.now_us() == start + 2000, "host deadline advances clock and returns final poll value");
     k.wait_host(ctx, 100, [](bool) -> std::optional<unsigned> { return std::nullopt; });
-    check(ctx.gpr[2] == mhp3rd::error::kWaitTimeout, "empty final poll falls back to kernel timeout");
+    check(ctx.gpr[2] == mhp2g::error::kWaitTimeout, "empty final poll falls back to kernel timeout");
     bool returned = false;
     ctx.set_gpr(31, 0x08829000);
     k.call_guest(ctx, 0x0882a000, {1, 2, 3, 4}, [&](auto &context, unsigned value) {
@@ -433,7 +433,7 @@ void interrupt_and_host_wait_contracts() {
         check(value == 33 && context.pc == 0x08829000 && context.gpr[31] == 0x08829000,
             "guest completion restores import return address");
     });
-    check(ctx.pc == 0x0882a000 && ctx.gpr[4] == 1 && ctx.gpr[7] == 4 && ctx.gpr[31] == mhp3rd::kGuestCallReturnStub,
+    check(ctx.pc == 0x0882a000 && ctx.gpr[4] == 1 && ctx.gpr[7] == 4 && ctx.gpr[31] == mhp2g::kGuestCallReturnStub,
         "guest call receives argument registers and trampoline");
     ctx.set_gpr(2, 33);
     k.guest_call_return_stub(ctx);
@@ -447,8 +447,8 @@ void vtimer_contracts() {
     const auto uid = f.thread("sceKernelCreateVTimer", {Fixture::text});
     check(f.thread("sceKernelStartVTimer", {uid}) == 0 && f.thread("sceKernelStartVTimer", {uid}) == 1,
         "vtimer starts once");
-    check(f.thread("sceKernelStartVTimer", {0xffffffffu}) == mhp3rd::error::kUnknownVtid &&
-            f.thread("sceKernelSetVTimerHandlerWide", {0xffffffffu}) == mhp3rd::error::kUnknownVtid,
+    check(f.thread("sceKernelStartVTimer", {0xffffffffu}) == mhp2g::error::kUnknownVtid &&
+            f.thread("sceKernelSetVTimerHandlerWide", {0xffffffffu}) == mhp2g::error::kUnknownVtid,
         "timer operations validate UID");
     check(f.thread("sceKernelSetVTimerHandlerWide", {uid, 0, 500, 0, 0x0882b000, 0x5432}) == 0,
         "timer sets schedule and common pointer");
@@ -467,7 +467,7 @@ void vtimer_contracts() {
     f.ctx.set_gpr(2, 0);
     f.kernel.interrupt_return_stub(f.ctx);
     check(f.kernel.vtimers.at(uid).handler == 0, "zero handler result disarms timer");
-    mhp3rd::VTimer stopped{};
+    mhp2g::VTimer stopped{};
     stopped.accumulated_us = 17;
     check(f.kernel.vtimer_value(stopped) == 17, "stopped timer retains accumulated clock");
 }
@@ -485,10 +485,10 @@ void sysmem_contracts() {
             f.runtime.memory().load32(Fixture::output) == address,
         "block address writes output");
     check(call("sceKernelGetMemoryBlockAddr", {uid, 0}) == 0 &&
-            call("sceKernelGetMemoryBlockAddr", {0xffffffffu, Fixture::output}) == mhp3rd::error::kIllegalMemblock,
+            call("sceKernelGetMemoryBlockAddr", {0xffffffffu, Fixture::output}) == mhp2g::error::kIllegalMemblock,
         "block lookup handles optional pointer and bad UID");
     check(call("sceKernelFreePartitionMemory", {uid}) == 0, "partition free succeeds");
-    check(call("sceKernelAllocMemoryBlock", {Fixture::text, 2, 256}) == mhp3rd::error::kIllegalMemblockType,
+    check(call("sceKernelAllocMemoryBlock", {Fixture::text, 2, 256}) == mhp2g::error::kIllegalMemblockType,
         "new allocation API rejects fixed type");
     const auto newer = call("sceKernelAllocMemoryBlock", {Fixture::text, 1, 256});
     check(static_cast<int>(newer) > 0 && call("sceKernelFreeMemoryBlock", {newer}) == 0,
@@ -497,8 +497,8 @@ void sysmem_contracts() {
         check(call(name) == 0, "compiler metadata acknowledged");
     check(f.call("sceSuspendForUser", "sceKernelVolatileMemLock", {0, Fixture::output, Fixture::output + 4}) == 0,
         "volatile lock succeeds");
-    check(f.runtime.memory().load32(Fixture::output) == mhp3rd::kVolatileMemoryBase &&
-            f.runtime.memory().load32(Fixture::output + 4) == mhp3rd::kVolatileMemorySize,
+    check(f.runtime.memory().load32(Fixture::output) == mhp2g::kVolatileMemoryBase &&
+            f.runtime.memory().load32(Fixture::output + 4) == mhp2g::kVolatileMemorySize,
         "volatile lock returns reserved region");
     check(f.call("sceSuspendForUser", "sceKernelVolatileMemLock") == 0 &&
             f.call("sceSuspendForUser", "sceKernelVolatileMemUnlock") == 0 &&
@@ -506,10 +506,10 @@ void sysmem_contracts() {
         "optional lock pointers and power operations succeed");
     f.string(Fixture::output, "abcdefghij");
     check(f.call("sceDmac", "sceDmacMemcpy", {Fixture::output + 2, Fixture::output, 8}) == 0 &&
-            mhp3rd::read_cstring(f.runtime.memory(), Fixture::output, 10) == "ababcdefgh",
+            mhp2g::read_cstring(f.runtime.memory(), Fixture::output, 10) == "ababcdefgh",
         "backward overlapping copy preserves bytes");
     check(f.call("sceDmac", "sceDmacMemcpy", {Fixture::output, Fixture::output + 2, 8}) == 0 &&
-            mhp3rd::read_cstring(f.runtime.memory(), Fixture::output, 8) == "abcdefgh",
+            mhp2g::read_cstring(f.runtime.memory(), Fixture::output, 8) == "abcdefgh",
         "forward overlapping copy preserves bytes");
     check(f.call("sceDmac", "sceDmacMemcpy", {Fixture::output, Fixture::output, 0}) == 0, "empty DMA copy succeeds");
     f.string(Fixture::text, "%d %i %u %x %X %p %c %% %q %.");
@@ -555,8 +555,8 @@ public:
 void io_contracts() {
     Fixture f;
     PublicFiles files;
-    mhp3rd::HleRegistrar hle(f.runtime);
-    mhp3rd::register_io(hle, {}, files.root / "ms");
+    mhp2g::HleRegistrar hle(f.runtime);
+    mhp2g::register_io(hle, {}, files.root / "ms");
     auto call = [&](const char *name, std::initializer_list<unsigned> args = {}) {
         return f.call("IoFileMgrForUser", name, args);
     };
@@ -577,11 +577,11 @@ void io_contracts() {
     check(call("sceIoWrite", {fd, Fixture::output, 14}) == 14, "host write returns exact length");
     check(call("sceIoLseek", {fd, 0, 0, 0, 0}) == 0 && f.ctx.gpr[3] == 0, "seek to start returns 64-bit offset");
     check(call("sceIoRead", {fd, Fixture::output, 50}) == 14 &&
-            mhp3rd::read_cstring(f.runtime.memory(), Fixture::output) == "synthetic data",
+            mhp2g::read_cstring(f.runtime.memory(), Fixture::output) == "synthetic data",
         "read clamps at EOF and preserves bytes");
     check(call("sceIoRead", {fd, Fixture::output, 1}) == 0, "EOF read returns zero");
     std::array<std::uint8_t, 5> prefix{};
-    check(mhp3rd::read_open_file(fd, 0, prefix.data(), prefix.size()) == 5 &&
+    check(mhp2g::read_open_file(fd, 0, prefix.data(), prefix.size()) == 5 &&
             std::string(prefix.begin(), prefix.end()) == "synth",
         "position-independent read returns requested prefix");
     check(call("sceIoLseek", {fd, 0, 0, 0, 1}) == 14, "position-independent read does not move guest offset");
@@ -603,14 +603,14 @@ void io_contracts() {
     check(static_cast<int>(directory) > 0 && call("sceIoRead", {directory, Fixture::output, 1}) == badfd &&
             call("sceIoWrite", {directory, Fixture::output, 1}) == badfd,
         "directory descriptors reject byte I/O");
-    check(mhp3rd::read_open_file(directory, 0, prefix.data(), 5) == 0, "position-independent read rejects directories");
+    check(mhp2g::read_open_file(directory, 0, prefix.data(), 5) == 0, "position-independent read rejects directories");
     check(call("sceIoDclose", {directory}) == 0 && call("sceIoDclose", {directory}) == badfd,
         "directory close validates descriptor");
     check(path_call("sceIoDopen", "ms0:/missing") == missing &&
             path_call("sceIoGetstat", "ms0:/missing", Fixture::output) == missing,
         "missing directory/stat errors");
     check(call("sceIoClose", {fd}) == 0 && call("sceIoClose", {fd}) == badfd, "double close rejected");
-    check(mhp3rd::read_open_file(fd, 0, prefix.data(), 5) == 0, "closed file cannot be read by module loader");
+    check(mhp2g::read_open_file(fd, 0, prefix.data(), 5) == 0, "closed file cannot be read by module loader");
     for (const auto *name : {"sceIoRead", "sceIoWrite", "sceIoLseek"})
         check(call(name, {fd, Fixture::output, 1}) == badfd, "closed descriptor operations rejected");
     f.string(Fixture::text, "ms0:/folder/sample.txt");
@@ -621,7 +621,7 @@ void io_contracts() {
     check(call("sceIoRename", {Fixture::text, Fixture::output}) == missing, "rename missing source fails");
     f.string(Fixture::text, "disc0:/public.txt");
     check(call("sceIoRename", {Fixture::text, Fixture::output}) == readonly, "cross-device rename rejected");
-    mhp3rd::register_io(hle, files.iso(), files.root / "ms");
+    mhp2g::register_io(hle, files.iso(), files.root / "ms");
     check(f.call("sceUmdUser", "sceUmdGetDriveStat") == 0x32 && f.call("sceUmdUser", "sceUmdActivate") == 0 &&
             f.call("sceUmdUser", "sceUmdGetErrorStat") == 0,
         "synthetic disc reports ready/readable");
@@ -630,12 +630,12 @@ void io_contracts() {
         "disc rejects writes and missing files");
     const auto disc = path_call("sceIoOpen", "umd0:/public.txt", 1);
     check(static_cast<int>(disc) > 0 && call("sceIoRead", {disc, Fixture::output, 50}) == 8 &&
-            mhp3rd::read_cstring(f.runtime.memory(), Fixture::output, 8) == "fixture!",
+            mhp2g::read_cstring(f.runtime.memory(), Fixture::output, 8) == "fixture!",
         "disc reads synthetic payload and clamps requested length");
-    check(call("sceIoRead", {disc, Fixture::output, 1}) == 0 && mhp3rd::read_open_file(disc, 8, prefix.data(), 5) == 0,
+    check(call("sceIoRead", {disc, Fixture::output, 1}) == 0 && mhp2g::read_open_file(disc, 8, prefix.data(), 5) == 0,
         "disc EOF applies to both read interfaces");
     check(
-        mhp3rd::read_open_file(disc, 2, prefix.data(), 5) == 5 && std::string(prefix.begin(), prefix.end()) == "xture",
+        mhp2g::read_open_file(disc, 2, prefix.data(), 5) == 5 && std::string(prefix.begin(), prefix.end()) == "xture",
         "disc independent read addresses original extent");
     check(path_call("sceIoGetstat", "isofs0:/PUBLIC.TXT", Fixture::output) == 0 &&
             f.runtime.memory().load32(Fixture::output + 8) == 8 &&
@@ -693,9 +693,9 @@ bool wait_until(const std::function<bool()> &condition) {
     return condition();
 }
 struct ProtocolPeer {
-    mhp3rd::adhoc::net::Socket socket = mhp3rd::adhoc::net::kNoSocket;
+    mhp2g::adhoc::net::Socket socket = mhp2g::adhoc::net::kNoSocket;
     explicit ProtocolPeer(std::uint16_t port) {
-        using namespace mhp3rd::adhoc::net;
+        using namespace mhp2g::adhoc::net;
         socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         const auto address = Address::ipv4_address(htonl(INADDR_LOOPBACK), port);
         check(socket != kNoSocket &&
@@ -706,11 +706,11 @@ struct ProtocolPeer {
     }
     ~ProtocolPeer() { close(); }
     void close() {
-        if (socket != mhp3rd::adhoc::net::kNoSocket) mhp3rd::adhoc::net::close_socket(socket);
-        socket = mhp3rd::adhoc::net::kNoSocket;
+        if (socket != mhp2g::adhoc::net::kNoSocket) mhp2g::adhoc::net::close_socket(socket);
+        socket = mhp2g::adhoc::net::kNoSocket;
     }
     void send(const std::string &bytes) {
-        check(::send(socket, bytes.data(), static_cast<int>(bytes.size()), mhp3rd::adhoc::net::kSendFlags) ==
+        check(::send(socket, bytes.data(), static_cast<int>(bytes.size()), mhp2g::adhoc::net::kSendFlags) ==
                 static_cast<int>(bytes.size()),
             "public protocol record sent completely");
     }
@@ -718,7 +718,7 @@ struct ProtocolPeer {
         return wait_until([&] {
             char buffer[256];
             const auto got = ::recv(socket, buffer, sizeof(buffer), 0);
-            return got == 0 || (got < 0 && !mhp3rd::adhoc::net::would_block(mhp3rd::adhoc::net::socket_error()));
+            return got == 0 || (got < 0 && !mhp2g::adhoc::net::would_block(mhp2g::adhoc::net::socket_error()));
         });
     }
     std::string read(std::size_t size) {
@@ -734,13 +734,13 @@ struct ProtocolPeer {
     }
 };
 void network_contracts() {
-    using namespace mhp3rd::adhoc;
+    using namespace mhp2g::adhoc;
     Fixture f;
     Server server;
     struct Cleanup {
         ~Cleanup() { Client::get().stop(); }
     } cleanup;
-    auto &settings = mhp3rd::settings::current();
+    auto &settings = mhp2g::settings::current();
     settings.adhoc = false;
     settings.adhoc_mac = "02:11:22:33:44:0a";
     settings.adhoc_nickname = "PublicA";
@@ -750,8 +750,8 @@ void network_contracts() {
         f.runtime.memory().store8(own + i, macA[i]);
         f.runtime.memory().store8(peer + i, macB[i]);
     }
-    mhp3rd::HleRegistrar hle(f.runtime);
-    mhp3rd::register_adhoc(hle);
+    mhp2g::HleRegistrar hle(f.runtime);
+    mhp2g::register_adhoc(hle);
     auto net = [&](const char *name, std::initializer_list<unsigned> args = {}) {
         return f.call("sceNetAdhoc", name, args);
     };
@@ -850,7 +850,7 @@ void network_contracts() {
     check(ctl("sceNetAdhocctlGetPeerList", {length, 0}) == 0 && f.runtime.memory().load32(length) == 152,
         "peer sizing query counts records");
     check(ctl("sceNetAdhocctlGetPeerList", {length, data}) == 0 && f.runtime.memory().load32(data) == 0 &&
-            mhp3rd::read_cstring(f.runtime.memory(), data + 4) == "PublicB" &&
+            mhp2g::read_cstring(f.runtime.memory(), data + 4) == "PublicB" &&
             f.runtime.memory().load8(data + 137) == macB[5],
         "peer record terminates list and exports nickname/MAC");
     check(ctl("sceNetAdhocctlScan") == 0 && wait_until([] { return !Client::get().scan_results().empty(); }),
@@ -858,7 +858,7 @@ void network_contracts() {
     check(ctl("sceNetAdhocctlGetScanInfo", {length, 0}) == 0 && f.runtime.memory().load32(length) == 28,
         "scan sizing query counts record");
     check(ctl("sceNetAdhocctlGetScanInfo", {length, data}) == 0 && f.runtime.memory().load32(data + 4) == 1 &&
-            mhp3rd::read_cstring(f.runtime.memory(), data + 8, 8) == "PUBLIC01",
+            mhp2g::read_cstring(f.runtime.memory(), data + 8, 8) == "PUBLIC01",
         "scan record exports channel and group");
     const auto livepdp = net("sceNetAdhocPdpCreate", {own, 10000, 4096});
     ProtocolPeer datagrams(relay_port_for(server_port));
@@ -877,7 +877,7 @@ void network_contracts() {
             f.runtime.memory().load32(length) == 5,
         "short PDP buffer reports required size without consuming datagram");
     check(net("sceNetAdhocPdpRecv", {livepdp, peer, port_out, data, length, 100, 1}) == 0 &&
-            mhp3rd::read_cstring(f.runtime.memory(), data, 5) == "reply" &&
+            mhp2g::read_cstring(f.runtime.memory(), data, 5) == "reply" &&
             f.runtime.memory().load16(port_out) == 10000,
         "retry receives preserved datagram and sender port");
     check(net("sceNetAdhocPtpListen") == addr && net("sceNetAdhocPtpListen", {own, 20000, 0}) == buflen,
@@ -927,7 +927,7 @@ void network_contracts() {
     check(wait_until([&] { return Client::get().ptp_info(static_cast<int>(accepted)).readable == 5; }),
         "stream reply reaches client buffer");
     check(net("sceNetAdhocPtpRecv", {accepted, data, length, 100, 1}) == 0 && f.runtime.memory().load32(length) == 5 &&
-            mhp3rd::read_cstring(f.runtime.memory(), data, 5) == "ready",
+            mhp2g::read_cstring(f.runtime.memory(), data, 5) == "ready",
         "HLE returns exact stream reply bytes");
     check(net("sceNetAdhocGetPtpStat") == invalid && net("sceNetAdhocGetPtpStat", {length, 0}) == 0 &&
             f.runtime.memory().load32(length) == 72,
@@ -959,7 +959,7 @@ void network_contracts() {
         "unconnected stream send reports not connected");
     check(net("sceNetAdhocPtpClose", {opening}) == 0, "pending connection cancels on close");
     check(ctl("sceNetAdhocctlDisconnect") == 0 && ctl("sceNetAdhocctlTerm") == 0 && net("sceNetAdhocTerm") == 0 &&
-            !mhp3rd::adhoc_networking_on(),
+            !mhp2g::adhoc_networking_on(),
         "shutdown clears control and socket initialization");
     auto utility = [&](const char *name, std::initializer_list<unsigned> args = {}) {
         return f.call("sceUtility", name, args);
@@ -973,7 +973,7 @@ void network_contracts() {
             f.call("sceNetAdhocDiscover", "sceNetAdhocDiscoverGetStatus") == 2,
         "synthetic discovery completes without nearby peer");
     check(utility("sceUtilityNetconfInitStart") == invalid &&
-            utility("sceUtilityNetconfShutdownStart") == mhp3rd::kErrorUtilityInvalidStatus,
+            utility("sceUtilityNetconfShutdownStart") == mhp2g::kErrorUtilityInvalidStatus,
         "netconf requires parameters and active dialog");
     constexpr unsigned params = Fixture::text + 0x400, group = params + 0x100;
     f.runtime.memory().store32(params + 0x30, 2);
@@ -981,7 +981,7 @@ void network_contracts() {
     f.string(group, "PUBLIC01");
     settings.adhoc = false;
     check(utility("sceUtilityNetconfInitStart", {params}) == 0 &&
-            utility("sceUtilityNetconfInitStart", {params}) == mhp3rd::kErrorUtilityInvalidStatus,
+            utility("sceUtilityNetconfInitStart", {params}) == mhp2g::kErrorUtilityInvalidStatus,
         "netconf starts once");
     check(utility("sceUtilityNetconfGetStatus") == 1 && utility("sceUtilityNetconfUpdate") == 0 &&
             utility("sceUtilityNetconfGetStatus") == 3 && f.runtime.memory().load32(params + 0x1c) == 0x80410b05u,
@@ -1006,7 +1006,7 @@ void network_contracts() {
 }
 void hosting_contracts() {
     using namespace mhp3rd;
-    using namespace mhp3rd::adhoc;
+    using namespace mhp2g::adhoc;
     struct Cleanup {
         ~Cleanup() { adhoc_shutdown(); }
     } cleanup;
@@ -1118,21 +1118,21 @@ void thread_end_and_dispatch_contracts() {
     Fixture f;
     const auto loader = f.kernel.current_uid();
     const auto helper = f.helper();
-    mhp3rd::WaitState join{};
-    join.type = mhp3rd::WaitType::ThreadEnd;
+    mhp2g::WaitState join{};
+    join.type = mhp2g::WaitType::ThreadEnd;
     join.object = static_cast<int>(helper);
     f.kernel.block(f.ctx, join);
     check(f.kernel.current_uid() == static_cast<int>(helper), "thread-end wait schedules its target");
     f.kernel.exit_current_thread(f.ctx, 17, false);
     check(f.kernel.current_uid() == loader && f.ctx.gpr[2] == 17, "thread exit wakes joiner with exit status");
     check(f.thread("sceKernelGetThreadExitStatus", {helper}) == 17 &&
-            f.thread("sceKernelGetThreadExitStatus", {static_cast<unsigned>(loader)}) == mhp3rd::error::kNotDormant &&
-            f.thread("sceKernelGetThreadExitStatus", {0xffffffffu}) == mhp3rd::error::kUnknownThid,
+            f.thread("sceKernelGetThreadExitStatus", {static_cast<unsigned>(loader)}) == mhp2g::error::kNotDormant &&
+            f.thread("sceKernelGetThreadExitStatus", {0xffffffffu}) == mhp2g::error::kUnknownThid,
         "exit status API distinguishes dormant, live and missing threads");
-    check(f.thread("sceKernelChangeThreadPriority", {helper, 1}) == mhp3rd::error::kDormant,
+    check(f.thread("sceKernelChangeThreadPriority", {helper, 1}) == mhp2g::error::kDormant,
         "dormant priority change rejected");
     check(f.thread("sceKernelDeleteThread", {helper}) == 0 &&
-            f.thread("sceKernelDeleteThread", {static_cast<unsigned>(loader)}) == mhp3rd::error::kNotDormant,
+            f.thread("sceKernelDeleteThread", {static_cast<unsigned>(loader)}) == mhp2g::error::kNotDormant,
         "delete HLE distinguishes dormant and current thread");
     check(f.thread("sceKernelChangeCurrentThreadAttr", {0xffffffffu, 0x100000}) == 0 &&
             f.kernel.current_thread()->attributes == 0x100000,
@@ -1168,7 +1168,7 @@ void thread_end_and_dispatch_contracts() {
     const auto exhausted = f.kernel.allocate_block("exhausted", 0, f.kernel.free_memory(), 0);
     check(exhausted > 0 &&
             static_cast<unsigned>(f.kernel.create_thread("no-stack", 0x08824000, 0x30, 4096, 0, 0)) ==
-                mhp3rd::error::kNoMemory,
+                mhp2g::error::kNoMemory,
         "thread creation rejects unavailable stack memory");
     check(f.kernel.free_block(exhausted) == 0, "stack exhaustion fixture restores all available memory");
 }
@@ -1177,7 +1177,7 @@ void scheduler_deadlock_contracts() {
     const auto dormant = f.kernel.create_thread("not-started", 0x08824000, 0x30, 4096, 0, 0);
     check(dormant > 0, "deadlock fixture retains a dormant thread");
     f.thread("sceKernelSleepThread");
-    check(f.runtime.stopped() && f.ctx.pc == mhp3rd::kIdleStub,
+    check(f.runtime.stopped() && f.ctx.pc == mhp2g::kIdleStub,
         "permanent sleep without runnable threads eventually stops in idle");
     const auto &reason = f.runtime.stop_reason();
     check(reason.find("PSP scheduler deadlock: no runnable thread") != std::string::npos &&
@@ -1194,21 +1194,21 @@ void utility_and_savedata_contracts() {
     } capture;
     Fixture f;
     PublicFiles files;
-    mhp3rd::HleRegistrar hle(f.runtime);
-    mhp3rd::register_utility(hle, files.root / "ms");
+    mhp2g::HleRegistrar hle(f.runtime);
+    mhp2g::register_utility(hle, files.root / "ms");
     auto call = [&](const char *name, std::initializer_list<unsigned> args = {}) {
         return f.call("sceUtility", name, args);
     };
     auto &memory = f.runtime.memory();
     constexpr unsigned params = Fixture::text + 0x1000, field = params + 0x800, data = params + 0x1000,
                        aux = data + 0x1000;
-    check(call("sceUtilityOskShutdownStart") == mhp3rd::kErrorUtilityInvalidStatus, "inactive OSK cannot shut down");
+    check(call("sceUtilityOskShutdownStart") == mhp2g::kErrorUtilityInvalidStatus, "inactive OSK cannot shut down");
     memory.store32(params, 0x40);
     memory.store32(params + 0x30, 1);
     memory.store32(params + 0x34, field);
     memory.store32(field + 0x24, 8);
     memory.store32(field + 0x28, data);
-    mhp3rd::settings::current().name = "A\xc3\xa9\xe6\x97\xa5\xf0\x9f\x98\x80Z";
+    mhp2g::settings::current().name = "A\xc3\xa9\xe6\x97\xa5\xf0\x9f\x98\x80Z";
     auto finish_osk = [&] {
         check(call("sceUtilityOskGetStatus") == 1 && call("sceUtilityOskGetStatus") == 2 &&
                 call("sceUtilityOskGetStatus") == 3,
@@ -1221,7 +1221,7 @@ void utility_and_savedata_contracts() {
             "OSK shutdown converges to none");
     };
     check(call("sceUtilityOskInitStart", {params}) == 0 &&
-            call("sceUtilityOskInitStart", {params}) == mhp3rd::kErrorUtilityInvalidStatus,
+            call("sceUtilityOskInitStart", {params}) == mhp2g::kErrorUtilityInvalidStatus,
         "OSK cannot start a second active request");
     finish_osk();
     const std::array<unsigned, 7> units{'A', 0xe9, 0x65e5, 0xd83d, 0xde00, 'Z', 0};
@@ -1254,7 +1254,7 @@ void utility_and_savedata_contracts() {
     check(call("sceUtilityOskShutdownStart") == 0 && call("sceUtilityOskGetStatus") == 4 &&
             call("sceUtilityOskGetStatus") == 0,
         "zero-field OSK cleans up");
-    if (std::getenv("MHP3RD_TRACE_OSK") != nullptr) {
+    if (std::getenv("MHP2G_TRACE_OSK") != nullptr) {
         const auto diagnostic = capture.output.str();
         check(diagnostic.find("[osk-trace] InitStart") != std::string::npos &&
                 diagnostic.find("field+") != std::string::npos &&
@@ -1263,7 +1263,7 @@ void utility_and_savedata_contracts() {
             "OSK diagnostics describe request fields and complete lifecycle");
         check(diagnostic.size() < 32768, "OSK trace stays bounded for synthetic requests");
     }
-    check(call("sceUtilityMsgDialogShutdownStart") == mhp3rd::kErrorUtilityInvalidStatus,
+    check(call("sceUtilityMsgDialogShutdownStart") == mhp2g::kErrorUtilityInvalidStatus,
         "inactive message dialog rejects shutdown");
     memory.store32(params, 0x244);
     memory.store32(params + 0x34, 1);
@@ -1307,7 +1307,7 @@ void utility_and_savedata_contracts() {
             "save success/error lifecycle always converges");
         return result;
     };
-    check(call("sceUtilitySavedataShutdownStart") == mhp3rd::kErrorUtilityInvalidStatus && request(0) == 0x80110307u,
+    check(call("sceUtilitySavedataShutdownStart") == mhp2g::kErrorUtilityInvalidStatus && request(0) == 0x80110307u,
         "missing save reports no data");
     memory.store32(params + 0x74, 0);
     check(request(0) == 0x80110308u && request(1) == 0x80110388u, "load/save require guest buffer");
@@ -1322,8 +1322,8 @@ void utility_and_savedata_contracts() {
         "icon data clamps requested size to guest capacity");
     f.string(data, "overwritten");
     memory.store32(params + 0x78, 5);
-    check(request(2) == 0 && memory.load32(params + 0x7c) == 5 && mhp3rd::read_cstring(memory, data, 5) == "publi" &&
-            mhp3rd::read_cstring(memory, params + 0x80) == "Public title",
+    check(request(2) == 0 && memory.load32(params + 0x7c) == 5 && mhp2g::read_cstring(memory, data, 5) == "publi" &&
+            mhp2g::read_cstring(memory, params + 0x80) == "Public title",
         "load truncates payload and restores metadata");
     memory.store32(params + 0x78, 64);
     memory.store32(params + 0x5d0, aux + 0x100);
@@ -1332,26 +1332,26 @@ void utility_and_savedata_contracts() {
     f.string(aux + 0x200, "PUB000001");
     f.string(aux + 0x210, "SLOT0");
     check(request(8) == 0 && memory.load32(aux + 0x100) == 0x8000 &&
-            mhp3rd::read_cstring(memory, aux + 0x10c) == "1 GB" && memory.load32(aux + 0x300) >= 1,
+            mhp2g::read_cstring(memory, aux + 0x10c) == "1 GB" && memory.load32(aux + 0x300) >= 1,
         "sizes reports free-space geometry and needed clusters");
     f.string(aux + 0x210, "MISSING");
     check(request(8) == 0x801103c7u, "sizes reports absent slot");
     memory.store32(params + 0x5d4, 0);
     memory.store32(params + 0x7c, 2 * 1024 * 1024);
-    check(request(8) == 0 && mhp3rd::read_cstring(memory, aux + 0x308).find("MB") != std::string::npos,
+    check(request(8) == 0 && mhp2g::read_cstring(memory, aux + 0x308).find("MB") != std::string::npos,
         "needed-space formatting supports megabytes");
     memory.store32(params + 0x7c, 12);
     memory.store32(params + 0x60, aux + 0x400);
     f.string(aux + 0x400, "MISSING");
     f.string(aux + 0x414, "SLOT0");
-    check(request(4) == 0 && mhp3rd::read_cstring(memory, params + 0x4c) == "SLOT0",
+    check(request(4) == 0 && mhp2g::read_cstring(memory, params + 0x4c) == "SLOT0",
         "list load chooses first existing slot");
     check(request(6) == 0 && request(6) == 0x80110347u && request(4) == 0x80110307u,
         "list delete removes selected save and missing list paths report correct error");
     f.string(aux + 0x400, "SLOT1");
     memory.store8(aux + 0x414, 0);
     f.string(data, "public save!");
-    check(request(5) == 0 && mhp3rd::read_cstring(memory, params + 0x4c) == "SLOT1",
+    check(request(5) == 0 && mhp2g::read_cstring(memory, params + 0x4c) == "SLOT1",
         "list save chooses first provided slot");
     memory.store32(params + 0x60, 0);
     for (auto mode : {7u, 9u, 10u}) {
@@ -1365,7 +1365,7 @@ void utility_and_savedata_contracts() {
     f.string(params + 0x4c, "SECURE");
     for (unsigned i = 0; i < 16; ++i) memory.store8(params + 0x5dc + i, static_cast<std::uint8_t>(i + 1));
     check(request(1) == 0 && request(0) == 0 && memory.load32(params + 0x7c) == 16 &&
-            mhp3rd::read_cstring(memory, data, 12) == "public save!",
+            mhp2g::read_cstring(memory, data, 12) == "public save!",
         "synthetic secure save encrypts and decrypts through HLE");
     {
         std::ofstream corrupt(
@@ -1378,7 +1378,7 @@ void utility_and_savedata_contracts() {
         std::ofstream block(blocked);
         block << "not a directory";
     }
-    mhp3rd::register_savedata(hle, blocked);
+    mhp2g::register_savedata(hle, blocked);
     check(request(1) == 0x80110385u, "non-directory memory stick reports save access error");
 }
 
@@ -1437,13 +1437,13 @@ void font_contracts() {
         std::ofstream output(path, std::ios::binary);
         output.write(reinterpret_cast<const char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     }
-    auto &settings = mhp3rd::settings::current();
+    auto &settings = mhp2g::settings::current();
     settings.font = path.string();
     settings.font_weight = 0;
-    mhp3rd::fonts::reload();
-    check(mhp3rd::fonts::ready() && mhp3rd::fonts::metrics('A').found, "independently authored square font loads");
-    mhp3rd::HleRegistrar hle(f.runtime);
-    mhp3rd::register_font(hle);
+    mhp2g::fonts::reload();
+    check(mhp2g::fonts::ready() && mhp2g::fonts::metrics('A').found, "independently authored square font loads");
+    mhp2g::HleRegistrar hle(f.runtime);
+    mhp2g::register_font(hle);
     auto call = [&](const char *name, std::initializer_list<unsigned> args = {}) {
         return f.call("sceLibFont", name, args);
     };
@@ -1502,24 +1502,24 @@ void font_contracts() {
     f.return_address = 0x088ea3a4;
     f.ctx.set_gpr(17, atlas);
     call("sceFontGetCharGlyphImage", {font, 'A', 0});
-    check(mhp3rd::fonts::game_atlas() == atlas, "synthetic recognized atlas object is recorded");
+    check(mhp2g::fonts::game_atlas() == atlas, "synthetic recognized atlas object is recorded");
     memory.store16(table, 1);
     memory.store16(table + 0x1000, 2);
     memory.store16(table + (0xfff0 - 1) * 2, 3);
-    mhp3rd::fonts::reload();
+    mhp2g::fonts::reload();
     check(memory.load16(table) == 0xffff && memory.load16(table + 0x1000) == 0xffff &&
             memory.load16(table + (0xfff0 - 1) * 2) == 0xffff,
         "font reload invalidates complete recognized guest glyph map");
     check(call("sceFontClose", {font}) == 0 && call("sceFontDoneLib", {0xf0f000}) == 0,
         "font and library close successfully");
-    mhp3rd::fonts::set_reload_hook(nullptr);
+    mhp2g::fonts::set_reload_hook(nullptr);
 }
 
 }
 int main() {
     try {
         PublicFiles environment;
-        mhp3rd::install::set_data_directory_override(environment.root / "data");
+        mhp2g::install::set_data_directory_override(environment.root / "data");
         memory_contracts();
         common_hle_contracts();
         scheduler_contracts();

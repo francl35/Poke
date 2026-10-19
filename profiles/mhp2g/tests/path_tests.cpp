@@ -2,11 +2,11 @@
 // ASCII: a user folder in Cyrillic, a disc image in a Japanese folder. No
 // game data is needed.
 //
-//   mhp3rd_path_tests
+//   mhp2g_path_tests
 //
-// Everything happens under <temp>/mhp3rd_path_tests_<n>/Юникод_テスト, which
+// Everything happens under <temp>/mhp2g_path_tests_<n>/Юникод_テスト, which
 // is removed afterwards; the data directory is pointed there with
-// MHP3RD_DATA_DIR. The names are written as universal character names, so the
+// MHP2G_DATA_DIR. The names are written as universal character names, so the
 // test means the same whatever encoding the compiler reads this file in. On
 // Windows these names are outside the ANSI code page of most systems, which is
 // what broke path::string() and path(std::string) there.
@@ -39,8 +39,8 @@
 #include <vector>
 
 namespace fs = std::filesystem;
-using mhp3rd::path_from_utf8;
-using mhp3rd::path_to_utf8;
+using mhp2g::path_from_utf8;
+using mhp2g::path_to_utf8;
 
 namespace {
 
@@ -87,7 +87,7 @@ bool contains(const std::string &haystack, const std::string &needle) {
 // Sets an environment variable to UTF-8 text, as a player's shell would.
 void set_environment(const char *name, const std::string &value) {
 #if defined(_WIN32)
-    _wputenv_s(mhp3rd::widen(name).c_str(), mhp3rd::widen(value).c_str());
+    _wputenv_s(mhp2g::widen(name).c_str(), mhp2g::widen(value).c_str());
 #else
     setenv(name, value.c_str(), 1);
 #endif
@@ -98,7 +98,7 @@ struct Scratch {
     fs::path root;
     Scratch() {
         std::random_device random;
-        base = fs::temp_directory_path() / ("mhp3rd_path_tests_" + std::to_string(random()));
+        base = fs::temp_directory_path() / ("mhp2g_path_tests_" + std::to_string(random()));
         root = base / kFolder;
         fs::create_directories(root);
     }
@@ -116,14 +116,14 @@ void test_conversions(const fs::path &root) {
     check(path_to_utf8(root.filename()) == utf8, "the folder's name comes back as it was");
     check(fs::is_directory(path_from_utf8(path_to_utf8(root))), "the round-tripped path names the folder");
 
-    set_environment("MHP3RD_PATH_TESTS_VALUE", path_to_utf8(root));
-    check(mhp3rd::environment_path("MHP3RD_PATH_TESTS_VALUE") == root, "an environment variable gives the path back");
-    check(mhp3rd::environment_utf8("MHP3RD_PATH_TESTS_VALUE").value_or("") == path_to_utf8(root),
+    set_environment("MHP2G_PATH_TESTS_VALUE", path_to_utf8(root));
+    check(mhp2g::environment_path("MHP2G_PATH_TESTS_VALUE") == root, "an environment variable gives the path back");
+    check(mhp2g::environment_utf8("MHP2G_PATH_TESTS_VALUE").value_or("") == path_to_utf8(root),
         "an environment variable reads as UTF-8");
-    check(!mhp3rd::environment_utf8("MHP3RD_PATH_TESTS_UNSET"), "an unset variable has no value");
-    check(mhp3rd::environment_path("MHP3RD_PATH_TESTS_UNSET").empty(), "an unset variable names no path");
+    check(!mhp2g::environment_utf8("MHP2G_PATH_TESTS_UNSET"), "an unset variable has no value");
+    check(mhp2g::environment_path("MHP2G_PATH_TESTS_UNSET").empty(), "an unset variable names no path");
 
-    const std::string url = mhp3rd::folder_url(root);
+    const std::string url = mhp2g::folder_url(root);
 #if defined(_WIN32)
     check(path_from_utf8(url) == fs::path(root).make_preferred(), "the folder opens by its own path on Windows");
 #else
@@ -133,9 +133,9 @@ void test_conversions(const fs::path &root) {
 }
 
 void test_settings(const fs::path &data_dir, const fs::path &pack_folder, const fs::path &font) {
-    namespace install = mhp3rd::install;
-    namespace settings = mhp3rd::settings;
-    check(install::user_data_directory() == data_dir, "MHP3RD_DATA_DIR names the data directory");
+    namespace install = mhp2g::install;
+    namespace settings = mhp2g::settings;
+    check(install::user_data_directory() == data_dir, "MHP2G_DATA_DIR names the data directory");
 
     // The disc image the installer records: a path outside the data directory.
     const fs::path image = data_dir.parent_path() / kGames / "MHP3rd HD.iso";
@@ -165,12 +165,12 @@ void test_settings(const fs::path &data_dir, const fs::path &pack_folder, const 
     check(installed && installed->disc_image == image && installed->executable == data_dir / "EBOOT.ELF",
         "the installation is found in the data directory");
     const auto location =
-        mhp3rd::gpu::texture_pack_location(data_dir / "textures", "NPJB40001", settings::current().texture_pack_folder);
+        mhp2g::gpu::texture_pack_location(data_dir / "textures", "NPJB40001", settings::current().texture_pack_folder);
     check(location.folder == pack_folder, "a pack used in place is found from its setting");
 }
 
 void test_saves(const fs::path &root) {
-    namespace sd = mhp3rd::savedata;
+    namespace sd = mhp2g::savedata;
     const fs::path stick = root / "ms0";
     sd::SaveFiles files;
     files.game_name = "ULJM05800";
@@ -211,7 +211,7 @@ void test_saves(const fs::path &root) {
 }
 
 void test_texture_pack(const fs::path &root, const fs::path &chosen) {
-    namespace gpu = mhp3rd::gpu;
+    namespace gpu = mhp2g::gpu;
     const std::string image = text(kImage) + ".png";
     write(chosen / "textures.ini",
         "[options]\nversion = 1\nhash = xxh64\nignoreAddress = true\n\n[hashes]\n"
@@ -267,7 +267,7 @@ fs::path copy_a_font(const fs::path &fonts) {
 }
 
 void test_font(const fs::path &font) {
-    namespace fonts = mhp3rd::fonts;
+    namespace fonts = mhp2g::fonts;
     if (font.empty()) {
         std::printf("skip the font checks: no known system font to copy\n");
         return;
@@ -320,7 +320,7 @@ void test_disc_image_and_executable(const fs::path &root) {
     const fs::path iso = folder / "MHP3rd HD.iso";
     write(iso, tiny_iso());
     try {
-        mhp3rd::IsoImage image(iso);
+        mhp2g::IsoImage image(iso);
         check(image.find("README.TXT").has_value() && image.size_bytes() == 20u * 2048u,
             "a disc image in the folder opens and reads");
     } catch (const std::exception &e) {
@@ -329,7 +329,7 @@ void test_disc_image_and_executable(const fs::path &root) {
     const fs::path not_iso = folder / (text(kImage) + ".iso");
     write(not_iso, std::string(40u * 1024u, 'x'));
     try {
-        mhp3rd::IsoImage image(not_iso);
+        mhp2g::IsoImage image(not_iso);
         check(false, "a file that is not a disc image is refused");
     } catch (const psprecomp::Error &e) {
         check(contains(e.what(), path_to_utf8(not_iso)), "a refused disc image is named in UTF-8");
@@ -358,26 +358,26 @@ void test_disc_image_and_executable(const fs::path &root) {
     }
 }
 
-// The data folder chosen through MHP3RD_DATA_DIR, a portable data\ folder
+// The data folder chosen through MHP2G_DATA_DIR, a portable data\ folder
 // beside the executable, and screenshots written into the data folder.
 void test_data_folders(const fs::path &root, const fs::path &data_dir) {
-    check(mhp3rd::install::data_directory().path == data_dir &&
-            mhp3rd::install::data_directory().source == mhp3rd::install::DataSource::Environment,
-        "MHP3RD_DATA_DIR names the data folder");
-    const fs::path program = root / kGames / "Yakumo";
+    check(mhp2g::install::data_directory().path == data_dir &&
+            mhp2g::install::data_directory().source == mhp2g::install::DataSource::Environment,
+        "MHP2G_DATA_DIR names the data folder");
+    const fs::path program = root / kGames / "Poke";
     fs::create_directories(program);
-    check(mhp3rd::install::portable_data_directory(program, false, false).empty(), "no portable folder by itself");
+    check(mhp2g::install::portable_data_directory(program, false, false).empty(), "no portable folder by itself");
     {
-        std::ofstream(program / mhp3rd::install::kPortableMarkerFile) << "\n";
+        std::ofstream(program / mhp2g::install::kPortableMarkerFile) << "\n";
     }
-    const fs::path portable = mhp3rd::install::portable_data_directory(program, false, false);
-    check(portable == program / mhp3rd::install::kPortableDataFolder, "portable.txt keeps the data in data/ beside it");
-    check(mhp3rd::install::check_writable(portable).empty(), "and that folder can be written");
-    check(mhp3rd::screenshot::folder() == data_dir / "screenshots", "screenshots go into the data folder");
+    const fs::path portable = mhp2g::install::portable_data_directory(program, false, false);
+    check(portable == program / mhp2g::install::kPortableDataFolder, "portable.txt keeps the data in data/ beside it");
+    check(mhp2g::install::check_writable(portable).empty(), "and that folder can be written");
+    check(mhp2g::screenshot::folder() == data_dir / "screenshots", "screenshots go into the data folder");
     const std::vector<std::uint8_t> rgba(2u * 2u * 4u, 0x80u);
     std::string error;
-    const fs::path shot = mhp3rd::screenshot::free_path(mhp3rd::screenshot::folder(), std::chrono::system_clock::now());
-    check(mhp3rd::screenshot::write_png(shot, rgba, 2u, 2u, error) && fs::is_regular_file(shot),
+    const fs::path shot = mhp2g::screenshot::free_path(mhp2g::screenshot::folder(), std::chrono::system_clock::now());
+    check(mhp2g::screenshot::write_png(shot, rgba, 2u, 2u, error) && fs::is_regular_file(shot),
         "a screenshot is written there: " + error);
 }
 
@@ -386,16 +386,16 @@ void test_data_folders(const fs::path &root, const fs::path &data_dir) {
 int main() {
     try {
         const Scratch scratch;
-        const fs::path data_dir = scratch.root / "Yakumo" / "MHP3rd";
+        const fs::path data_dir = scratch.root / "Poke" / "MHP2G";
         fs::create_directories(data_dir);
-        set_environment("MHP3RD_DATA_DIR", path_to_utf8(data_dir));
+        set_environment("MHP2G_DATA_DIR", path_to_utf8(data_dir));
         // Variables that would override what the test writes to settings.ini.
 #if defined(_WIN32)
-        _wputenv_s(L"MHP3RD_FONT", L"");
-        _wputenv_s(L"MHP3RD_TEXTURE_PACK", L"");
+        _wputenv_s(L"MHP2G_FONT", L"");
+        _wputenv_s(L"MHP2G_TEXTURE_PACK", L"");
 #else
-        unsetenv("MHP3RD_FONT");
-        unsetenv("MHP3RD_TEXTURE_PACK");
+        unsetenv("MHP2G_FONT");
+        unsetenv("MHP2G_TEXTURE_PACK");
 #endif
 
         test_conversions(scratch.root);

@@ -9,12 +9,12 @@
 #include <iostream>
 #include <vector>
 
-bool mhp3rd::perf::alternate_off(NewPath) {
+bool mhp2g::perf::alternate_off(NewPath) {
     return false;
 }
 
 namespace {
-using namespace mhp3rd::gpu;
+using namespace mhp2g::gpu;
 int failures{};
 void expect(bool condition, const char *message) {
     if (!condition) {
@@ -270,7 +270,7 @@ void invalid_and_keys() {
 }
 }
 int main() {
-    const bool checked = std::getenv("MHP3RD_CHECK_TEXTURE_DECODE") != nullptr;
+    const bool checked = std::getenv("MHP2G_CHECK_TEXTURE_DECODE") != nullptr;
     std::ostringstream diagnostics;
     auto *original_output = checked ? std::cout.rdbuf(diagnostics.rdbuf()) : nullptr;
     direct_formats();

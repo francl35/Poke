@@ -67,7 +67,7 @@ void run_pending(Ram &ram) {
 // files in it when mods are on). The directory is read again each time: mods
 // can move entries while the game runs.
 std::optional<std::vector<std::uint8_t>> read_entry(std::uint32_t entry) {
-    namespace db = mods::p3rd;
+    namespace db = mods::legacy_archive;
     const std::uint64_t archive = mods::data_bin_size();
     std::vector<std::uint8_t> head(db::kBlock);
     head.resize(mods::read_data_bin(0u, head));
