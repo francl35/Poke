@@ -165,7 +165,7 @@ endif()
 # The build the in-game menu shows: `git describe` of the checkout, refreshed
 # on every build but rewritten only when it changes, so only the menu
 # recompiles after a commit.
-set(MHP2G_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/generated_version/yakumo_version.hpp")
+set(MHP2G_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/generated_version/poke_version.hpp")
 add_custom_target(mhp2g_version
     COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${PROJECT_SOURCE_DIR} -DOUTPUT=${MHP2G_VERSION_HEADER}
             -P "${MHP2G_PROFILE_DIR}/tools/write_version.cmake"

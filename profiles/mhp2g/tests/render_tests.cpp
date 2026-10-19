@@ -11,7 +11,7 @@
 
 namespace {
 
-using mhp3rd::gpu::PrimitiveType;
+using mhp2g::gpu::PrimitiveType;
 
 int failures{};
 
@@ -80,7 +80,7 @@ void test_matches_expansion() {
                             indices.push_back(static_cast<std::uint16_t>(random() % (vertex_count + 4u)));
                     }
                     if (vertex_count == 0u) continue;
-                    expect(mhp3rd::gpu::triangle_indices(primitive, count, indices, vertex_count, out),
+                    expect(mhp2g::gpu::triangle_indices(primitive, count, indices, vertex_count, out),
                         "triangle primitives are supported");
                     expect(
                         out == reference(primitive, count, indices, vertex_count), "index list matches the expansion");
@@ -95,7 +95,7 @@ void test_large_mesh() {
     // A strip over the whole 16-bit index range.
     const std::size_t count = 65536u;
     std::vector<std::uint16_t> out;
-    expect(mhp3rd::gpu::triangle_indices(PrimitiveType::TriangleStrip, count, {}, count, out), "strip supported");
+    expect(mhp2g::gpu::triangle_indices(PrimitiveType::TriangleStrip, count, {}, count, out), "strip supported");
     expect(out == reference(PrimitiveType::TriangleStrip, count, {}, count), "large strip matches the expansion");
     expect(out.size() == (count - 2u) * 3u, "large strip triangle count");
 }
@@ -104,7 +104,7 @@ void test_other_primitives() {
     std::vector<std::uint16_t> out{1u, 2u, 3u};
     for (const PrimitiveType primitive :
         {PrimitiveType::Points, PrimitiveType::Lines, PrimitiveType::LineStrip, PrimitiveType::Sprites}) {
-        expect(!mhp3rd::gpu::triangle_indices(primitive, 4u, {}, 4u, out), "other primitives are refused");
+        expect(!mhp2g::gpu::triangle_indices(primitive, 4u, {}, 4u, out), "other primitives are refused");
         expect(out.empty(), "refused primitives leave no indices");
     }
 }

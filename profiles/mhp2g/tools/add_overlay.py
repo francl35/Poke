@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turn an overlay dump into a shared library Yakumo loads at run time.
+"""Turn an overlay dump into a shared library Poke loads at run time.
 
     add_overlay.py [-j N] [--no-build] <build_dir> <overlay.bin> <base_address>
 

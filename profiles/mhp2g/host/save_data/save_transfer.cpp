@@ -214,7 +214,7 @@ SaveCheck check_save_folder(const fs::path &folder, const std::optional<Block> &
     if (flags == 0u) return check;
     const auto mode = mode_from_flags(flags);
     if (!mode) {
-        check.problem = "The save is protected in a way Yakumo does not know.";
+        check.problem = "The save is protected in a way Poke does not know.";
         return check;
     }
     const auto params_offset = sfo->data_offset("SAVEDATA_PARAMS");
@@ -317,7 +317,7 @@ ImportResult import_save(const SaveCheck &save, const fs::path &memory_stick, co
     const fs::path root = memory_stick / "PSP" / "SAVEDATA";
     result.destination = root / save.name;
     if (same_folder(save.folder, result.destination)) {
-        result.error = "This is the save Yakumo already uses.";
+        result.error = "This is the save Poke already uses.";
         return result;
     }
 

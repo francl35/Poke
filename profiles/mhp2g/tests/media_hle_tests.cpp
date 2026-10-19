@@ -18,23 +18,23 @@ public:
     static constexpr std::uint32_t data = 0x08840000u;
     static constexpr std::uint32_t output = 0x08860000u;
     psprecomp::Runtime runtime{64u * 1024u * 1024u};
-    mhp3rd::Kernel &kernel = mhp3rd::kernel();
+    mhp2g::Kernel &kernel = mhp2g::kernel();
     psprecomp::AllegrexContext &cpu = runtime.cpu();
     std::map<std::pair<std::string, std::string>, std::uint32_t> nids;
     Fixture() {
-        kernel = mhp3rd::Kernel{};
+        kernel = mhp2g::Kernel{};
         kernel.install(runtime, 0x08801000u, 0x08820000u);
         const char *csv_path = std::getenv("PSPRECOMP_TEST_NIDS_CSV");
         runtime.nids().load_csv(csv_path ? csv_path : PSPRECOMP_TEST_NIDS_CSV);
         for (const auto &symbol : runtime.nids().all()) nids[{symbol.library, symbol.name}] = symbol.nid;
-        mhp3rd::HleRegistrar hle(runtime);
-        mhp3rd::register_media(hle);
-        mhp3rd::register_atrac(hle);
-        mhp3rd::register_mpeg(hle);
+        mhp2g::HleRegistrar hle(runtime);
+        mhp2g::register_media(hle);
+        mhp2g::register_atrac(hle);
+        mhp2g::register_mpeg(hle);
         kernel.start_loader_thread(cpu, 0x08820000u, 0);
     }
     ~Fixture() {
-        kernel = mhp3rd::Kernel{};
+        kernel = mhp2g::Kernel{};
         psprecomp::set_runtime_starvation_hook(nullptr, 0);
     }
     std::uint32_t call(std::string library, std::string name, std::initializer_list<std::uint32_t> args = {}) {
@@ -96,7 +96,7 @@ std::vector<std::uint8_t> wave(bool looping = false) {
     return bytes;
 }
 void atrac_contracts(Fixture &f) {
-    if (!mhp3rd::audio::AtracDecoder::available()) return;
+    if (!mhp2g::audio::AtracDecoder::available()) return;
     auto &memory = f.runtime.memory();
     check(f.atrac("sceAtracSetDataAndGetID", {f.data, 0}) == 0x80630011u, "Short RIFF buffer rejected");
     check(f.atrac("sceAtracSetDataAndGetID", {f.data, 12}) == 0x80630006u, "Wrong RIFF signature rejected");
@@ -188,7 +188,7 @@ void audio_display_contracts(Fixture &f) {
     check(f.call("sceGe_user", "sceGeListUpdateStallAddr", {list, 0}) == 0 &&
             f.call("sceGe_user", "sceGeListSync", {list, 0}) == 0,
         "Released GE stall must finish list");
-    check(f.call("sceGe_user", "sceGeListUpdateStallAddr", {0xFFFFFFFFu, 0}) == mhp3rd::error::kIllegalArgument,
+    check(f.call("sceGe_user", "sceGeListUpdateStallAddr", {0xFFFFFFFFu, 0}) == mhp2g::error::kIllegalArgument,
         "Unknown GE list must reject stall update");
     memory.store32(f.data + 32, 0);
     memory.store32(f.data + 36, 1);
@@ -247,7 +247,7 @@ void audio_display_contracts(Fixture &f) {
 }
 
 void mpeg_contracts(Fixture &f) {
-    if (!mhp3rd::movie::AvcDecoder::available() || !mhp3rd::audio::AtracDecoder::available()) {
+    if (!mhp2g::movie::AvcDecoder::available() || !mhp2g::audio::AtracDecoder::available()) {
         check(f.mpeg("sceMpegGetAvcAu", {0, 0, 0, 0}) == 0x80618001u, "Disabled movies must report no data");
         return;
     }
@@ -286,7 +286,7 @@ void mpeg_contracts(Fixture &f) {
     memory.store8(header + 15, 1);
     check(f.mpeg("sceMpegQueryStreamSize", {header, header + 64}) == 0x806101FEu, "Unaligned PSMF size accepted");
     memory.store8(header + 15, 0);
-    check(f.mpeg("sceMpegCreate", {handle, work, 65536, ring, 16, 0, 0}) == 0 && mhp3rd::mpeg_active() &&
+    check(f.mpeg("sceMpegCreate", {handle, work, 65536, ring, 16, 0, 0}) == 0 && mhp2g::mpeg_active() &&
             memory.load32(handle) == work + 0x30u,
         "MPEG handle lifetime changed");
     const auto stream = f.mpeg("sceMpegRegistStream", {handle, 0, 0});
@@ -355,7 +355,7 @@ void mpeg_contracts(Fixture &f) {
         "Video ES sentinel allocation changed");
     check(f.mpeg("sceMpegFlushAllStream", {handle}) == 0 && f.mpeg("sceMpegUnRegistStream", {handle, stream}) == 0,
         "Stream flush/unregister failed");
-    check(f.mpeg("sceMpegDelete", {handle}) == 0 && !mhp3rd::mpeg_active() &&
+    check(f.mpeg("sceMpegDelete", {handle}) == 0 && !mhp2g::mpeg_active() &&
             f.mpeg("sceMpegRingbufferDestruct", {ring}) == 0,
         "MPEG lifetime cleanup failed");
 }

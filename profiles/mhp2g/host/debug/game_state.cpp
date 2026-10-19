@@ -10,7 +10,7 @@
 #include <set>
 
 namespace mhp2g::debug {
-namespace p3rd {
+namespace legacy_layout {
 namespace {
 
 std::uint32_t item_slot(std::uint32_t slot) {
@@ -211,7 +211,7 @@ void set_money(Ram &ram, std::uint32_t zenny) {
     ram.store32(kMoney, std::min(zenny, kMostMoney));
 }
 
-} // namespace p3rd
+} // namespace legacy_layout
 
 namespace {
 std::uint32_t number(const std::string &text) {
@@ -221,7 +221,7 @@ std::uint32_t number(const std::string &text) {
 
 bool game_command(
     Ram &ram, const std::string &command, const std::vector<std::string> &args, std::vector<std::string> &out) {
-    using namespace p3rd;
+    using namespace legacy_layout;
     const auto arg = [&](std::size_t i, std::uint32_t fallback = 0u) {
         return i < args.size() ? number(args[i]) : fallback;
     };
@@ -283,7 +283,7 @@ bool game_command(
 }
 
 void held_cheats_frame(Ram &ram, const HeldCheats &cheats) {
-    using namespace p3rd;
+    using namespace legacy_layout;
     static std::optional<std::uint32_t> frozen_time;
     if (!on_quest(ram)) {
         frozen_time.reset();
@@ -315,7 +315,7 @@ void held_cheats_frame(Ram &ram, const HeldCheats &cheats) {
 }
 
 std::vector<std::string> quest_lines(const Ram &ram) {
-    using namespace p3rd;
+    using namespace legacy_layout;
     std::vector<std::string> lines;
     if (!on_quest(ram)) return lines;
     const std::uint32_t left = ram.load32(kQuestTimeLeft) / 30u;

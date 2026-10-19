@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace {
-using namespace mhp3rd::game;
+using namespace mhp2g::game;
 int failures{};
 
 void check(bool condition, const char *message) {
@@ -155,7 +155,7 @@ void test_mod_parts() {
 // Layered armor (game/layered_armor.hpp): the model it gives the game's lookup
 // for the hunter played here, and what it leaves to the game.
 void test_layered_armor() {
-    namespace layered = mhp3rd::game::layered;
+    namespace layered = mhp2g::game::layered;
     BufferRam ram(kBase, kSize);
     write_text(ram);
     write_tables(ram);

@@ -41,7 +41,7 @@
 #include "perf/frame_stats.hpp"
 #include "save_data/save_transfer.hpp"
 #include "settings/settings.hpp"
-#include "yakumo_version.hpp"
+#include "poke_version.hpp"
 #if defined(MHP2G_ANDROID_APP)
 #include "platform/android_fatal.hpp"
 #endif
@@ -656,7 +656,7 @@ void Menu::video() {
         RowOptions o = options_for("video.gpu_compat",
             "Leaves out what some older phone GPU drivers may get wrong: specialized shaders, robust buffer "
             "access, the pipeline cache and a second frame in flight. It costs speed, so Auto turns it on only "
-            "when the start-up test picture comes out wrong or the driver refuses a shader. Applies when Yakumo "
+            "when the start-up test picture comes out wrong or the driver refuses a shader. Applies when Poke "
             "starts next. Now: " +
                 renderer().gpu_compat_status() + ".");
         if (const int delta = choice_row("GPU compatibility", kCompat[current], o)) {
@@ -666,7 +666,7 @@ void Menu::video() {
     }
     font_rows();
     ImGui::Dummy({0.0f, font_gap()});
-    if (button_row("Restore video defaults", {false, {}, "Every setting on this page back to how Yakumo ships."})) {
+    if (button_row("Restore video defaults", {false, {}, "Every setting on this page back to how Poke ships."})) {
         const settings::Settings &d = settings::defaults();
         const auto restore = [&](const char *key, auto &value, const auto &fallback) {
             if (settings::overridden_by(key) == nullptr) value = fallback;
@@ -1166,7 +1166,7 @@ void Menu::controls() {
     if (button_row("Restore control defaults",
             {false, {},
                 "Every gamepad, keyboard, mouse, touch, name and free camera setting back to how "
-                "Yakumo ships, with the Default preset. Your own presets and the Action layout's "
+                "Poke ships, with the Default preset. Your own presets and the Action layout's "
                 "arrangement are kept."})) {
         const settings::Settings &d = settings::defaults();
         const auto restore = [&](const char *key, auto &value, const auto &fallback) {
@@ -1711,16 +1711,16 @@ void Menu::system() {
     (void)data_dir;
     if (button_row("Save the log…",
             {false, {},
-                "Copies Yakumo's logs (this run's, the previous run's, the last "
+                "Copies Poke's logs (this run's, the previous run's, the last "
                 "error's and the logs folder) to a folder you pick, to send with a "
                 "problem report."})) {
         const auto saved = android::save_logs(install::user_data_directory(),
-            "Yakumo log " + savedata::timestamp_for_path(std::chrono::system_clock::now()));
+            "Poke log " + savedata::timestamp_for_path(std::chrono::system_clock::now()));
         if (saved) saved_log_path() = saved->error.empty() ? saved->where : "Not saved: " + saved->error;
     }
     if (!saved_log_path().empty()) info_row("Log", saved_log_path());
 #else
-    if (button_row("Open the data folder", {false, {}, "Show Yakumo's data folder in the file manager."})) {
+    if (button_row("Open the data folder", {false, {}, "Show Poke's data folder in the file manager."})) {
         if (!SDL_OpenURL(folder_url(path_from_utf8(data_dir)).c_str()))
             std::cout << "[menu] cannot open " << data_dir << ": " << SDL_GetError() << "\n";
     }
@@ -1728,14 +1728,14 @@ void Menu::system() {
     if (button_row("Set up game data again…",
             {false, {}, "Choose the disc image again, for example after moving it. The game closes first."}))
         confirm_ = Confirm::Setup;
-    if (button_row("Quit game", {false, {}, "Close Yakumo. Progress since your last save is lost."}, colors::kDanger))
+    if (button_row("Quit game", {false, {}, "Close Poke. Progress since your last save is lost."}, colors::kDanger))
         confirm_ = Confirm::Quit;
 
     section("Saves");
     save_rows();
 
     section("About");
-    info_row("Yakumo", std::string(kYakumoVersion));
+    info_row("Poke", std::string(kPokeVersion));
     info_row("Game", std::string(install::kGameTitle) + " (" + install::kDiscIdDisplay + ")");
     {
         std::string where = data_dir;
@@ -1796,7 +1796,7 @@ bool Menu::confirm_dialog() {
         const bool quit = confirm_ == Confirm::Quit;
         heading(quit ? "Quit the game?" : "Set up game data again?");
         paragraph(quit ? "Progress since your last save is lost."
-                       : "Yakumo closes the game and opens the setup, where you choose the disc image again. "
+                       : "Poke closes the game and opens the setup, where you choose the disc image again. "
                          "Progress since your last save is lost.",
             colors::kTextDim);
         ImGui::Dummy({0.0f, font * 0.6f});

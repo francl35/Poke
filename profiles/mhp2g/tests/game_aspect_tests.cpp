@@ -8,7 +8,7 @@
 #include <iostream>
 
 namespace {
-using namespace mhp3rd::camera;
+using namespace mhp2g::camera;
 
 constexpr std::uint32_t kAspectConstant = 0x08969F74u;
 constexpr std::uint32_t kCullDepthConstant = 0x08969ED4u;

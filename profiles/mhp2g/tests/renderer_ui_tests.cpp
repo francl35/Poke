@@ -12,8 +12,8 @@
 #include "ui/layered_armor_screen.hpp"
 #include "ui/font_menu.hpp"
 #include "fonts/game_font.hpp"
-#include "mods/mhp3rd_mods.hpp"
-#include "mods/mhp3rd_data_bin.hpp"
+#include "mods/mhp2g_mods.hpp"
+#include "mods/mhp2g_data_bin.hpp"
 #include "kernel/iso_image.hpp"
 #include "ui/mods_screen.hpp"
 #include "ui/texture_pack_screen.hpp"
@@ -342,8 +342,8 @@ void keyboard_contracts(gpu::VulkanRenderer &renderer) {
 }
 
 void primitive_contracts(gpu::VulkanRenderer &renderer) {
-    const bool trace_fb = std::getenv("MHP3RD_TRACE_FB_TEXTURES") != nullptr;
-    const bool trace_3d = std::getenv("MHP3RD_TRACE_3D") != nullptr;
+    const bool trace_fb = std::getenv("MHP2G_TRACE_FB_TEXTURES") != nullptr;
+    const bool trace_3d = std::getenv("MHP2G_TRACE_3D") != nullptr;
     std::ostringstream trace;
     struct RestoreTrace {
         std::streambuf *previous;
@@ -505,7 +505,7 @@ void primitive_contracts(gpu::VulkanRenderer &renderer) {
     renderer.set_frame_rate_auto(false);
     renderer.set_frame_rate(settings::FrameRate::Fps60);
     const auto presented_before = renderer.frames_presented();
-    const int replay_frames = std::getenv("MHP3RD_CHECK_REPLAY") ? 160 : 16;
+    const int replay_frames = std::getenv("MHP2G_CHECK_REPLAY") ? 160 : 16;
     int deferred{};
     for (int frame = 0; frame < replay_frames; ++frame) {
         draw.world[12] = static_cast<float>(frame) * 0.002f;
@@ -1024,8 +1024,8 @@ class MediaFixture {
 public:
     psprecomp::Runtime runtime{64u * 1024u * 1024u};
     MediaFixture() {
-        auto &kernel = mhp3rd::kernel();
-        kernel = mhp3rd::Kernel{};
+        auto &kernel = mhp2g::kernel();
+        kernel = mhp2g::Kernel{};
         kernel.install(runtime, 0x08801000, 0x08820000);
         runtime.nids().load_csv(PSPRECOMP_TEST_NIDS_CSV);
         HleRegistrar hle(runtime);
@@ -1033,7 +1033,7 @@ public:
         kernel.start_loader_thread(runtime.cpu(), 0x08820000, 0);
     }
     ~MediaFixture() {
-        mhp3rd::kernel() = mhp3rd::Kernel{};
+        mhp2g::kernel() = mhp2g::Kernel{};
         psprecomp::set_runtime_starvation_hook(nullptr, 0);
     }
     std::uint32_t call(
@@ -1315,7 +1315,7 @@ void file_browser_boundary_contracts(gpu::VulkanRenderer &renderer, const std::f
     filter_pad_desc.nbuttons = SDL_GAMEPAD_BUTTON_COUNT;
     filter_pad_desc.axis_mask = (1u << SDL_GAMEPAD_AXIS_COUNT) - 1;
     filter_pad_desc.button_mask = (1u << SDL_GAMEPAD_BUTTON_COUNT) - 1;
-    filter_pad_desc.name = "Yakumo public browser test gamepad";
+    filter_pad_desc.name = "Poke public browser test gamepad";
     const auto filter_pad_id = SDL_AttachVirtualJoystick(&filter_pad_desc);
     auto *filter_pad = filter_pad_id ? SDL_OpenGamepad(filter_pad_id) : nullptr;
     expect(filter_pad != nullptr, "browser shortcut fixture opens a real virtual SDL gamepad");
@@ -1673,7 +1673,7 @@ void texture_pack_screen_contracts(gpu::VulkanRenderer &renderer, const std::fil
     bool review{};
     for (int settle = 0; settle < 100 && !review; ++settle) {
         SDL_Delay(5);
-        review = frame(false, "Copy into Yakumo's data folder");
+        review = frame(false, "Copy into Poke's data folder");
     }
     expect(review, "asynchronous texture check reaches valid-copy review");
     press(ImGuiKey_Space);
@@ -1786,18 +1786,18 @@ void mods_screen_contracts(
     record(20 * block, "PSP_GAME", 21, block, true);
     record(21 * block, "USRDIR", 22, block, true);
     record(22 * block, "DATA.BIN;1", 23, block * 2, false);
-    mods::p3rd::Directory directory;
+    mods::legacy_archive::Directory directory;
     directory.directory_blocks = 1;
     directory.blocks = {1, 2};
     directory.sizes = {{0, 8}};
     directory.trailer.resize(block - 16);
-    mods::p3rd::encrypt(directory.trailer, 0, 16);
+    mods::legacy_archive::encrypt(directory.trailer, 0, 16);
     const auto header = directory.encode();
     expect(header.size() == block, "synthetic archive directory fills exactly one block");
     std::copy(header.begin(), header.end(), image.begin() + 23 * block);
     std::vector<std::uint8_t> entry(block);
     std::copy_n("PUBLIC!!", 8, entry.begin());
-    mods::p3rd::encrypt(entry, 1, 0);
+    mods::legacy_archive::encrypt(entry, 1, 0);
     std::copy(entry.begin(), entry.end(), image.begin() + 24 * block);
     const auto iso_path = sandbox / "public-mod-fixture.iso";
     {
@@ -1862,7 +1862,7 @@ void mods_screen_contracts(
         "details toggle activates public replacement through real session");
     std::array<std::uint8_t, 8> bytes{};
     expect(mods::read_data_bin(block, bytes) == bytes.size(), "active UI mod serves replacement bytes");
-    mods::p3rd::decrypt(bytes, 1, 0);
+    mods::legacy_archive::decrypt(bytes, 1, 0);
     expect(std::string(bytes.begin(), bytes.end()) == "CHANGED!", "replacement selected in UI reaches archive reads");
     ImGui::GetIO().AddKeyEvent(ImGuiKey_LeftArrow, true);
     frame();
@@ -2479,7 +2479,7 @@ void virtual_gamepad_contracts(gpu::VulkanRenderer &renderer) {
     desc.nbuttons = SDL_GAMEPAD_BUTTON_COUNT;
     desc.axis_mask = (1u << SDL_GAMEPAD_AXIS_COUNT) - 1;
     desc.button_mask = (1u << SDL_GAMEPAD_BUTTON_COUNT) - 1;
-    desc.name = "Yakumo synthetic test gamepad";
+    desc.name = "Poke synthetic test gamepad";
     const auto id = SDL_AttachVirtualJoystick(&desc);
     expect(id != 0, "synthetic SDL gamepad attaches");
     if (!id) return;
@@ -2611,7 +2611,7 @@ void virtual_gamepad_contracts(gpu::VulkanRenderer &renderer) {
     const auto file = input::devices::mappings_file();
     std::ifstream mappings(file);
     const std::string saved{std::istreambuf_iterator<char>(mappings), std::istreambuf_iterator<char>()};
-    expect(saved.find("a:b0") != std::string::npos && saved.find("Yakumo synthetic test gamepad") != std::string::npos,
+    expect(saved.find("a:b0") != std::string::npos && saved.find("Poke synthetic test gamepad") != std::string::npos,
         "saved SDL mapping contains exact virtual device name and recorded bottom button");
     activate("Set up this controller again");
     controller_frame(nullptr, true); // Back cancels the wizard, leaving its list open.
@@ -2622,7 +2622,7 @@ void virtual_gamepad_contracts(gpu::VulkanRenderer &renderer) {
         "removing virtual controller layout clears saved mapping");
     std::ifstream removed(file);
     const std::string remaining{std::istreambuf_iterator<char>(removed), std::istreambuf_iterator<char>()};
-    expect(remaining.find("Yakumo synthetic test gamepad") == std::string::npos,
+    expect(remaining.find("Poke synthetic test gamepad") == std::string::npos,
         "removed mapping no longer appears in sandbox database");
     controller_frame(nullptr, true);
     expect(!ui::controllers_screen_open(), "back closes controller screen after successful wizard");
@@ -2775,7 +2775,7 @@ void virtual_gamepad_contracts(gpu::VulkanRenderer &renderer) {
     expect(renderer.gamepad() && SDL_GetGamepadID(renderer.gamepad()) == id,
         "connecting a second ordinary pad does not steal the first player's input");
     if (secondary) {
-        const char *follow = std::getenv("MHP3RD_PAD_FOLLOW");
+        const char *follow = std::getenv("MHP2G_PAD_FOLLOW");
         const bool follows = !follow || std::string_view(follow) != "0";
         SDL_SetJoystickVirtualButton(secondary, SDL_GAMEPAD_BUTTON_SOUTH, true);
         sample();
@@ -3432,7 +3432,7 @@ void menu_contracts(gpu::VulkanRenderer &renderer) {
         for (const auto &entry : std::filesystem::directory_iterator(log_directory)) {
             std::ifstream input(entry.path());
             const std::string contents{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
-            expect(contents.find("Yakumo ad hoc log") != std::string::npos &&
+            expect(contents.find("Poke ad hoc log") != std::string::npos &&
                     contents.find("state: off") != std::string::npos &&
                     contents.find("Public synthetic diagnostic marker") != std::string::npos,
                 "network menu saves real diagnostics and buffered messages");
@@ -4023,7 +4023,7 @@ void input_script_contracts(
     expect(motion.x == 7 && motion.y == -3, "script mouse preserves exact relative counts");
     auto *pad = renderer.gamepad();
     expect(pad && SDL_GetGamepadID(pad) != competitor_id &&
-            std::string_view(SDL_GetGamepadName(pad)) == "Yakumo input script",
+            std::string_view(SDL_GetGamepadName(pad)) == "Poke input script",
         "script controller takes priority over an already connected ordinary controller");
     if (competitor) {
         SDL_SetJoystickVirtualButton(competitor, SDL_GAMEPAD_BUTTON_SOUTH, true);
@@ -4127,17 +4127,17 @@ int run_contracts(int scripts) {
         ("yakumo-renderer-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     std::filesystem::create_directories(sandbox);
     install::set_data_directory_override(sandbox);
-    SDL_setenv_unsafe("MHP3RD_FIND_CAMERA", "1", 1);
-    SDL_setenv_unsafe("MHP3RD_ADHOC_OVERLAY", "0", 1);
-    SDL_setenv_unsafe("MHP3RD_POKE_FLOAT", "0x08000120:1.25,0x08000124:-2.5,broken", 1);
-    SDL_setenv_unsafe("MHP3RD_FIND_FLOAT", "6.25", 1);
-    SDL_setenv_unsafe("MHP3RD_POKE_FOUND", "6.5", 1);
-    SDL_setenv_unsafe("MHP3RD_FIND_INT32", "1150", 1);
-    SDL_setenv_unsafe("MHP3RD_POKE_INT32", "-7", 1);
-    SDL_setenv_unsafe("MHP3RD_POKE_WHICH", "all", 1);
-    SDL_setenv_unsafe("MHP3RD_FIND_STEP", "1150", 1);
+    SDL_setenv_unsafe("MHP2G_FIND_CAMERA", "1", 1);
+    SDL_setenv_unsafe("MHP2G_ADHOC_OVERLAY", "0", 1);
+    SDL_setenv_unsafe("MHP2G_POKE_FLOAT", "0x08000120:1.25,0x08000124:-2.5,broken", 1);
+    SDL_setenv_unsafe("MHP2G_FIND_FLOAT", "6.25", 1);
+    SDL_setenv_unsafe("MHP2G_POKE_FOUND", "6.5", 1);
+    SDL_setenv_unsafe("MHP2G_FIND_INT32", "1150", 1);
+    SDL_setenv_unsafe("MHP2G_POKE_INT32", "-7", 1);
+    SDL_setenv_unsafe("MHP2G_POKE_WHICH", "all", 1);
+    SDL_setenv_unsafe("MHP2G_FIND_STEP", "1150", 1);
 
-    SDL_setenv_unsafe("MHP3RD_FIND_CAMERA_OUT", (sandbox / "camera-candidates.txt").string().c_str(), 1);
+    SDL_setenv_unsafe("MHP2G_FIND_CAMERA_OUT", (sandbox / "camera-candidates.txt").string().c_str(), 1);
     auto &settings = settings::current();
     settings.internal_scale = 1;
     settings.window_scale = 1;
@@ -4154,10 +4154,10 @@ int run_contracts(int scripts) {
             initial << "0:text startup ignored\n";
         }
         if (scripts == 1)
-            SDL_setenv_unsafe("MHP3RD_INPUT_LIVE", live.string().c_str(), 1);
+            SDL_setenv_unsafe("MHP2G_INPUT_LIVE", live.string().c_str(), 1);
         else
-            SDL_unsetenv_unsafe("MHP3RD_INPUT_LIVE");
-        SDL_setenv_unsafe("MHP3RD_SCREENSHOT_DIR", sandbox.string().c_str(), 1);
+            SDL_unsetenv_unsafe("MHP2G_INPUT_LIVE");
+        SDL_setenv_unsafe("MHP2G_SCREENSHOT_DIR", sandbox.string().c_str(), 1);
         const auto script = std::string("bad; ;1:key F13 2;1:mouse 7 -3;1:click left 2;1:pad a+invalid 2;") +
             "1:axis leftx 2;2:joy 4 attach Public script joystick;2:joy 4 attach;"
             "3:joy 4 button 2 2;3:joy 4 hat 3 2;3:joy 4 axis 1 -2;6:joy 4 nonsense;7:joy 4 detach;"
@@ -4167,11 +4167,11 @@ int run_contracts(int scripts) {
             (sandbox / "synthetic.zip").string() +
             ";8:shot script-window;9:shot;10:key NoSuchKey;10:click invalid;10:axis invalid 1;"
             "10:joy 99 button 0;10:hold 1;10:swipe 1;10:drag 1;10:pointer malformed;10:unknown;";
-        SDL_setenv_unsafe("MHP3RD_INPUT_SCRIPT", script.c_str(), 1);
+        SDL_setenv_unsafe("MHP2G_INPUT_SCRIPT", script.c_str(), 1);
     }
     SDL_Joystick *competitor = nullptr;
     if (scripts == 1 || scripts == 2) {
-        SDL_setenv_unsafe("MHP3RD_PAD_FOLLOW", "1", 1);
+        SDL_setenv_unsafe("MHP2G_PAD_FOLLOW", "1", 1);
         expect(SDL_InitSubSystem(SDL_INIT_GAMEPAD), "competing controller initializes its real SDL subsystem");
         SDL_VirtualJoystickDesc competitor_desc{};
         SDL_INIT_INTERFACE(&competitor_desc);
@@ -4214,7 +4214,7 @@ int run_contracts(int scripts) {
         std::cout << (failures ? "FAIL" : "PASS") << ": input script (" << failures << " failures)\n";
         return failures ? 1 : 0;
     }
-    if (const char *compat = std::getenv("MHP3RD_GPU_COMPAT"); compat && std::string_view(compat) == "on")
+    if (const char *compat = std::getenv("MHP2G_GPU_COMPAT"); compat && std::string_view(compat) == "on")
         expect(renderer.gpu_compat_status().rfind("On", 0) == 0,
             "compatibility variant initializes the actual conservative renderer path");
     auto &diagnostic_memory = fixture.runtime.memory();

@@ -275,7 +275,7 @@ void browse(bool back) {
 #if defined(MHP2G_ANDROID_APP)
     indented("Open the folder of a mod you downloaded and unpacked (the one with its mod.ini), or a folder that "
              "holds several.");
-    indented("On Android this lists only folders Yakumo can read by itself, which leaves out Downloads and SD "
+    indented("On Android this lists only folders Poke can read by itself, which leaves out Downloads and SD "
              "cards. Importing through Android's file picker is not supported yet.",
         colors::kTextDim);
 #else
@@ -470,7 +470,7 @@ void equipment_buttons(ModSession &session, const Mod &mod) {
     indented(s.equip_note, s.equip_failed ? colors::kDanger : colors::kText);
     if (!s.equip_failed && !session.restart_pending())
         indented("The hunter shows it the next time the game loads these models: at the item box (Manage "
-                 "Equipment), change to other equipment and back, or restart Yakumo. Putting on what the hunter "
+                 "Equipment), change to other equipment and back, or restart Poke. Putting on what the hunter "
                  "already wears, or moving between the village and the Guild Hall, keeps the models already loaded.");
 }
 
@@ -598,7 +598,7 @@ void list(ModSession &session) {
     if (button_row("Import mod…",
             {false, {},
                 "Copy a mod you downloaded into the mods folder: choose its unpacked folder, the one with its "
-                "mod.ini. Yakumo does not download mods; unpack .zip, .rar or .7z archives first."}))
+                "mod.ini. Poke does not download mods; unpack .zip, .rar or .7z archives first."}))
         open_browser();
     if (button_row("Open the mods folder",
             {false, {},

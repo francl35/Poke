@@ -5,7 +5,7 @@
 #include <string>
 
 namespace {
-using namespace mhp3rd::input::mapping;
+using namespace mhp2g::input::mapping;
 int failures{};
 
 void check(bool condition, const char *message) {

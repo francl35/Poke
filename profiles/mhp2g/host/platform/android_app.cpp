@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
     pthread_attr_setstacksize(&attributes, kGameStackBytes);
     pthread_t thread;
     if (pthread_create(&thread, &attributes, run_game, &launch) != 0) {
-        std::fprintf(stderr, "Yakumo: cannot start the game thread with a %zu MiB stack\n", kGameStackBytes >> 20);
+        std::fprintf(stderr, "Poke: cannot start the game thread with a %zu MiB stack\n", kGameStackBytes >> 20);
         pthread_attr_destroy(&attributes);
         return 1;
     }

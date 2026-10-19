@@ -31,13 +31,13 @@ inline constexpr const char *kSettingsFile = "settings.ini";
 //   Environment  MHP2G_DATA_DIR
 //   Portable     data/ next to the executable, when portable.txt or data/ is
 //                there, --portable was given or MHP2G_PORTABLE=1 is set
-//   PerUser      SDL_GetPrefPath("Yakumo", "MHP2G")
+//   PerUser      SDL_GetPrefPath("Poke", "MHP2G")
 //
 // MHP2G_PORTABLE=0 turns the portable check off.
 enum class DataSource { CommandLine, Environment, Portable, PerUser };
 
 // A portable copy: a file of this name next to the executable, or the data
-// folder itself, keeps all of Yakumo's data in that folder.
+// folder itself, keeps all of Poke's data in that folder.
 inline constexpr const char *kPortableMarkerFile = "portable.txt";
 inline constexpr const char *kPortableDataFolder = "data";
 
@@ -61,7 +61,7 @@ void set_portable_requested();                                     // --portable
 // the check off. Empty when portable mode is not on there.
 [[nodiscard]] std::filesystem::path portable_data_directory(
     const std::filesystem::path &executable_dir, bool portable, bool no_portable);
-// SDL_GetPrefPath("Yakumo", "MHP2G"), or the same location computed by hand in
+// SDL_GetPrefPath("Poke", "MHP2G"), or the same location computed by hand in
 // a build without SDL: where an installed copy keeps its data. SDL creates the
 // directory if it does not exist yet.
 [[nodiscard]] std::filesystem::path per_user_data_directory();
@@ -73,7 +73,7 @@ void set_portable_requested();                                     // --portable
 // Empty when that worked; otherwise what went wrong, written for the player.
 [[nodiscard]] std::string check_writable(const std::filesystem::path &directory);
 
-// Whether directory holds anything Yakumo keeps: settings, an installation or
+// Whether directory holds anything Poke keeps: settings, an installation or
 // saves.
 [[nodiscard]] bool has_user_data(const std::filesystem::path &directory);
 

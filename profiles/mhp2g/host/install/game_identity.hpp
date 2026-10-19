@@ -1,7 +1,7 @@
 #pragma once
 
-// Identity of the one release this profile supports. The hashes match
-// config/mhp2g_npjb40001.toml and the profile README.
+// Identity used by this profile installer. The executable hash below
+// identifies its generated-code input; see the current profile configuration.
 namespace mhp2g::install {
 
 // DISC_ID in PSP_GAME/PARAM.SFO.

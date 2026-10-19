@@ -1,3 +1,6 @@
+// Address provenance below is upstream NPJB-40001; this naming cleanup
+// does not independently verify those values for MHP2G/FUComplete.
+
 #include "camera/game_aspect.hpp"
 
 #include "psprecomp/runtime.hpp"

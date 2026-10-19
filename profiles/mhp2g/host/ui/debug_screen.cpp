@@ -27,7 +27,7 @@
 namespace mhp2g::ui {
 namespace {
 
-namespace game = debug::p3rd;
+namespace game = debug::legacy_layout;
 
 enum class Screen { Page, Items, Equipment, Quests };
 

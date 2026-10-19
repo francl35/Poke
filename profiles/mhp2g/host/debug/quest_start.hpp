@@ -1,5 +1,6 @@
 #pragma once
 
+// Legacy upstream quest layout; not verified for MHP2G/FUComplete here.
 // Starting a quest from the developer tools: the village and Guild Hall
 // quests the game has, read from its own quest lists, and a departure made the
 // way the game makes one when the hunter presses the button at the village
@@ -33,7 +34,7 @@ namespace mhp2g::debug::quests {
 
 using game::Ram;
 
-// Where a quest is taken: the Yukumo Chief in the village, or the Gathering
+// Upstream layout: the Yukumo Chief in the village, or the Gathering
 // Hall's counter.
 enum class Board : std::uint8_t { Village, Hall };
 

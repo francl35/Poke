@@ -105,13 +105,13 @@ std::uint64_t configured_max_dispatches() {
     return static_cast<std::uint64_t>(parsed);
 }
 
-constexpr const char *kUsage = "usage: Yakumo [game_dir]\n"
-                               "       Yakumo --install [image.iso [--in-place]]\n"
-                               "       Yakumo --adhoc-server [port]\n"
+constexpr const char *kUsage = "usage: Poke [game_dir]\n"
+                               "       Poke --install [image.iso [--in-place]]\n"
+                               "       Poke --adhoc-server [port]\n"
                                "  game_dir        play from a directory holding EBOOT.ELF, disc.iso and ms0/\n"
                                "  --data-dir dir  keep settings, saves and the prepared game in dir\n"
-                               "  --portable      keep them in data/ next to Yakumo (as portable.txt does)\n"
-                               "  --copy-user-data copy the data of the installed Yakumo into the data\n"
+                               "  --portable      keep them in data/ next to Poke (as portable.txt does)\n"
+                               "  --copy-user-data copy the data of the installed Poke into the data\n"
                                "                  folder of this run (with --portable or --data-dir), then exit\n"
                                "  --install       run the setup again on screen, then play\n"
                                "  --install image set up from image.iso without the setup screens, then exit\n"
@@ -262,11 +262,11 @@ std::optional<GameFiles> locate_game(const Options &options) {
                 }
                 const std::string where = install::path_to_utf8(installed->disc_image);
                 const std::string message = installed->image_copied
-                    ? "The copy of the disc image Yakumo made is missing:\n" + where +
-                        "\n\nSet up again to restore it (Yakumo --install)."
-                    : "The disc image Yakumo was set up with is no longer at:\n" + where +
+                    ? "The copy of the disc image Poke made is missing:\n" + where +
+                        "\n\nSet up again to restore it (Poke --install)."
+                    : "The disc image Poke was set up with is no longer at:\n" + where +
                         "\n\nPut it back there, or set up again to choose where it is now "
-                        "(Yakumo --install).";
+                        "(Poke --install).";
                 if (!install::report_problem("Disc image not found", message, true)) return std::nullopt;
                 run_setup = true;
                 continue;
@@ -281,7 +281,7 @@ std::optional<GameFiles> locate_game(const Options &options) {
                       << (checkout_game_dir.empty() ? std::string() : " or " + install::path_to_utf8(checkout_game_dir))
                       << ".\n"
                       << "Set up from your disc image of " << install::kGameTitle << " (" << install::kDiscIdDisplay
-                      << ") with:\n  Yakumo --install /path/to/image.iso\n";
+                      << ") with:\n  Poke --install /path/to/image.iso\n";
             return std::nullopt;
         }
         if (!install::run_installer(*ui, data_dir)) return std::nullopt;
@@ -306,7 +306,7 @@ int install_from_command_line(const Options &options) {
         player.game_directory.clear();
         mhp2g::settings::save();
     }
-    std::cout << "Game data is ready in " << install::path_to_utf8(data_dir) << ". Start Yakumo to play.\n";
+    std::cout << "Game data is ready in " << install::path_to_utf8(data_dir) << ". Start Poke to play.\n";
     return 0;
 }
 
@@ -347,7 +347,7 @@ int prepare_data_directory(const Options &options) {
     const bool elsewhere = !installed.empty() && !std::filesystem::equivalent(installed, data.path, ec);
     if (options.copy_user_data) {
         if (!elsewhere) {
-            std::cerr << "Yakumo: the data folder of this run is the installed one; nothing to copy\n";
+            std::cerr << "Poke: the data folder of this run is the installed one; nothing to copy\n";
             return 1;
         }
         return install::copy_user_data_on_console(installed, data.path);
@@ -374,7 +374,7 @@ int run_adhoc_server(int argc, char **argv) {
     if (argc > 2) {
         const unsigned long port = std::strtoul(argv[2], nullptr, 10);
         if (port < 1024u || port > 65534u) {
-            std::cerr << "Yakumo: --adhoc-server takes a port from 1024 to 65534\n";
+            std::cerr << "Poke: --adhoc-server takes a port from 1024 to 65534\n";
             return 2;
         }
         config.adhocctl_port = static_cast<std::uint16_t>(port);
@@ -385,7 +385,7 @@ int run_adhoc_server(int argc, char **argv) {
         return 1;
     }
     std::string name = local_host_name();
-    if (name.empty()) name = "Yakumo server";
+    if (name.empty()) name = "Poke server";
     Discovery::get().start_announcing(config.adhocctl_port, [&server, name] {
         Announcement info;
         info.name = name;
@@ -435,7 +435,7 @@ int main(int argc, char **argv) {
                 std::cout << kUsage;
                 return 0;
             }
-            std::cerr << "Yakumo: " << e.what() << "\n" << kUsage;
+            std::cerr << "Poke: " << e.what() << "\n" << kUsage;
             return 2;
         }
 #if !defined(MHP2G_ANDROID_APP)
@@ -489,7 +489,7 @@ int main(int argc, char **argv) {
 //             (void)mhp2g::camera::prepare_game_camera(runtime, &psprecomp::MHP2G_CAMERA_HELPER_UNIT);
 // #endif
 
-        std::cout << "Yakumo PSP bootstrap\n"
+        std::cout << "Poke PSP bootstrap\n"
                   << "Executable: " << mhp2g::path_to_utf8(executable) << "\n"
                   << "SHA-256:    " << sha256 << "\n"
                   << "Disc image: " << (paths.disc_image.empty() ? "<none>" : mhp2g::path_to_utf8(paths.disc_image))
@@ -530,7 +530,7 @@ int main(int argc, char **argv) {
         return runtime.stop_reason().empty() ? 0 : 4;
     } catch (const std::exception &e) {
         mhp2g::adhoc_shutdown();
-        std::cerr << "Yakumo error: " << e.what() << "\n";
+        std::cerr << "Poke error: " << e.what() << "\n";
         return 1;
     }
 }

@@ -21,9 +21,9 @@ namespace mhp2g::mods {
 namespace {
 
 namespace fs = std::filesystem;
-using p3rd::ArchiveView;
-using p3rd::Directory;
-using p3rd::Layout;
+using legacy_archive::ArchiveView;
+using legacy_archive::Directory;
+using legacy_archive::Layout;
 
 constexpr const char *kDataBin = "PSP_GAME/USRDIR/DATA.BIN";
 
@@ -47,7 +47,7 @@ struct State {
     IsoImage *disc{};
     std::optional<DiscRange> range;
     std::optional<Directory> directory;
-    p3rd::ModFolderFormat format{0u};
+    legacy_archive::ModFolderFormat format{0u};
     std::unique_ptr<ArchiveView> view;
     std::unique_ptr<FileOverlay> overlay;
     std::unique_ptr<ModSession> session;
@@ -206,15 +206,15 @@ void attach_disc(IsoImage *disc) {
     s.range = DiscRange{static_cast<std::uint64_t>(entry->lba) * IsoImage::kSectorSize, entry->size};
 
     // The directory is small: its first word says how many blocks it takes.
-    std::vector<std::uint8_t> head(p3rd::kBlock);
+    std::vector<std::uint8_t> head(legacy_archive::kBlock);
     head.resize(raw_read(0u, head));
     std::vector<std::uint8_t> first(head);
-    p3rd::decrypt(first, 0u, 0u);
+    legacy_archive::decrypt(first, 0u, 0u);
     const std::uint32_t blocks = first.size() >= 4u
         ? static_cast<std::uint32_t>(first[0] | first[1] << 8u | first[2] << 16u | first[3] << 24u)
         : 0u;
     if (blocks > 0u && blocks < 512u) {
-        std::vector<std::uint8_t> encrypted(static_cast<std::size_t>(blocks) * p3rd::kBlock);
+        std::vector<std::uint8_t> encrypted(static_cast<std::size_t>(blocks) * legacy_archive::kBlock);
         encrypted.resize(raw_read(0u, encrypted));
         s.directory = Directory::parse(encrypted, s.range->size);
     }
@@ -227,7 +227,7 @@ void attach_disc(IsoImage *disc) {
     s.overlay = std::make_unique<FileOverlay>(FileOverlay::Game{[&s](FileId file) { return s.view->original(file); },
         [&s](FileId file) { return s.directory->size(file); },
         [](FileId, std::vector<std::uint8_t> &bytes, const fs::path &patch) {
-            return p3rd::apply_patch(bytes, patch);
+            return legacy_archive::apply_patch(bytes, patch);
         }});
 
     ModSession::Paths paths;
@@ -275,12 +275,12 @@ std::size_t read_data_bin(std::uint64_t offset, std::span<std::uint8_t> out) {
     const Directory &d = s.layout->directory;
     const std::uint64_t end = offset + count;
     s.partial.reset();
-    if (const std::int64_t last = d.entry_at(static_cast<std::uint32_t>((end - 1u) / p3rd::kBlock)); last >= 0) {
+    if (const std::int64_t last = d.entry_at(static_cast<std::uint32_t>((end - 1u) / legacy_archive::kBlock)); last >= 0) {
         const auto file = static_cast<FileId>(last);
         // Which file each read ends in: how to find the id of a model the game shows.
         static const bool trace_reads = std::getenv("MHP2G_TRACE_DATA_BIN") != nullptr;
         if (trace_reads) std::cout << "[mods] data " << s.format.file_name(file) << " (" << d.size(file) << " bytes)\n";
-        const std::uint64_t file_end = static_cast<std::uint64_t>(d.blocks[file]) * p3rd::kBlock + d.size(file);
+        const std::uint64_t file_end = static_cast<std::uint64_t>(d.blocks[file]) * legacy_archive::kBlock + d.size(file);
         if (end < file_end)
             s.partial = file;
         else if (s.overlay->touches(file)) {
@@ -295,7 +295,7 @@ std::size_t read_data_bin(std::uint64_t offset, std::span<std::uint8_t> out) {
             previous = file;
             note_problems(file);
             if (!trace()) continue;
-            const std::uint64_t start = static_cast<std::uint64_t>(d.blocks[file]) * p3rd::kBlock;
+            const std::uint64_t start = static_cast<std::uint64_t>(d.blocks[file]) * legacy_archive::kBlock;
             const std::uint64_t from = offset > start ? offset - start : 0u;
             const Resolution &r = s.overlay->resolution();
             std::string source;
@@ -319,7 +319,7 @@ void code_loaded(psprecomp::Runtime &runtime) {
     for (const FileId file : s.loaded_code) {
         const std::shared_ptr<const FileContent> content = s.overlay->content(file);
         if (!content) continue;
-        const std::optional<p3rd::OverlayImage> image = p3rd::overlay_image(content->bytes);
+        const std::optional<legacy_archive::OverlayImage> image = legacy_archive::overlay_image(content->bytes);
         if (!image) continue;
         // Only if that overlay is the one in its slot now.
         auto &memory = runtime.memory();
@@ -344,7 +344,7 @@ std::string pending_note() {
     State &s = state();
     if (!s.session) return {};
     if (s.session->restart_pending())
-        return "Restart Yakumo to apply: a file changes size in a way the running game cannot take.";
+        return "Restart Poke to apply: a file changes size in a way the running game cannot take.";
     if (s.waiting) return "Applies once the game finishes loading the file it is reading.";
     if (s.switched_live)
         return "Applied: each file changes the next time the game loads it, usually at the next area or menu. "

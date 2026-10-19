@@ -1,6 +1,6 @@
 // The free camera's geometry and its guard: no game data is needed. The
 // view matrix below is one the game drew a quest area with, as
-// MHP3RD_TRACE_VIEWS printed it.
+// MHP2G_TRACE_VIEWS printed it.
 #include "camera/free_camera.hpp"
 #include "gpu/ge_state.hpp"
 #include "psprecomp/runtime.hpp"
@@ -12,7 +12,7 @@
 #include <iostream>
 
 namespace {
-using namespace mhp3rd::camera;
+using namespace mhp2g::camera;
 
 constexpr std::uint32_t kCameraPointer = 0x08A2F958u;
 constexpr std::uint32_t kCamera = 0x08900000u;
@@ -46,7 +46,7 @@ void test_traced_view() {
     const auto pose = pose_of_view(traced_view());
     check(pose.has_value(), "the game's view is a rotation");
     if (!pose) return;
-    // Where MHP3RD_TRACE_VIEWS put the eye.
+    // Where MHP2G_TRACE_VIEWS put the eye.
     check(near(pose->eye[0], 364.79f, 0.2f) && near(pose->eye[1], -8.84f, 0.2f) && near(pose->eye[2], 781.77f, 0.2f),
         "the eye is where the trace put it");
     const Matrix again = view_of_pose(*pose);
@@ -145,7 +145,7 @@ void test_game_view_and_guard() {
     // Off (and not tracing): the display lists get no hook at all, so no
     // draw is looked at, let alone changed.
     check(!free_camera_active(), "the free camera starts off");
-    if (std::getenv("MHP3RD_TRACE_VIEWS") == nullptr)
+    if (std::getenv("MHP2G_TRACE_VIEWS") == nullptr)
         check(!free_camera_view_hook(memory), "off, nothing is hooked into the display lists");
 }
 

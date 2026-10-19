@@ -36,7 +36,7 @@ std::vector<std::uint8_t> pack(
     return result;
 }
 void demux_contracts() {
-    mhp3rd::movie::PsmfDemuxer demux;
+    mhp2g::movie::PsmfDemuxer demux;
     check(!demux.push_pack({}), "Empty packs must be rejected");
     std::vector<std::uint8_t> invalid(32u, 0xFFu);
     check(!demux.push_pack(invalid), "Invalid pack signature accepted");
@@ -87,8 +87,8 @@ void demux_contracts() {
     check(video && video->pts == -1 && video->dts == -1, "Unknown timestamps must stay unknown");
 }
 void decoder_contracts() {
-    mhp3rd::movie::AvcDecoder video;
-    mhp3rd::movie::Picture picture;
+    mhp2g::movie::AvcDecoder video;
+    mhp2g::movie::Picture picture;
     check(
         !video.is_open() && !video.decode({}, picture) && !video.drain(picture), "Closed video decoder accepted input");
     video.reset();
@@ -122,20 +122,20 @@ void decoder_contracts() {
     } else {
         check(!video.open(), "Disabled decoder reported successful open");
     }
-    mhp3rd::audio::AtracDecoder audio;
+    mhp2g::audio::AtracDecoder audio;
     std::array<std::int16_t, 4096> pcm{};
     check(!audio.is_open() && audio.decode({}, pcm.data()) == 0u, "Closed audio decoder produced samples");
     audio.reset();
-    check(mhp3rd::audio::atrac_frame_samples(mhp3rd::audio::AtracCodec::Atrac3) == 1024u &&
-            mhp3rd::audio::atrac_frame_samples(mhp3rd::audio::AtracCodec::Atrac3Plus) == 2048u,
+    check(mhp2g::audio::atrac_frame_samples(mhp2g::audio::AtracCodec::Atrac3) == 1024u &&
+            mhp2g::audio::atrac_frame_samples(mhp2g::audio::AtracCodec::Atrac3Plus) == 2048u,
         "ATRAC frame sizes changed");
-    check(!audio.open(mhp3rd::audio::AtracCodec::Atrac3, 0u, 192u, {}) &&
-            !audio.open(mhp3rd::audio::AtracCodec::Atrac3, 3u, 192u, {}) &&
-            !audio.open(mhp3rd::audio::AtracCodec::Atrac3, 2u, 0u, {}),
+    check(!audio.open(mhp2g::audio::AtracCodec::Atrac3, 0u, 192u, {}) &&
+            !audio.open(mhp2g::audio::AtracCodec::Atrac3, 3u, 192u, {}) &&
+            !audio.open(mhp2g::audio::AtracCodec::Atrac3, 2u, 0u, {}),
         "Invalid ATRAC parameters accepted");
     if (audio.available()) {
-        check(audio.open(mhp3rd::audio::AtracCodec::Atrac3Plus, 2u, 16u, {}) && audio.is_open() &&
-                audio.codec() == mhp3rd::audio::AtracCodec::Atrac3Plus,
+        check(audio.open(mhp2g::audio::AtracCodec::Atrac3Plus, 2u, 16u, {}) && audio.is_open() &&
+                audio.codec() == mhp2g::audio::AtracCodec::Atrac3Plus,
             "ATRAC3plus open contract failed");
         const std::array<std::uint8_t, 16> malformed{};
         check(audio.decode(malformed, pcm.data()) == 0u && audio.decode({}, pcm.data()) == 0u,
@@ -151,7 +151,7 @@ void decoder_contracts() {
         extra[3] = 4u;
         extra[10] = 1u;
         for (unsigned channels : {1u, 2u}) {
-            check(audio.open(mhp3rd::audio::AtracCodec::Atrac3, channels, 192u * channels, extra),
+            check(audio.open(mhp2g::audio::AtracCodec::Atrac3, channels, 192u * channels, extra),
                 "Synthetic ATRAC3 format did not open");
             std::vector<std::uint8_t> silent(192u * channels, 0u);
             for (unsigned channel = 0u; channel < channels; ++channel) silent[channel * 192u] = 0xA0u;
@@ -163,16 +163,16 @@ void decoder_contracts() {
             check(audio.decode(silent, pcm.data()) == 1024u, "ATRAC reset discarded valid codec state");
         }
         const std::array<std::uint8_t, 1> invalid_extra{};
-        check(!audio.open(mhp3rd::audio::AtracCodec::Atrac3, 2u, 192u, invalid_extra) && !audio.is_open(),
+        check(!audio.open(mhp2g::audio::AtracCodec::Atrac3, 2u, 192u, invalid_extra) && !audio.is_open(),
             "Invalid codec extradata must close the old stream");
     } else {
-        check(!audio.open(mhp3rd::audio::AtracCodec::Atrac3Plus, 2u, 16u, {}), "Disabled ATRAC decoder opened");
+        check(!audio.open(mhp2g::audio::AtracCodec::Atrac3Plus, 2u, 16u, {}), "Disabled ATRAC decoder opened");
     }
 }
 void sas_contracts() {
     psprecomp::GuestMemory memory;
     constexpr std::uint32_t address = 0x08804000u;
-    mhp3rd::audio::SasCore core;
+    mhp2g::audio::SasCore core;
     core.init(0u, 1u, 3u);
     check(core.grain() == 256u && core.output_mode() == 3u, "SAS initialization defaults changed");
     std::array<std::int16_t, 512> output{};
@@ -264,8 +264,8 @@ void sas_contracts() {
     core.key_on(32u);
     core.key_off(32u);
     check(core.envelope_height(32u) == 0, "Invalid voice index must be harmless");
-    check(&mhp3rd::audio::sas_core(42u) == &mhp3rd::audio::sas_core(42u) &&
-            &mhp3rd::audio::sas_core(42u) != &mhp3rd::audio::sas_core(43u),
+    check(&mhp2g::audio::sas_core(42u) == &mhp2g::audio::sas_core(42u) &&
+            &mhp2g::audio::sas_core(42u) != &mhp2g::audio::sas_core(43u),
         "SAS handles must preserve independent cores");
 }
 }
