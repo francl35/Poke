@@ -14,6 +14,7 @@ Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation projec
 - [ ] Add full character customisation from home 
 
 ### Completed tasks ✓
+- [x] ui scalling when changing items
 - [x] Command options for improvement (crisp text, textures, maps and menu) 
 - [x] UI size adjustment 
 - [x] kcx2 format texture pack support

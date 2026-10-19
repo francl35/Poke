@@ -64,6 +64,7 @@
 #include <string>
 #include <utility>
 #include <set>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -7341,8 +7342,8 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
     bool fitted = false;
     ui::HudAnchor hud_anchor{};
     const auto display_factor = [](settings::HudSize size) {
-        return size == settings::HudSize::Medium ? 0.5f :
-            size == settings::HudSize::Small ? 1.0f / 3.0f : 1.0f;
+        return size == settings::HudSize::Medium ? 0.75f :
+            size == settings::HudSize::Small ? 0.5f : 1.0f;
     };
     const float hud_choice_factor = display_factor(settings::current().hud_size);
     const auto map_size = settings::current().map_size;
@@ -7789,6 +7790,56 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
     const std::int32_t bottom = std::max(top, to_pixels(edges[3], scale_y, impl.target_extent.height));
     vk_scissor.offset = {left, top};
     vk_scissor.extent = {static_cast<std::uint32_t>(right - left), static_cast<std::uint32_t>(bottom - top)};
+    // Opt-in observations only: do not change sharpness geometry or clipping.
+    static const bool trace_sharpness = std::getenv("MHP2G_TRACE_SHARPNESS") != nullptr;
+    if (trace_sharpness && impl.frames % 30u == 0u && call.through && !raw &&
+        !call.clear_mode && !impl.scratch.empty() && impl.shows(call.target.color_address)) {
+        const auto &first = impl.scratch.front();
+        float x0=first.x, y0=first.y, x1=first.x, y1=first.y;
+        float u0=first.u, v0=first.v, u1=first.u, v1=first.v;
+        for (const auto &v : impl.scratch) {
+            x0=std::min(x0,v.x); y0=std::min(y0,v.y);
+            x1=std::max(x1,v.x); y1=std::max(y1,v.y);
+            u0=std::min(u0,v.u); v0=std::min(v0,v.v);
+            u1=std::max(u1,v.u); v1=std::max(v1,v.v);
+        }
+        // Includes the gauge backing, fill and tip, plus neighbouring HUD
+        // pieces for context. Reject full-screen quads and 3D geometry.
+        if (x0 >= 0 && x1 <= 180 && y0 >= 24 && y1 <= 80) {
+            std::ostringstream line;
+            line << "pos=" << x0 << ',' << y0 << ',' << x1 << ',' << y1
+                 << " uv=" << u0 << ',' << v0 << ',' << u1 << ',' << v1
+                 << " tex=0x" << std::hex << call.texture.address << std::dec
+                 << " size=" << call.texture.width << 'x' << call.texture.height
+                 << " fmt=" << static_cast<int>(call.texture.format)
+                 << " textured=" << call.texture.enabled
+                 << " filter=" << call.texture.min_filter << '/' << call.texture.mag_filter
+                 << " wrap=" << call.texture.wrap_s << '/' << call.texture.wrap_t
+                 << " shader_mode=" << push.texture_params[0]
+                 << " pack_active=" << impl.pack_applied
+                 << " fb_texture=" << (framebuffer_source.target != nullptr)
+                 << " hud_group=" << static_cast<int>(hud_anchor.group)
+                 << " hud_factor=" << (hud_anchor ? hud_factor : 1.0f)
+                 << " psp_scissor=" << sx1 << ',' << sy1 << ',' << sx2 << ',' << sy2
+                 << " pixel_scissor=" << left << ',' << top << ',' << right << ',' << bottom
+                 << " target=" << impl.target_extent.width << 'x' << impl.target_extent.height;
+            static std::set<std::string> seen_sharpness;
+            if (seen_sharpness.size() < 512u && seen_sharpness.insert(line.str()).second) {
+                if (call.texture.enabled) {
+                    TexturePackKey trace_key{};
+                    std::uint32_t covered_w=0, covered_h=0;
+                    const TexturePackOptions defaults;
+                    const auto &options = impl.pack ? impl.pack->options() : defaults;
+                    if (compute_texture_pack_key(memory, call.texture, 0u, options,
+                            trace_key, covered_w, covered_h))
+                        line << " pack_key=" << format_texture_pack_key(trace_key)
+                             << " coverage=" << covered_w << 'x' << covered_h;
+                }
+                std::cout << "[sharpness] f=" << impl.frames << " at=0x" << std::hex
+                          << call.command_address << std::dec << ' ' << line.str() << '\n';
+            }
+        }
+    }
     }
     const std::array<std::uint32_t, 3> lighting_offsets{impl.environment_offset, impl.object_offset, impl.raw_offset};
     if (merge) {
