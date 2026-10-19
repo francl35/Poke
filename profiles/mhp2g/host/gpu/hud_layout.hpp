@@ -2,6 +2,11 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <iostream>
+#include <set>
+#include <sstream>
+#include <string>
 
 // Conservative recognition of the normal MHP2G quest HUD from its submitted
 // geometry. No guest code patches, MHP3rd addresses, or texture-pack hashes.
@@ -28,6 +33,33 @@ struct HudAnchor {
 class HudLayout {
 public:
     HudAnchor classify(std::uint64_t frame, std::uint32_t target, const HudProbe &draw) {
+        const HudAnchor result = classify_impl(frame, target, draw);
+        // Temporary, opt-in observations. Classification and geometry are unchanged.
+        // Deliberately not MHP2G_TRACE_*: the isolated FUC launcher clears those.
+        static const bool trace = std::getenv("MHP2G_HUD_WEAPON_TRACE") != nullptr;
+        if (trace && clock_ && !draw.glyph_page && valid(draw.screen) && valid(draw.uv) &&
+            inside(draw.screen, {0, 0, 344, 90})) {
+            std::ostringstream key;
+            key << "screen=" << draw.screen.left << ',' << draw.screen.top << ','
+                << draw.screen.right << ',' << draw.screen.bottom
+                << " uv=" << draw.uv.left << ',' << draw.uv.top << ','
+                << draw.uv.right << ',' << draw.uv.bottom
+                << " tex=0x" << std::hex << draw.texture_address << std::dec
+                << " size=" << draw.width << 'x' << draw.height
+                << " textured=" << draw.textured
+                << " hud_sheet=" << (draw.textured && draw.texture_address == hud_texture_)
+                << " group=" << static_cast<int>(result.group)
+                << " anchor=" << result.x << ',' << result.y;
+            static std::set<std::string> seen;
+            if (seen.size() < 384u && seen.insert(key.str()).second)
+                std::cerr << "[hud-weapon] frame=" << frame << " target=0x" << std::hex
+                    << target << std::dec << ' ' << key.str() << '\n';
+        }
+        return result;
+    }
+
+private:
+    HudAnchor classify_impl(std::uint64_t frame, std::uint32_t target, const HudProbe &draw) {
         if (frame_ != frame || target_ != target) {
             frame_ = frame;
             target_ = target;
@@ -95,8 +127,17 @@ public:
             map_anchor_ = {HudGroup::Map, b.right, b.top};
             return map_anchor_;
         }
+        // Dialog frames share the HUD atlas with map markers. Their right
+        // corners can overlap the map while the rest of the dialog does not.
+        // Reserve the four known panel-corner cells for their own layout;
+        // screen overlap alone must not make them inherit the map transform.
+        const bool panel_corner = hud_sheet &&
+            (same(draw.uv, {0, 208, 16, 216}) ||
+             same(draw.uv, {32, 208, 48, 216}) ||
+             same(draw.uv, {0, 224, 16, 232}) ||
+             same(draw.uv, {32, 224, 48, 232}));
         if (map_ && draw.textured && draw.width == 256u && draw.height == 256u &&
-            !draw.glyph_page && inside(b, map_bounds_))
+            !draw.glyph_page && !panel_corner && inside(b, map_bounds_))
             return map_anchor_;
         // Recognize only traced item-selector openers on the quest HUD sheet.
         // FUComplete widens the idle panel by 16 pixels on the left; holding L
