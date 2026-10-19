@@ -52,6 +52,22 @@ public:
             const bool name = draw.glyph_page && inside(b, {24, 56, 112, 74});
             const bool name_icon = draw.textured && draw.width == 256u && draw.height == 256u &&
                 inside(b, {8, 56, 24, 72}) && same(draw.uv, {48, 192, 60, 208});
+            // Weapon icons use a separate 256x256 sheet. These are the
+            // traced longsword and bowgun cells in the player-name slot.
+            const bool weapon_icon = draw.textured && !draw.glyph_page &&
+                draw.width == 256u && draw.height == 256u &&
+                same(b, {10, 56, 22, 72}) &&
+                (same(draw.uv, {208, 224, 220, 240}) ||
+                 same(draw.uv, {232, 224, 244, 240}));
+            // The longsword spirit gauge is below sharpness. Its two caps
+            // come from the HUD sheet; its colour strip is a separate texture.
+            // Exact screen/UV matches exclude the nearby menu-panel corners.
+            const bool spirit_cap = hud_sheet &&
+                (same(b, {62, 44, 66, 50}) || same(b, {162, 44, 166, 50})) &&
+                same(draw.uv, {240, 112, 244, 118});
+            const bool spirit_strip = draw.textured && !draw.glyph_page &&
+                draw.width == 16u && draw.height == 8u &&
+                same(b, {66, 44, 162, 50}) && same(draw.uv, {0, 0, 96, 6});
             // The main sheet also contains menu corners. Screen position
             // alone is insufficient: accept only the traced HUD UV regions.
             const bool clock_piece = hud_sheet && inside(b, {8, 8, 60, 56}) &&
@@ -66,7 +82,8 @@ public:
                 inside(draw.uv, {184, 0, 256, 80}) &&
                 b.right - b.left <= 24.0f && b.bottom - b.top <= 24.0f;
             if (clock_piece || gauge_cap || sharpness || name_plate || status_icon ||
-                bar_fill || bar_strip || name || name_icon)
+                bar_fill || bar_strip || name || name_icon || weapon_icon ||
+                spirit_cap || spirit_strip)
                 return {HudGroup::TopLeft, 8, 8};
         }
         // A map's own right/top edges define its anchor; both expanded and
