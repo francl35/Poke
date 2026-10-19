@@ -15,6 +15,7 @@
 
 #include "save_data/savedata_crypto.hpp"
 #include "save_data/savedata_store.hpp"
+#include "save_data/fuc_save_keys.hpp"
 #include "save_data/save_transfer.hpp"
 
 #include "platform/utf8_path.hpp"
@@ -164,9 +165,9 @@ savedata::SaveFiles files_for(
         savedata::Block key{};
         for (std::uint32_t i = 0; i < key.size(); ++i) key[i] = memory.load8(params + param::kKey + i);
         if (!savedata::is_zero(key)) {
-            files.key = key;
+            files.key = savedata::effective_save_key(files.game_name, files.file_name, key);
             // The menu's Import checks saves with it.
-            savedata::remember_game_key(files.game_name, key);
+            savedata::remember_game_key(files.game_name, *files.key);
         }
     }
     return files;

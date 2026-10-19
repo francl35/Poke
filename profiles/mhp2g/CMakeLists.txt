@@ -1124,3 +1124,21 @@ if(PSPRECOMP_BUILD_TESTS)
         set_tests_properties(mhp2g_${fuc_test}_tests PROPERTIES TIMEOUT 15)
     endforeach()
 endif()
+
+# Synthetic FUComplete regional-key and earlier-Poke-save regressions.
+add_executable(mhp2g_fuc_save_tests
+    tests/fuc_save_tests.cpp
+    host/save_data/aes128.cpp
+    host/save_data/param_sfo.cpp
+    host/save_data/savedata_crypto.cpp
+    host/save_data/savedata_store.cpp
+    host/platform/utf8_path.cpp
+    third_party/tiny_aes/aes.c)
+target_include_directories(mhp2g_fuc_save_tests PRIVATE
+    "${MHP2G_PROFILE_DIR}/host" "${MHP2G_PROFILE_DIR}/third_party")
+target_compile_definitions(mhp2g_fuc_save_tests PRIVATE
+    MHP2G_AOT_ELF_SHA256="02811bb3a529d48d707072a726e87106d0ecdab62aa7e494b23ecf1469eb662f")
+set_target_properties(mhp2g_fuc_save_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(PSPRECOMP_BUILD_TESTS)
+    add_test(NAME mhp2g_fuc_save_tests COMMAND mhp2g_fuc_save_tests)
+endif()

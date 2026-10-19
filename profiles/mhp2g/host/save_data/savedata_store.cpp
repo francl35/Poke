@@ -2,6 +2,7 @@
 
 #include "save_data/param_sfo.hpp"
 #include "save_data/savedata_crypto.hpp"
+#include "save_data/fuc_save_keys.hpp"
 
 #include "platform/utf8_path.hpp"
 
@@ -117,6 +118,8 @@ LoadResult load_save(const std::filesystem::path &memory_stick, const SaveFiles 
             return result;
         }
 
+        // Keep an authenticated compatibility key alive through decryption.
+        std::optional<Block> previous_key;
         const auto expected = listed_hash(*sfo, files.file_name);
 
         if (expected) {
@@ -133,9 +136,15 @@ LoadResult load_save(const std::filesystem::path &memory_stick, const SaveFiles 
                     << " ms\n";
 
             if (*expected != actual) {
-                result.reason = files.file_name +
-                                " does not match its hash in PARAM.SFO";
-                return result;
+                previous_key = previous_fuc_save_key(files.game_name, files.file_name, key);
+                if (*mode == CryptMode::Mode5 && previous_key &&
+                    data_file_hash(*file, *mode, &*previous_key) == *expected) {
+                    key = &*previous_key;
+                    std::cerr << "[savedata] authenticated earlier Poke FUComplete save key\n";
+                } else {
+                    result.reason = files.file_name + " does not match its hash in PARAM.SFO";
+                    return result;
+                }
             }
         }
 
