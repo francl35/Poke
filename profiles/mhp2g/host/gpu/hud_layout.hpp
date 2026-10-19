@@ -33,6 +33,7 @@ public:
             target_ = target;
             clock_ = items_ = map_ = false;
             hud_texture_ = 0u;
+            party_rows_ = 0u;
         }
         const HudRect &b = draw.screen;
         if (!valid(b) || !valid(draw.uv)) return {};
@@ -53,12 +54,13 @@ public:
             const bool name_icon = draw.textured && draw.width == 256u && draw.height == 256u &&
                 inside(b, {8, 56, 24, 72}) && same(draw.uv, {48, 192, 60, 208});
             // Weapon icons use a separate 256x256 sheet. These are the
-            // traced longsword and bowgun cells in the player-name slot.
+            // traced weapon cells in the player-name slot.
             const bool weapon_icon = draw.textured && !draw.glyph_page &&
                 draw.width == 256u && draw.height == 256u &&
                 same(b, {10, 56, 22, 72}) &&
                 (same(draw.uv, {208, 224, 220, 240}) ||
-                 same(draw.uv, {232, 224, 244, 240}));
+                 same(draw.uv, {232, 224, 244, 240}) ||
+                 same(draw.uv, {220, 240, 232, 256}));
             // The longsword spirit gauge is below sharpness. Its two caps
             // come from the HUD sheet; its colour strip is a separate texture.
             // Exact screen/UV matches exclude the nearby menu-panel corners.
@@ -74,8 +76,12 @@ public:
                 inside(draw.uv, {0, 32, 108, 80});
             const bool gauge_cap = hud_sheet && inside(b, {56, 9, 344, 33}) &&
                 inside(draw.uv, {52, 32, 76, 56});
-            const bool sharpness = hud_sheet && inside(b, {56, 30, 112, 48}) &&
-                inside(draw.uv, {108, 32, 152, 68});
+            const bool sharpness = hud_sheet &&
+                ((inside(b, {56, 30, 112, 48}) &&
+                  inside(draw.uv, {108, 32, 152, 68})) ||
+                 // Traced colour overlay extends one pixel above the base.
+                 (same(b, {60, 29, 104, 41}) &&
+                  same(draw.uv, {108, 32, 152, 44})));
             const bool name_plate = hud_sheet && inside(b, {8, 56, 96, 72}) &&
                 inside(draw.uv, {120, 16, 156, 32});
             const bool status_icon = hud_sheet && inside(b, {56, 8, 344, 48}) &&
@@ -85,6 +91,29 @@ public:
                 bar_fill || bar_strip || name || name_icon || weapon_icon ||
                 spirit_cap || spirit_strip)
                 return {HudGroup::TopLeft, 8, 8};
+        }
+        // Recognize additional name rows only after their HUD-sheet opener.
+        // The companion trace uses y76, twenty pixels below the first row.
+        // Later party slots may use the same spacing; unknown layouts stay put.
+        for (unsigned row = 1; row < 4; ++row) {
+            const float y = 56.0f + 20.0f * static_cast<float>(row);
+            if (hud_sheet && same(b, {8, y, 24, y + 16}) &&
+                same(draw.uv, {120, 16, 136, 32}))
+                party_rows_ |= 1u << row;
+            if ((party_rows_ & (1u << row)) == 0u) continue;
+            const bool plate = hud_sheet &&
+                ((same(b, {8, y, 24, y + 16}) && same(draw.uv, {120, 16, 136, 32})) ||
+                 (same(b, {24, y, 88, y + 16}) && same(draw.uv, {136, 16, 148, 32})) ||
+                 (same(b, {88, y, 96, y + 16}) && same(draw.uv, {148, 16, 156, 32})));
+            const bool label = draw.glyph_page && inside(b, {24, y, 112, y + 18});
+            const bool icon = draw.textured && !draw.glyph_page &&
+                draw.width == 256u && draw.height == 256u &&
+                same(b, {10, y, 22, y + 16}) &&
+                (same(draw.uv, {208, 224, 220, 240}) ||
+                 same(draw.uv, {232, 224, 244, 240}) ||
+                 same(draw.uv, {220, 240, 232, 256}) ||
+                 same(draw.uv, {232, 240, 244, 256}));
+            if (plate || label || icon) return {HudGroup::TopLeft, 8, 8};
         }
         // A map's own right/top edges define its anchor; both expanded and
         // collapsed maps keep their original margins. Following marker draws
@@ -145,6 +174,7 @@ private:
     std::uint64_t frame_{~0ull};
     std::uint32_t target_{}, hud_texture_{};
     bool clock_{}, items_{}, map_{};
+    std::uint32_t party_rows_{};
     HudRect map_bounds_{}, item_bounds_{};
     HudAnchor map_anchor_{};
 };
