@@ -3,6 +3,7 @@
 Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation project
 
 ### To Do tasks
+- [ ] FU complete save compatibility issue
 - [ ] game weapons ui gauge and specific ui scalling
 - [ ] ui elements wrong place colliding map
 - [ ] FOV slider
@@ -11,6 +12,7 @@ Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation projec
 - [ ] Proper game executable
 - [ ] Decomp game to readable and reusable Cpp or Rust and detach logic from data to help mod and alter game
 - [ ] Add full character customisation from home 
+- [ ] Add retro achievement equivalent
 
 ### Completed tasks ✓
 - [x] ui scalling when changing items
