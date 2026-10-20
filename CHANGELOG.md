@@ -11,8 +11,13 @@ release dates, or commit identifiers are inferred here.
 ## Unreleased — planned 0.1.0
 
 ### Development checkpoint — 2026-10-18
-
-- Add Video > HUD size: Original (100%), Medium (50%), and Small (33.33%).
+- Fixed save corruption issues in Fu Complete
+- Fix various UI bug on scaling options, including weapons special gauges and palico infos
+- Increase the default renderer vertex arena from 64 to 128 MiB per
+  frame region, preventing observed missing character and HUD draws
+  in Mountain area 4. Preserve diagnostic capacity overrides.
+- Added a FOV slider by 5 percent increments
+- Add Video > HUD size: Original (100%), Medium (75%), and Small (50%).
   Scale recognized normal quest HUD groups about their corner anchors without
   changing texture enhancement. Preserve sampling coordinates and transform
   clipping alongside placement; broader HUD layouts remain pending testing.

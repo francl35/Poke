@@ -3,10 +3,6 @@
 Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation project
 
 ### To Do tasks
-- [ ] FU complete save compatibility issue
-- [ ] game weapons ui gauge and specific ui scalling
-- [ ] ui elements wrong place colliding map
-- [ ] FOV slider
 - [ ] Reduce hub monster life for solo 
 - [ ] Change Poke menu to use mhfu menu theme
 - [ ] Proper game executable
@@ -15,6 +11,10 @@ Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation projec
 - [ ] Add retro achievement equivalent
 
 ### Completed tasks ✓
+- [x] ui elements wrong place colliding map
+- [x] FOV slider
+- [x] FU complete save compatibility issue
+- [x] game weapons ui gauge and specific ui scalling
 - [x] ui scalling when changing items
 - [x] Command options for improvement (crisp text, textures, maps and menu) 
 - [x] UI size adjustment 
