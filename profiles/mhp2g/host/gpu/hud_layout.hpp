@@ -124,17 +124,13 @@ public:
             map_anchor_ = {HudGroup::Map, b.right, b.top};
             return map_anchor_;
         }
-        // Dialog frames share the HUD atlas with map markers. Their right
-        // corners can overlap the map while the rest of the dialog does not.
-        // Reserve the four known panel-corner cells for their own layout;
-        // screen overlap alone must not make them inherit the map transform.
-        const bool panel_corner = hud_sheet &&
-            (same(draw.uv, {0, 208, 16, 216}) ||
-             same(draw.uv, {32, 208, 48, 216}) ||
-             same(draw.uv, {0, 224, 16, 232}) ||
-             same(draw.uv, {32, 224, 48, 232}));
+        // Keep the four HUD-sheet dialog corners out of map-marker scaling.
         if (map_ && draw.textured && draw.width == 256u && draw.height == 256u &&
-            !draw.glyph_page && !panel_corner && inside(b, map_bounds_))
+            !draw.glyph_page && !(hud_sheet &&
+                (same(draw.uv, {0, 208, 16, 216}) ||
+                 same(draw.uv, {32, 208, 48, 216}) ||
+                 same(draw.uv, {0, 224, 16, 232}) ||
+                 same(draw.uv, {32, 224, 48, 232}))) && inside(b, map_bounds_))
             return map_anchor_;
         // Recognize only traced item-selector openers on the quest HUD sheet.
         // FUComplete widens the idle panel by 16 pixels on the left; holding L

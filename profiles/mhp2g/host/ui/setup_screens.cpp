@@ -134,7 +134,7 @@ bool SetupScreens::introduce(const fs::path &data_dir) {
             ImGui::Dummy({0.0f, font() * 0.4f});
             paragraph("You can also drop the .iso file onto this window.", colors::kTextDim);
 #endif
-            layer.set_description("Monster Hunter Portable 3rd HD Ver. (NPJB-40001) is the only release supported.");
+            layer.set_description("Monster Hunter Portable 2nd G and FU Comlplete are supported");
             begin_footer();
             hints({{Control::Confirm, "Select"}, {Control::Back, "Quit"}});
             end_panel();

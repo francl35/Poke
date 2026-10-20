@@ -3,17 +3,20 @@
 Static recompilation of mhp2g / mhfu based on Yakumo mph3rd recompilation project
 
 ### To Do tasks
-- [ ] game weapons ui gauge and specific ui scalling
-- [ ] ui elements wrong place colliding map
-- [x] Scale the observed idle and L-held item-selector layouts
-- [x] Saved FOV adjustment in the Video menu
 - [ ] Reduce hub monster life for solo 
 - [ ] Change Poke menu to use mhfu menu theme
 - [ ] Proper game executable
 - [ ] Decomp game to readable and reusable Cpp or Rust and detach logic from data to help mod and alter game
 - [ ] Add full character customisation from home 
+- [ ] Add retro achievement equivalent
 
 ### Completed tasks ✓
+- [x] game weapons ui gauge and specific ui scalling
+- [x] ui elements wrong place colliding map
+- [x] Scale the observed idle and L-held item-selector layouts
+- [x] Saved FOV adjustment in the Video menu
+- [x] FU complete save compatibility issue
+- [x] game weapons ui gauge and specific ui scalling
 - [x] ui scalling when changing items
 - [x] Command options for improvement (crisp text, textures, maps and menu) 
 - [x] UI size adjustment 

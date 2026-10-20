@@ -22,6 +22,7 @@
 #include "platform/utf8_path.hpp"
 
 #include "perf/frame_stats.hpp"
+#include "perf/resource_stats.hpp"
 #include "perf/perf_overlay.hpp"
 #include "input/gamepad_devices.hpp"
 #include "input/bindings.hpp"
@@ -85,11 +86,24 @@ constexpr std::uint32_t kSettleFrames = 12u;
 // a fade, a backdrop or a copy of the picture, which spreads with the 3D view
 // instead of keeping the interface's proportions.
 constexpr float kScreenWideDraw = 470.0f;
-// Room for one frame's vertices. With frame interpolation a frame cannot reuse
-// its region part way through, so all of it must fit: measured at 16.1 MiB in
-// the busiest areas found (Flooded Forest area 3, Tundra area 2), where 16 MiB
-// left the interface, drawn last, and parts of the ground out. Twice that.
-constexpr VkDeviceSize kVertexBufferBytes = 64u * 1024u * 1024u;
+// One frame region must retain its geometry for interpolation/replay.
+// The optional capacity experiment below leaves the default unchanged.
+// Temporary capacity experiment; default remains the existing 64 MiB.
+VkDeviceSize vertex_arena_bytes() {
+    // increased vertex arena from 64 to 128 due to exceding usage in some cases
+    constexpr VkDeviceSize fallback = 128u * 1024u * 1024u;
+    const char *text = std::getenv("MHP2G_VERTEX_BUFFER_MB");
+    if (text == nullptr) return fallback;
+    char *end = nullptr;
+    const auto mib = std::strtoull(text, &end, 10);
+    if (end == text || *end != '\0' || (mib != 64u && mib != 128u && mib != 256u)) {
+        std::cerr << "[vertex-arena-config] invalid MHP2G_VERTEX_BUFFER_MB; using 64 MiB\n";
+        return fallback;
+    }
+    std::cerr << "[vertex-arena-config] per_frame_mib=" << mib << '\n';
+    return static_cast<VkDeviceSize>(mib) * 1024u * 1024u;
+}
+const VkDeviceSize kVertexBufferBytes = vertex_arena_bytes();
 // Index lists of merged draws (see submit()), kept apart from the vertices so
 // that the draws of one group have consecutive indices.
 constexpr VkDeviceSize kIndexBufferBytes = 4u * 1024u * 1024u;
@@ -102,12 +116,13 @@ constexpr VkDeviceSize kIndexBufferBytes = 4u * 1024u * 1024u;
 // blended vertices of skinned draws and the lighting blocks of blended draws.
 constexpr std::uint32_t kFrameRegions = 3u;
 constexpr VkDeviceSize kPresentScratchBytes = 6u * 1024u * 1024u;
-constexpr VkDeviceSize kVertexBufferTotal = kFrameRegions * kVertexBufferBytes + 2u * kPresentScratchBytes;
+const VkDeviceSize kVertexBufferTotal = kFrameRegions * kVertexBufferBytes + 2u * kPresentScratchBytes;
 constexpr VkDeviceSize kIndexBufferTotal = kFrameRegions * kIndexBufferBytes;
 
 // Says, once in a while, that a frame's geometry did not fit and some of its
 // draws were left out, instead of dropping them silently.
 void report_frame_space_full(const char *what) {
+    perf::note_resource_failure(what);
     static std::uint64_t count = 0;
     if (count++ % 600u == 0u)
         std::cout << "[render] a frame ran out of " << what << " space; the draws past it are not drawn (" << count
@@ -1568,7 +1583,58 @@ struct VulkanRenderer::Impl {
     std::uint32_t next_region{};
     VkDeviceSize vertex_limit{kVertexBufferBytes};
     VkDeviceSize index_limit{kIndexBufferBytes};
+    
+    std::uint64_t arena_uniform_bytes{};
+    std::uint64_t arena_draw_bytes{};
+    std::uint64_t arena_raw_draws{};
+    std::uint64_t arena_direct_draws{};
+    std::uint64_t arena_expanded_draws{};
+
     void enter_region(std::uint32_t index) {
+
+        if (std::getenv("MHP2G_ARENA_ACCOUNTING") != nullptr &&
+            frames % 120u == 0u) {
+            const auto base =
+                static_cast<VkDeviceSize>(frame_region) * kVertexBufferBytes;
+            const auto used = vertex_offset >= base ? vertex_offset - base : 0u;
+            const auto accounted = arena_uniform_bytes + arena_draw_bytes;
+
+            std::cerr << "[arena-accounting]"
+                    << " frame=" << frames
+                    << " region=" << frame_region
+                    << " used=" << used
+                    << " uniforms_with_padding=" << arena_uniform_bytes
+                    << " draws_with_padding=" << arena_draw_bytes
+                    << " accounted=" << accounted
+                    << " raw_draws=" << arena_raw_draws
+                    << " direct_draws=" << arena_direct_draws
+                    << " expanded_draws=" << arena_expanded_draws
+                    << " interpolation=" << interpolating
+                    << '\n';
+        }
+
+        arena_uniform_bytes = 0;
+        arena_draw_bytes = 0;
+        arena_raw_draws = 0;
+        arena_direct_draws = 0;
+        arena_expanded_draws = 0;
+
+        // Temporary observations before resetting this frame region.
+        static const bool arena_trace = [] {
+            const char *v = std::getenv("MHP2G_VERTEX_ARENA_TRACE");
+            return v != nullptr && std::strcmp(v, "1") == 0;
+        }();
+        if (arena_trace) {
+            const VkDeviceSize probe_region_start = static_cast<VkDeviceSize>(frame_region) * kVertexBufferBytes;
+            const VkDeviceSize probe_used = vertex_offset >= probe_region_start ? vertex_offset - probe_region_start : 0u;
+            if (frames % 120u == 0u || probe_used > kVertexBufferBytes * 9u / 10u)
+                std::cerr << "[vertex-arena] frame=" << frames << " action=enter-region"
+                    << " previous_region=" << frame_region << " incoming_region=" << index
+                    << " used_kib=" << (probe_used >> 10u)
+                    << " capacity_kib=" << (kVertexBufferBytes >> 10u)
+                    << " absolute_offset=" << vertex_offset
+                    << " interpolation=" << interpolating << '\n';
+        }
         // How much of its region the frame being left used, for the perf line.
         perf::note_frame_space(vertex_offset - static_cast<VkDeviceSize>(frame_region) * kVertexBufferBytes,
             index_offset - static_cast<VkDeviceSize>(frame_region) * kIndexBufferBytes);
@@ -1614,6 +1680,7 @@ struct VulkanRenderer::Impl {
         }
         std::memcpy(static_cast<std::uint8_t *>(vertex_mapped) + at, data, size);
         offset = static_cast<std::uint32_t>(at);
+        arena_uniform_bytes += at + size - vertex_offset;
         vertex_offset = at + size;
         return true;
     }
@@ -3139,6 +3206,11 @@ void VulkanRenderer::Impl::record_overlay(VkCommandBuffer commands, VkImage dest
     const std::uint32_t height = perf::kOverlayHeight * scale;
     if (inset + width > content_rect.extent.width || inset + height > content_rect.extent.height) return;
 
+    const VkDeviceSize arena_base = static_cast<VkDeviceSize>(frame_region) * kVertexBufferBytes;
+    const VkDeviceSize indices_base = static_cast<VkDeviceSize>(frame_region) * kIndexBufferBytes;
+    perf::note_resource_usage(vertex_offset >= arena_base ? vertex_offset - arena_base : 0u,
+        index_offset >= indices_base ? index_offset - indices_base : 0u,
+        kVertexBufferBytes, kIndexBufferBytes, replacements.resident_bytes(), interpolating);
     perf::draw_overlay(overlay_pixels.data());
     // Free to rewrite: this command buffer's previous use has finished.
     const Staging &staging = overlay_staging[command_index(commands)];
@@ -6721,6 +6793,8 @@ void VulkanRenderer::begin_frame() {
     }
     frame.region = region;
     impl.enter_region(region);
+    perf::note_resource_usage(0u, 0u, kVertexBufferBytes, kIndexBufferBytes,
+        impl.replacements.resident_bytes(), impl.interpolating);
     if (impl.interpolating && !impl.recording_frame.recorded) {
         impl.recording_frame.clear();
         impl.recording_frame.recorded = true;
@@ -7473,6 +7547,8 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
 
                 std::cout
                     << "[vertex-overflow]"
+                    << " frame=" << impl.frames << " region=" << impl.frame_region
+                    << " capacity_kib=" << (kVertexBufferBytes >> 10u)
                     << " used=" << ((impl.vertex_offset - region_begin) >> 10u) << " KiB"
                     << " request=" << (vertex_bytes >> 10u) << " KiB"
                     << " vertices=" << vertex_total
@@ -7898,6 +7974,15 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             group.index_count += draw_count;
             ++group.draws;
         }
+
+        impl.arena_draw_bytes += draw_end - impl.vertex_offset;
+        if (raw)
+            ++impl.arena_raw_draws;
+        else if (direct)
+            ++impl.arena_direct_draws;
+        else
+            ++impl.arena_expanded_draws;
+
         impl.vertex_offset = draw_end;
         ++impl.draws;
         perf::count_draw();
@@ -7938,6 +8023,15 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
         impl.record_draw_for_replay(call, lit, skinned_first, state, vertex_start,
             direct ? impl.vertex_buffer : VK_NULL_HANDLE, index_start, draw_count, drawn_vertices, false, raw);
     }
+
+    impl.arena_draw_bytes += draw_end - impl.vertex_offset;
+    if (raw)
+        ++impl.arena_raw_draws;
+    else if (direct)
+        ++impl.arena_direct_draws;
+    else
+        ++impl.arena_expanded_draws;
+
     impl.vertex_offset = draw_end;
     ++impl.draws;
     perf::count_draw();
