@@ -1,4 +1,5 @@
 #include "frame_stats.hpp"
+#include "resource_stats.hpp"
 
 #include "settings/settings.hpp"
 
@@ -177,6 +178,17 @@ void print(const Summary &s) {
     // Flushed per line: the log is read while the game runs, often through a
     // pipe where stdout would otherwise sit in a block buffer.
     std::cout << line << std::endl;
+    const auto &u = resource_usage();
+    std::cout << "[memory] rss_mib=";
+    if (u.rss_valid) std::cout << memory_mib(u.rss_bytes); else std::cout << "n/a";
+    std::cout << " rss_sample_peak_mib=" << memory_mib(u.rss_peak_bytes)
+              << " vertex_peak_mib=" << memory_mib(u.vertex_peak)
+              << " vertex_capacity_mib=" << memory_mib(u.vertex_capacity)
+              << " index_peak_mib=" << memory_mib(u.index_peak)
+              << " index_capacity_mib=" << memory_mib(u.index_capacity)
+              << " pack_gpu_mib=" << memory_mib(u.pack_bytes)
+              << " arena_failures_v/i=" << u.vertex_failures << '/' << u.index_failures
+              << " interpolation=" << u.interpolating << std::endl;
 }
 
 // " name avg max M xN" for every kind that happened: the average per frame
@@ -418,6 +430,7 @@ void count_cleared_pass() {
 }
 
 void note_frame_space(std::uint64_t vertex_bytes, std::uint64_t index_bytes) {
+    note_resource_peak(vertex_bytes, index_bytes);
     State &s = state();
     s.vertex_peak = std::max(s.vertex_peak, vertex_bytes);
     s.index_peak = std::max(s.index_peak, index_bytes);
