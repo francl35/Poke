@@ -1,6 +1,7 @@
 #include "perf_overlay.hpp"
 
 #include "frame_stats.hpp"
+#include "resource_stats.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -63,7 +64,7 @@ constexpr Glyph kFont[] = {
 constexpr std::uint32_t kGlyphAdvance = 6u;
 constexpr std::uint32_t kLineAdvance = 9u;
 constexpr std::uint32_t kMargin = 2u;
-constexpr std::uint32_t kGraphTop = kMargin + 4u * kLineAdvance + 1u;
+constexpr std::uint32_t kGraphTop = kMargin + 9u * kLineAdvance + 1u;
 constexpr std::uint32_t kGraphHeight = kOverlayHeight - kGraphTop - kMargin;
 constexpr float kGraphRangeMs = 50.0f;
 
@@ -85,6 +86,7 @@ const Glyph *find_glyph(char character) {
 }
 
 void draw_text(std::uint32_t *pixels, std::uint32_t x, std::uint32_t y, const char *text) {
+    if (y + 7u > kOverlayHeight) return;
     for (; *text != '\0' && x + 5u <= kOverlayWidth; ++text, x += kGlyphAdvance) {
         const Glyph *glyph = find_glyph(*text);
         if (glyph == nullptr) continue;
@@ -113,7 +115,7 @@ void draw_overlay(std::uint32_t *pixels) {
     std::fill(pixels, pixels + kOverlayWidth * kOverlayHeight, kBackground);
 
     const Summary &s = last_second();
-    char line[48];
+    char line[96];
     std::uint32_t y = kMargin;
     if (s.valid) {
         std::snprintf(line, sizeof(line), "FPS %.1f GAME %.1f SPD %.0f%%", s.fps, s.game_fps, s.speed * 100.0);
@@ -135,6 +137,31 @@ void draw_overlay(std::uint32_t *pixels) {
     } else {
         draw_text(pixels, kMargin, y, "MEASURING");
     }
+
+    const auto &u = resource_usage();
+    y = kMargin + 4u * kLineAdvance;
+    if (u.rss_valid)
+        std::snprintf(line, sizeof(line), "RAM RSS %.0f MIB PK %.0f", memory_mib(u.rss_bytes), memory_mib(u.rss_peak_bytes));
+    else std::snprintf(line, sizeof(line), "RAM RSS N/A");
+    draw_text(pixels, kMargin, y, line);
+    if (u.renderer_known)
+        std::snprintf(line, sizeof(line), "VTX %.1f/%.0f MIB PK %.1f",
+            memory_mib(u.vertex_bytes), memory_mib(u.vertex_capacity), memory_mib(u.vertex_peak));
+    else std::snprintf(line, sizeof(line), "VTX N/A");
+    draw_text(pixels, kMargin, y += kLineAdvance, line);
+    if (u.renderer_known)
+        std::snprintf(line, sizeof(line), "IDX %.1f/%.0f MIB PK %.1f",
+            memory_mib(u.index_bytes), memory_mib(u.index_capacity), memory_mib(u.index_peak));
+    else std::snprintf(line, sizeof(line), "IDX N/A");
+    draw_text(pixels, kMargin, y += kLineAdvance, line);
+    if (u.renderer_known)
+        std::snprintf(line, sizeof(line), "PACK GPU %.1f MIB INTERP %s",
+            memory_mib(u.pack_bytes), u.interpolating ? "ON" : "OFF");
+    else std::snprintf(line, sizeof(line), "PACK GPU N/A INTERP N/A");
+    draw_text(pixels, kMargin, y += kLineAdvance, line);
+    std::snprintf(line, sizeof(line), "FAIL V/I %llu/%llu",
+        static_cast<unsigned long long>(u.vertex_failures), static_cast<unsigned long long>(u.index_failures));
+    draw_text(pixels, kMargin, y += kLineAdvance, line);
 
     // Guides at one and two 60 Hz frames, then one bar per frame, oldest first.
     for (const float guide : {1000.0f / 60.0f, 2000.0f / 60.0f}) {

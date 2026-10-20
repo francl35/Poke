@@ -6,8 +6,8 @@ namespace mhp2g::perf {
 
 // The overlay is drawn on the CPU into a small RGBA image, which the renderer
 // scales onto the top-left corner of the presented frame.
-inline constexpr std::uint32_t kOverlayWidth = 196u;
-inline constexpr std::uint32_t kOverlayHeight = 72u;
+inline constexpr std::uint32_t kOverlayWidth = 256u;
+inline constexpr std::uint32_t kOverlayHeight = 126u;
 
 // Fills `pixels` (kOverlayWidth x kOverlayHeight, red in the low byte) with the
 // last second's numbers and a graph of recent frame times.
