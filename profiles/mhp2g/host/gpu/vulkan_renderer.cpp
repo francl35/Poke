@@ -12,6 +12,7 @@
 #include "sharpness_replacement_uv.hpp"
 #include "texture_decode.hpp"
 #include "triangle_indices.hpp"
+#include "vertex_compaction.hpp"
 #include "texture_pack.hpp"
 #include "texture_pack_import.hpp"
 #include "descriptor_pools.hpp"
@@ -1590,7 +1591,22 @@ struct VulkanRenderer::Impl {
     std::uint64_t arena_direct_draws{};
     std::uint64_t arena_expanded_draws{};
 
+    std::vector<std::uint32_t> compact_sources, compact_mapping;
+    vertex_compaction::Stats compact_stats;
     void enter_region(std::uint32_t index) {
+        if (vertex_compaction::trace_enabled() && frames % 120u == 0u) {
+            std::cerr << "[vertex-upload] frame=" << frames
+                << " source_direct_bytes=" << compact_stats.source_direct_bytes
+                << " uploaded_direct_bytes=" << compact_stats.uploaded_direct_bytes
+                << " expanded_bytes=" << compact_stats.expanded_bytes
+                << " raw_bytes=" << compact_stats.raw_bytes
+                << " compacted_draws=" << compact_stats.compacted_draws
+                << " observed_draws=" << compact_stats.observed_draws
+                << " compact_enabled=" << vertex_compaction::enabled()
+                << " interpolation=" << interpolating << '\n';
+        }
+        compact_stats = {};
+
 
         if (std::getenv("MHP2G_ARENA_ACCOUNTING") != nullptr &&
             frames % 120u == 0u) {
@@ -7514,6 +7530,19 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
     const bool skinned = impl.interpolating && !raw && !call.through && ((call.vertex_type >> 9u) & 3u) != 0u;
     const std::uint32_t skinned_first =
         skinned ? static_cast<std::uint32_t>(impl.recording_frame.skinned.size()) : Impl::kNone;
+    // Rigid replay keeps its own frame's compacted vertices and indices.
+    // Weighted/skinned replay blends CPU arrays by position: keep its old path.
+    bool compact_upload = false;
+    std::size_t upload_count = vertex_total;
+    if (direct && !raw && !skinned && vertex_compaction::enabled()) {
+        if (vertex_compaction::referenced_vertices(
+                impl.direct_indices, vertex_total, impl.compact_sources, impl.compact_mapping) &&
+            impl.compact_sources.size() < vertex_total) {
+            upload_count = impl.compact_sources.size();
+            compact_upload = true;
+            vertex_compaction::dense_rebase(impl.direct_indices, impl.compact_mapping);
+        }
+    }
     VkDeviceSize vertex_start = impl.vertex_offset;
     VkDeviceSize index_start = 0u;
     VkDeviceSize draw_end = 0u;
@@ -7534,7 +7563,7 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             (raw ? impl.group.stride == call.raw_stride && !impl.check_gpu_decode : !loose_merge))
             vertex_start = impl.vertex_offset;
         const VkDeviceSize vertex_bytes = raw ? static_cast<VkDeviceSize>(call.raw_count) * call.raw_stride
-                                              : call.vertices.size() * sizeof(GpuVertex);
+                                              : upload_count * sizeof(GpuVertex);
         const VkDeviceSize vertex_end = vertex_start + vertex_bytes;
         index_start = (vertex_end + 3u) & ~VkDeviceSize{3u};
         draw_end = merge ? vertex_end : index_start + impl.direct_indices.size() * sizeof(std::uint16_t);
@@ -7574,8 +7603,9 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             if (raw)
                 std::memcpy(out, call.raw_vertices, static_cast<std::size_t>(vertex_bytes));
             else
-                for (const Vertex &vertex : call.vertices) {
-                        const GpuVertex converted = to_gpu(vertex);
+                for (std::size_t i = 0; i < upload_count; ++i) {
+                        const auto source_index = compact_upload ? impl.compact_sources[i] : i;
+                        const GpuVertex converted = to_gpu(call.vertices[source_index]);
                         std::memcpy(out, &converted, sizeof(GpuVertex));
                         out += sizeof(GpuVertex);
                         if (skinned) impl.recording_frame.skinned.push_back(converted);
@@ -7602,7 +7632,7 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             impl.recording_frame.skinned.insert(
                 impl.recording_frame.skinned.end(), impl.scratch.begin(), impl.scratch.end());
     }
-    const auto drawn_vertices = static_cast<std::uint32_t>(direct ? vertex_total : impl.scratch.size());
+    const auto drawn_vertices = static_cast<std::uint32_t>(direct ? upload_count : impl.scratch.size());
 
     PipelineKey key{};
     VkPipeline pipeline = VK_NULL_HANDLE;
@@ -7936,7 +7966,7 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
         const perf::SplitScope split_merge(perf::Split::Merge);
 
             Impl::DrawGroup &group = impl.group;
-            const auto vertex_count = static_cast<std::uint32_t>(vertex_total);
+            const auto vertex_count = static_cast<std::uint32_t>(upload_count);
             std::uint32_t rebase = 0u;
             bool join = group.open && vertex_start == group.vertex_end && impl.state_known &&
                 Impl::same_state(state, impl.recorded) && group.raw == raw &&
@@ -7983,6 +8013,9 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
         else
             ++impl.arena_expanded_draws;
 
+        if (vertex_compaction::trace_enabled())
+            impl.compact_stats.note(direct, raw, vertex_total, upload_count, impl.scratch.size(),
+                call.raw_stride, sizeof(GpuVertex), compact_upload);
         impl.vertex_offset = draw_end;
         ++impl.draws;
         perf::count_draw();
@@ -8032,6 +8065,9 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
     else
         ++impl.arena_expanded_draws;
 
+    if (vertex_compaction::trace_enabled())
+        impl.compact_stats.note(direct, raw, vertex_total, upload_count, impl.scratch.size(),
+            call.raw_stride, sizeof(GpuVertex), compact_upload);
     impl.vertex_offset = draw_end;
     ++impl.draws;
     perf::count_draw();
