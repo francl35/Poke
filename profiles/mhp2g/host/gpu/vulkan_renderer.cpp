@@ -7462,7 +7462,16 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
         probe.screen = {first.x, first.y, first.x, first.y};
         probe.uv = {first.u, first.v, first.u, first.v};
         bool zero_depth = true;
+        bool area_tint = call.texture.enabled;
+        bool area_visible = false;
         for (const GpuVertex &vertex : impl.scratch) {
+            if ((vertex.color >> 24u) != 0u) {
+                area_visible = true;
+                const auto r = vertex.color & 255u;
+                const auto g = (vertex.color >> 8u) & 255u;
+                const auto b = (vertex.color >> 16u) & 255u;
+                area_tint = area_tint && r >= 96u && g >= 96u && b * 2u <= r && b * 2u <= g;
+            }
             zero_depth = zero_depth && vertex.z == 0.0f;
             probe.screen.left = std::min(probe.screen.left, vertex.x);
             probe.screen.right = std::max(probe.screen.right, vertex.x);
@@ -7473,6 +7482,7 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             probe.uv.top = std::min(probe.uv.top, vertex.v);
             probe.uv.bottom = std::max(probe.uv.bottom, vertex.v);
         }
+        probe.map_area_tint = area_tint && area_visible && call.primitive == PrimitiveType::Sprites;
         probe.textured = call.texture.enabled;
         probe.texture_address = call.texture.address;
         probe.width = call.texture.width;
@@ -7487,6 +7497,53 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             hud_anchor = impl.hud_layout.classify(impl.frames, call.target.color_address, probe);
             hud_factor = hud_anchor.group == ui::HudGroup::Map ? map_choice_factor : hud_choice_factor;
             if (hud_factor == 1.0f) hud_anchor = {};
+        }
+        // Capture after the quest clock, not title/menu text. Include rejected
+        // draws and nonzero-depth layers; no colour/texture-size assumptions.
+        static const bool trace_map_layout = std::getenv("MHP2G_TRACE_MAP_LAYOUT") != nullptr;
+        if (trace_map_layout && impl.hud_layout.quest_hud_active(impl.frames, call.target.color_address) &&
+            probe.screen.right >= 280.0f && probe.screen.left <= 480.0f &&
+            probe.screen.bottom >= 0.0f && probe.screen.top <= 208.0f) {
+            std::ostringstream line;
+            line << "pos=" << probe.screen.left << ',' << probe.screen.top << ','
+                 << probe.screen.right << ',' << probe.screen.bottom
+                 << " uv=" << probe.uv.left << ',' << probe.uv.top << ',' << probe.uv.right << ',' << probe.uv.bottom
+                 << " tex=0x" << std::hex << probe.texture_address << std::dec
+                 << " size=" << probe.width << 'x' << probe.height
+                 << " fmt=" << static_cast<int>(call.texture.format)
+                 << " stride=" << call.texture.buffer_width << " swizzled=" << call.texture.swizzled
+                 << " textured=" << probe.textured << " glyph=" << probe.glyph_page
+                 << " map_surface=" << probe.map_surface << " zero_depth=" << zero_depth
+                 << " primitive=" << static_cast<int>(call.primitive)
+                 << " group=" << static_cast<int>(hud_anchor.group)
+                 << " anchor=" << hud_anchor.x << ',' << hud_anchor.y
+                 << " factor=" << (hud_anchor ? hud_factor : 1.0f)
+                 << " vertices=" << impl.scratch.size() << " samples=";
+            // Edge/colour/depth examples help distinguish a region polygon
+            // from atlas markers and reveal why zero-depth classification fails.
+            for (std::size_t i = 0; i < std::min<std::size_t>(impl.scratch.size(), 6u); ++i) {
+                const auto &v = impl.scratch[i];
+                if (i) line << ';';
+                line << v.x << ',' << v.y << ',' << v.z << ":0x" << std::hex << v.color << std::dec;
+            }
+            static std::set<std::string> seen_map_layout;
+            static std::uint64_t map_trace_frame = ~0ull;
+            static unsigned map_trace_count = 0u;
+            static bool map_trace_exhausted = false;
+            if (map_trace_frame != impl.frames) {
+                map_trace_frame = impl.frames;
+                map_trace_count = 0u;
+            }
+            // Reserve the budget for after the quest clock; bound changing
+            // marker positions to at most 64 new descriptions per frame.
+            if (!map_trace_exhausted && map_trace_count < 64u && seen_map_layout.insert(line.str()).second) {
+                ++map_trace_count;
+                std::cerr << "[map-layout-v2] frame=" << impl.frames << ' ' << line.str() << '\n';
+                if (seen_map_layout.size() >= 4096u) {
+                    map_trace_exhausted = true;
+                    std::cerr << "[map-layout-v2] capture-limit=4096 reached; restart for another capture\n";
+                }
+            }
         }
     }
 

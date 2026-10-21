@@ -15,6 +15,7 @@ struct HudProbe {
     HudRect screen, uv;
     std::uint32_t texture_address{}, width{}, height{};
     bool textured{}, glyph_page{}, map_surface{};
+    bool map_area_tint{}; // all visible vertices are yellow-tinted
 };
 enum class HudGroup { None, TopLeft, Map, Items };
 struct HudAnchor {
@@ -27,6 +28,11 @@ struct HudAnchor {
 
 class HudLayout {
 public:
+    // Diagnostic gate: menus cannot consume the map capture budget before
+    // the same clock signature used by HUD scaling has appeared.
+    bool quest_hud_active(std::uint64_t frame, std::uint32_t target) const {
+        return frame_ == frame && target_ == target && clock_;
+    }
     HudAnchor classify(std::uint64_t frame, std::uint32_t target, const HudProbe &draw) {
         if (frame_ != frame || target_ != target) {
             frame_ = frame;
@@ -115,6 +121,18 @@ public:
                  same(draw.uv, {232, 240, 244, 256}));
             if (plate || label || icon) return {HudGroup::TopLeft, 8, 8};
         }
+        // Captured detection halo: a textured yellow sprite from the same
+        // atlas cell as the monster dot, drawn BEFORE the map surface. It
+        // uses the expanded-map coordinate plane (anchor 468,32), even while
+        // the cropped local map is shown. Do not borrow a previous-frame
+        // cropped-map anchor, or wait for map_ to become true.
+        if (draw.textured && !draw.glyph_page && !hud_sheet && draw.map_area_tint &&
+            draw.width == 256u && draw.height == 256u &&
+            same(draw.uv, {36, 244, 48, 256}) &&
+            inside(b, {280, 16, 480, 200}) &&
+            b.right - b.left >= 16.0f && b.right - b.left <= 32.0f &&
+            b.bottom - b.top >= 16.0f && b.bottom - b.top <= 32.0f)
+            return {HudGroup::Map, 468, 32};
         // A map's own right/top edges define its anchor; both expanded and
         // collapsed maps keep their original margins. Following marker draws
         // inherit that exact transform rather than shrinking about themselves.
