@@ -212,13 +212,22 @@ void clamp_through_quad(
     }
     const float u_min = std::min(u_at_x0, u_at_x1), u_max = std::max(u_at_x0, u_at_x1);
     const float v_min = std::min(v_at_y0, v_at_y1), v_max = std::max(v_at_y0, v_at_y1);
-    // A range beyond the texture repeats it on purpose.
-    if (u_min < 0.0f || v_min < 0.0f || u_max > texture_width || v_max > texture_height) return;
-    // Half a pixel, in texels.
+    // Repetition is per axis. HUD bar strips repeat horizontally (for
+    // example U=0..264 on a 16x8 texture), but their vertical edge must still
+    // be clamped. Skipping both axes exposed a wrapped bottom row when HD
+    // replacements were sampled at fractional HUD scales.
+    const bool clamp_u = u_min >= 0.0f && u_max <= texture_width;
+    const bool clamp_v = v_min >= 0.0f && v_max <= texture_height;
+    if (!clamp_u && !clamp_v) return;
+    // Half an original screen pixel, in guest texels. Leave an intentionally
+    // repeated axis unbounded; the shader/sampler retains its repeat mode.
     const float inset_u = 0.5f * (u_max - u_min) / (x1 - x0);
     const float inset_v = 0.5f * (v_max - v_min) / (y1 - y0);
     for (std::size_t i = first; i < first + 6u; ++i)
-        set_uv_rect(vertices[i], u_min + inset_u, v_min + inset_v, u_max - inset_u, v_max - inset_v);
+        set_uv_rect(vertices[i], clamp_u ? u_min + inset_u : -kNoClamp,
+            clamp_v ? v_min + inset_v : -kNoClamp,
+            clamp_u ? u_max - inset_u : kNoClamp,
+            clamp_v ? v_max - inset_v : kNoClamp);
 }
 
 // Lighting reaches the shaders in two std140 uniform blocks that live in the
