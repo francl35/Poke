@@ -92,3 +92,11 @@ __pycache__/
 /psp_report*.csv
 /psp_report*.json
 /tools/*.bak
+
+# MHP1/FreedomDX local inputs and game-derived outputs
+/profiles/mhp1/game/
+/profiles/mhp1/analysis/
+/profiles/mhp1/generated/
+/profiles/mhp1/overlays/
+/profiles/mhp1/*.mhp1-step1.bak
+/profiles/mhp1/*.mhp1-headless.bak

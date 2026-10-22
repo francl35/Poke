@@ -521,6 +521,19 @@ void Menu::video() {
         texture_pack_rows();
     #endif
 
+
+    #ifdef MHP_UI_CORE_ONLY
+        if (toggle_row("Texture pack", s.texture_pack,
+                options_for("video.texture_pack",
+                    "Use replacements from the configured texture-pack folder."))) {
+            s.texture_pack = !s.texture_pack;
+            renderer().set_texture_pack(s.texture_pack);
+            settings::save();
+        }
+
+        info_row("Texture pack status", renderer().texture_pack_status());
+    #endif
+
     section("Timing");
     {
         struct Mode {

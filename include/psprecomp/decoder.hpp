@@ -7,6 +7,7 @@ namespace psprecomp {
 
 enum class OpcodeKind {
     Nop,
+    Addi,
     Addiu,
     Slti,
     Sltiu,

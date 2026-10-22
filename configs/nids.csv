@@ -307,5 +307,6 @@ sceUtility,0xE49BFE92,sceUtilityUnloadModule
 sceUtility,0xF3F76017,sceUtilityOskGetStatus
 sceUtility,0xF6269B82,sceUtilityOskInitStart
 sceUtility,0xF88155F6,sceUtilityNetconfShutdownStart
+sceUtility,0x1579A159,sceUtilityLoadNetModule
 sceWlanDrv,0x0C622081,sceWlanGetEtherAddr
 sceWlanDrv,0xD7763699,sceWlanGetSwitchState

@@ -127,10 +127,7 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
 
         // Preserve the current profile's unsupported-feature restrictions.
         auto &player = mhp2g::settings::current();
-        player.fast_loading = false;
-        player.texture_pack = false;
         player.selective_ui = false;
-        player.upscale_maps = false;
         player.right_stick = mhp2g::settings::RightStick::DPad;
         player.touch_controls = false;
         player.free_camera = false;

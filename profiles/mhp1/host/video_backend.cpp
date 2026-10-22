@@ -25,7 +25,8 @@ public:
         std::string error;
         if (!renderer_.initialize({"Monster Hunter Portable / FreedomDX (experimental)"}, error))
             throw psprecomp::Error("MHP1 Vulkan initialization failed: " + error);
-        renderer_.set_texture_pack(false);
+        renderer_.set_texture_pack(
+            mhp2g::settings::current().texture_pack);
         if (!mhp2g::ui::Layer::get().attach(renderer_))
             throw psprecomp::Error("MHP1 could not initialize the shared UI layer");
         renderer_.begin_frame();
