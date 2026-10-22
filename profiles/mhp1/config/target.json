@@ -1,0 +1,10 @@
+{
+  "profile": "mhp1",
+  "variant": "freedomdx",
+  "application_name": "Poke FreedomDX",
+  "disc_id": "ULJM05066",
+  "disc_version": "1.03",
+  "executable": "EBOOT.BIN",
+  "executable_sha256": "255215e8573d48e9d74bee0e78c9779789bfc4b600a8271402906c5d0d74e312",
+  "config_version_label": "1.8.0"
+}

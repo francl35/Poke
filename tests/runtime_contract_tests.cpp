@@ -629,6 +629,7 @@ void integer_contracts() {
         unsigned destination;
     };
     const Case cases[] = {{r(8, 9, 10, 0, 0x20), 17, 3, 20, 10}, {r(8, 9, 10, 0, 0x21), 0xFFFFFFFF, 1, 0, 10},
+        {i(8, 8, 10, 0xFFF4), 0x09FBFA50, 0, 0x09FBFA44, 10},
         {r(8, 9, 10, 0, 0x22), 17, 3, 14, 10}, {r(8, 9, 10, 0, 0x23), 0, 1, 0xFFFFFFFF, 10},
         {r(8, 9, 10, 0, 0x24), 0xF0, 0x3C, 0x30, 10}, {r(8, 9, 10, 0, 0x25), 0xF0, 0x3C, 0xFC, 10},
         {r(8, 9, 10, 0, 0x26), 0xF0, 0x3C, 0xCC, 10}, {r(8, 9, 10, 0, 0x27), 0xF0, 0x3C, 0xFFFFFF03, 10},
@@ -668,6 +669,25 @@ void integer_contracts() {
         step(runtime, cpu, r(8, 9, 10, 0, function));
         check(cpu.gpr[10] == 77, "Conditional move must preserve destination when condition is false");
     }
+
+    for (const auto &pair :
+        {std::pair{0x7FFFFFFFu, 0x0001u},
+         std::pair{0x80000000u, 0xFFFFu}}) {
+        psprecomp::Runtime overflow;
+        psprecomp::AllegrexContext state{};
+        state.gpr[8] = pair.first;
+        state.gpr[10] = 0x12345678u;
+        overflow.memory().store32(base, i(8, 8, 10, pair.second));
+        state.pc = base;
+        check(
+            psprecomp::interpret_allegrex(overflow, state, 1) ==
+                    psprecomp::InterpreterExit::Stopped &&
+                overflow.stop_reason().find("overflow") != std::string::npos &&
+                state.gpr[10] == 0x12345678u &&
+                state.pc == base,
+            "ADDI overflow must stop without changing the destination");
+    }
+
     for (unsigned function : {0x20u, 0x22u}) {
         psprecomp::Runtime overflow;
         psprecomp::AllegrexContext state{};

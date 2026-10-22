@@ -46,6 +46,7 @@ struct OpenFile {
     std::unique_ptr<std::fstream> host;
     // Inside DATA.BIN: read through the mods, which may change what the game
     // gets there (host/mods/mhp2g_mods.hpp). Byte 0 is this far into it.
+    std::optional<std::uint64_t> async_result;
     bool archive{};
     std::uint64_t archive_offset{};
 };
@@ -242,8 +243,8 @@ std::size_t read_open_file(std::uint32_t fd, std::uint64_t offset, std::uint8_t 
     return 0u;
 }
 
-void register_io(
-    HleRegistrar &hle, const std::filesystem::path &disc_image, const std::filesystem::path &memory_stick) {
+void register_io(HleRegistrar &hle, const std::filesystem::path &disc_image, const std::filesystem::path &memory_stick,
+    bool async_services) {
     if (!disc_image.empty()) io().disc = std::make_unique<IsoImage>(disc_image);
     io().memory_stick = memory_stick;
     mods::attach_disc(io().disc.get());
@@ -259,7 +260,7 @@ void register_io(
     hle.add("IoFileMgrForUser", "sceIoClose", [](Runtime &, AllegrexContext &ctx) {
         kernel().finish(ctx, io().files.erase(arg(ctx, 0)) != 0u ? 0u : io_error::kBadFileDescriptor);
     });
-    hle.add("IoFileMgrForUser", "sceIoRead", [](Runtime &rt, AllegrexContext &ctx) {
+    const auto read_request = [](Runtime &rt, AllegrexContext &ctx, bool asynchronous) {
         auto found = io().files.find(arg(ctx, 0));
         if (found == io().files.end() || found->second.kind == OpenFile::Kind::Directory) {
             kernel().finish(ctx, io_error::kBadFileDescriptor);
@@ -294,8 +295,17 @@ void register_io(
             std::cerr << "[io] read fd=" << arg(ctx, 0) << " " << file.path << " offset=" << file.position
                       << " size=" << buffer.size() << " -> " << psprecomp::hex32(address) << "\n";
         file.position += buffer.size();
-        kernel().finish(ctx, static_cast<std::uint32_t>(buffer.size()));
-    });
+        if (asynchronous) {
+            file.async_result = buffer.size();
+            kernel().finish(ctx, 0);
+        } else
+            kernel().finish(ctx, static_cast<std::uint32_t>(buffer.size()));
+    };
+    hle.add("IoFileMgrForUser", "sceIoRead",
+        [read_request](Runtime &rt, AllegrexContext &ctx) { read_request(rt, ctx, false); });
+    if (async_services)
+        hle.add("IoFileMgrForUser", "sceIoReadAsync",
+            [read_request](Runtime &rt, AllegrexContext &ctx) { read_request(rt, ctx, true); });
     hle.add("IoFileMgrForUser", "sceIoWrite", [](Runtime &rt, AllegrexContext &ctx) {
         const std::uint32_t fd = arg(ctx, 0);
         const std::uint32_t address = arg(ctx, 1);
@@ -323,7 +333,7 @@ void register_io(
         file.size = std::max(file.size, file.position);
         kernel().finish(ctx, size);
     });
-    hle.add("IoFileMgrForUser", "sceIoLseek", [](Runtime &, AllegrexContext &ctx) {
+    const auto seek_request = [](Runtime &, AllegrexContext &ctx, bool asynchronous) {
         auto found = io().files.find(arg(ctx, 0));
         if (found == io().files.end()) {
             kernel().finish64(ctx, static_cast<std::int64_t>(static_cast<std::int32_t>(io_error::kBadFileDescriptor)));
@@ -354,8 +364,33 @@ void register_io(
         file.position = static_cast<std::uint64_t>(target);
         if (trace_io())
             std::cerr << "[io] lseek fd=" << arg(ctx, 0) << " " << file.path << " -> " << file.position << "\n";
-        kernel().finish64(ctx, file.position);
-    });
+        if (asynchronous) {
+            file.async_result = file.position;
+            kernel().finish(ctx, 0);
+        } else
+            kernel().finish64(ctx, file.position);
+    };
+    hle.add("IoFileMgrForUser", "sceIoLseek",
+        [seek_request](Runtime &rt, AllegrexContext &ctx) { seek_request(rt, ctx, false); });
+    if (async_services) {
+        hle.add("IoFileMgrForUser", "sceIoLseekAsync",
+            [seek_request](Runtime &rt, AllegrexContext &ctx) { seek_request(rt, ctx, true); });
+        hle.add("IoFileMgrForUser", "sceIoPollAsync", [](Runtime &rt, AllegrexContext &ctx) {
+            const auto found = io().files.find(arg(ctx, 0));
+            const auto out = arg(ctx, 1);
+            if (found == io().files.end()) {
+                kernel().finish(ctx, io_error::kBadFileDescriptor);
+                return;
+            }
+            if (!found->second.async_result || !rt.memory().contains(out, 8u)) {
+                kernel().finish(ctx, io_error::kInvalidArgument);
+                return;
+            }
+            store64(rt.memory(), out, *found->second.async_result);
+            found->second.async_result.reset();
+            kernel().finish(ctx, 0);
+        });
+    }
     hle.add("IoFileMgrForUser", "sceIoGetstat", [](Runtime &rt, AllegrexContext &ctx) {
         const std::string path = read_cstring(rt.memory(), arg(ctx, 0), 256u);
         const SplitPath split = split_path(path);

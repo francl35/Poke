@@ -194,8 +194,12 @@ bool Menu::frame() {
         return true;
     }
     // A texture pack copy keeps the menu open until it ends.
-    texture_pack_import_tick();
-    if (layer.take_menu_toggle() && !texture_pack_import_busy()) return false;
+    #ifdef MHP_UI_CORE_ONLY
+        if (layer.take_menu_toggle()) return false;
+    #else
+        texture_pack_import_tick();
+        if (layer.take_menu_toggle() && !texture_pack_import_busy()) return false;
+    #endif
     const bool back = layer.take_back();
     // The pad's back button closes the menu too, once nothing is being edited.
     const ImGuiKey cancel = layer.confirm_south() ? ImGuiKey_GamepadFaceRight : ImGuiKey_GamepadFaceDown;
@@ -203,21 +207,27 @@ bool Menu::frame() {
     const bool start = ImGui::IsKeyPressed(ImGuiKey_GamepadStart, false);
     // Back closes the font list, or the save import and export, before it
     // closes the menu.
+#ifdef MHP_UI_CORE_ONLY
+    bool font_list_was_open = tab_ == 2 && controllers_screen_open();
+#else
     bool font_list_was_open = (tab_ == 0 && (font_list_open() || texture_pack_screen_open())) ||
         (tab_ == 2 && controllers_screen_open()) ||
         (tab_ == 4 && (mods_screen_open() || layered_armor_screen_open())) || (tab_ == 5 && save_screen_open());
-#if defined(MHP2G_DEBUG_MENU)
-    font_list_was_open = font_list_was_open || (tab_ == 6 && debug_screen_open());
 #endif
-    back_ = back || pad_back;
+    #if defined(MHP2G_DEBUG_MENU)
+        font_list_was_open = font_list_was_open || (tab_ == 6 && debug_screen_open());
+    #endif
+        back_ = back || pad_back;
 
     // The touch layout's editor takes the whole screen until it is done.
+#ifndef MHP_UI_CORE_ONLY
     if (touch_editor_open()) {
         touch_editor_frame(back_);
         if (!touch_editor_open()) focus_next_row();
         return true;
     }
 
+#endif
     begin_panel("##menu", "Poke", paused_ ? "Paused" : "Running", true);
 #if defined(MHP2G_DEBUG_MENU)
     // The developer tools' page, in developer builds run with MHP2G_DEBUG_MENU=1.
@@ -318,15 +328,19 @@ bool Menu::frame() {
     } else if (!font_list_was_open && (((back || pad_back) && !was_editing_) || start)) {
         close_ = true;
     }
+#ifndef MHP_UI_CORE_ONLY
     if (close_ && !quit_ && texture_pack_import_busy()) close_ = false;
+#endif
     if (!confirm_dialog()) return false;
     was_editing_ = ImGui::IsAnyItemActive();
     return !close_;
 }
 
 void Menu::video() {
-    if (font_list(back_)) return;
-    if (texture_pack_screen(back_)) return;
+    #ifndef MHP_UI_CORE_ONLY
+        if (font_list(back_)) return;
+        if (texture_pack_screen(back_)) return;
+    #endif
     settings::Settings &s = settings::current();
     section("Picture");
     {
@@ -374,7 +388,11 @@ void Menu::video() {
     }
 #endif
     {
-        static const char *const kAspects[] = {"Original", "Stretch", "Fill"};
+        #ifdef MHP_UI_CORE_ONLY
+                static const char *const kAspects[] = {"Original", "Stretch"};
+        #else
+                static const char *const kAspects[] = {"Original", "Stretch", "Fill"};
+        #endif
         const int current = static_cast<int>(s.aspect);
         if (const int delta = choice_row("Aspect ratio", kAspects[current],
                 options_for("video.aspect",
@@ -382,11 +400,12 @@ void Menu::video() {
                     "Stretch fills the window by stretching the picture. Fill widens (or "
                     "narrows) the game's view to the window's shape, keeping its height, "
                     "and keeps the interface in the PSP's proportions."))) {
-            s.aspect = static_cast<settings::Aspect>(cycle(current, delta, 3));
+            s.aspect = static_cast<settings::Aspect>(cycle(current, delta, static_cast<int>(std::size(kAspects))));
             renderer().set_aspect(s.aspect);
             settings::save();
         }
     }
+#ifndef MHP_UI_CORE_ONLY
     {
         static const char *const kFovLabels[] = {
             "-15 degrees", "-10 degrees", "-5 degrees", "Original", "+5 degrees",
@@ -403,6 +422,7 @@ void Menu::video() {
             settings::save();
         }
     }
+#endif
     if (choice_row("Scaling filter", s.sharp_screen ? "Sharp" : "Smooth",
             options_for("video.sharp_screen",
                 "How the finished picture is scaled to the window: smooth "
@@ -419,6 +439,7 @@ void Menu::video() {
         renderer().set_sharp_textures(s.sharp_textures);
         settings::save();
     }
+#ifndef MHP_UI_CORE_ONLY
     {
         static const char *const kHudSizes[] = {"Original (100%)", "Medium (75%)", "Small (50%)"};
         const int current = static_cast<int>(s.hud_size);
@@ -454,6 +475,7 @@ void Menu::video() {
         s.upscale_maps = !s.upscale_maps;
         settings::save();
     }
+#endif
     if (toggle_row("GPU vertex decoding", s.gpu_decode,
             options_for("video.gpu_decode",
                 "Uses the GPU to decode eligible vertices. CPU decoding is the compatibility default; some Steam Deck drivers have shown GPU timeouts with this enabled. Unsupported paths keep CPU decoding."))) {
@@ -473,29 +495,32 @@ void Menu::video() {
             settings::save();
         }
     }
-    {
-        RowOptions o = options_for("video.texture_pack",
-            "Draws an installed HD pack instead of original textures. Packs are detected in "
-            "textures/ULJM05500, or directly in textures when it contains textures.ini. "
-            "Import texture pack can select another folder without command-line options.");
-        // The footer shows the note under the description: what is loaded,
-        // or where the pack was looked for.
-        if (o.note.empty()) {
-            const std::string status = renderer().texture_pack_status();
-            o.note = status == "Not installed" ? "No pack in " + renderer().texture_pack_folder() : status;
-            // A pack used in place that has moved: its path is on the "Pack
-            // used from" row below; the footer has room for its name only.
-            if (status.rfind("Folder missing: ", 0) == 0)
-                o.note = "Pack folder missing: " +
-                    install::path_to_utf8(install::path_from_utf8(status.substr(16)).filename());
+    #ifndef MHP_UI_CORE_ONLY
+        {
+            RowOptions o = options_for("video.texture_pack",
+                "Draws an installed HD pack instead of original textures. Packs are detected in "
+                "textures/ULJM05500, or directly in textures when it contains textures.ini. "
+                "Import texture pack can select another folder without command-line options.");
+            // The footer shows the note under the description: what is loaded,
+            // or where the pack was looked for.
+            if (o.note.empty()) {
+                const std::string status = renderer().texture_pack_status();
+                o.note = status == "Not installed" ? "No pack in " + renderer().texture_pack_folder() : status;
+                // A pack used in place that has moved: its path is on the "Pack
+                // used from" row below; the footer has room for its name only.
+                if (status.rfind("Folder missing: ", 0) == 0)
+                    o.note = "Pack folder missing: " +
+                        install::path_to_utf8(install::path_from_utf8(status.substr(16)).filename());
+            }
+            if (choice_row("Texture pack", s.texture_pack ? "On" : "Off", o)) {
+                s.texture_pack = !s.texture_pack;
+                renderer().set_texture_pack(s.texture_pack);
+                settings::save();
+            }
         }
-        if (choice_row("Texture pack", s.texture_pack ? "On" : "Off", o)) {
-            s.texture_pack = !s.texture_pack;
-            renderer().set_texture_pack(s.texture_pack);
-            settings::save();
-        }
-    }
-    texture_pack_rows();
+        texture_pack_rows();
+    #endif
+
     section("Timing");
     {
         struct Mode {
@@ -572,6 +597,7 @@ void Menu::video() {
         s.unthrottled = !s.unthrottled;
         settings::save();
     }
+#ifndef MHP_UI_CORE_ONLY
     {
         RowOptions o = options_for("video.fast_loading",
             "Lets the game run ahead of real time while it loads and is silent, so loads "
@@ -638,6 +664,7 @@ void Menu::video() {
         }
         if (toggle_row("Hide HUD", gpu::hud::hidden(), o)) gpu::hud::toggle();
     }
+#endif
     {
         static const char *const kPerf[] = {"Off", "Overlay", "Overlay and log", "Log only"};
         const int current = static_cast<int>(s.perf);
@@ -664,7 +691,20 @@ void Menu::video() {
             settings::save();
         }
     }
-    font_rows();
+    #ifndef MHP_UI_CORE_ONLY
+        font_rows();
+    #endif
+
+    #ifdef MHP_UI_CORE_ONLY
+    if (toggle_row("Crisp text", s.crisp_text,
+            options_for("text.crisp",
+                "Redraws supported font textures at higher resolution. "
+                "Requires an internal resolution above x1."))) {
+        s.crisp_text = !s.crisp_text;
+        settings::save();
+    }
+    #endif
+
     ImGui::Dummy({0.0f, font_gap()});
     if (button_row("Restore video defaults", {false, {}, "Every setting on this page back to how Poke ships."})) {
         const settings::Settings &d = settings::defaults();
@@ -695,6 +735,18 @@ void Menu::video() {
         restore("video.fast_forward", s.fast_forward, d.fast_forward);
         restore("video.fast_forward_speed", s.fast_forward_speed, d.fast_forward_speed);
         restore("video.performance", s.perf, d.perf);
+            #ifdef MHP_UI_CORE_ONLY
+                    s.aspect = settings::Aspect::Original;
+                    s.fov_offset_degrees = 0;
+                    s.hud_size = settings::HudSize{};
+                    s.map_size = settings::HudSize{};
+                    s.selective_ui = false;
+                    s.upscale_maps = false;
+                    s.crisp_text = false;
+                    s.texture_pack = false;
+                    s.fast_loading = false;
+                    s.fast_forward = fast_forward::Mode::Off;
+            #endif
         renderer().set_internal_scale(s.internal_scale);
         renderer().set_fullscreen(s.fullscreen);
         renderer().set_window_scale(s.window_scale);
@@ -989,17 +1041,34 @@ void Menu::controls() {
         settings::save();
     }
     {
-        static const char *const kModes[] = {"Camera", "D-pad", "Off"};
-        const int current = static_cast<int>(s.right_stick);
-        if (const int delta = choice_row("Camera stick", kModes[current],
-                options_for("input.right_stick",
-                    "Camera uses the HD release's own right-stick camera. D-pad "
-                    "presses the D-pad instead, like the PSP's camera controls. "
-                    "It is the right stick unless the preset moves with it."))) {
-            s.right_stick = static_cast<settings::RightStick>(cycle(current, delta, 3));
-            settings::save();
-        }
+        #ifdef MHP_UI_CORE_ONLY
+            {
+                const bool enabled = s.right_stick == settings::RightStick::DPad;
+                if (choice_row("Camera stick", enabled ? "D-pad" : "Off",
+                        options_for("input.right_stick",
+                            "Use the right stick for the PSP's D-pad camera controls."))) {
+                    s.right_stick = enabled
+                        ? settings::RightStick::Off
+                        : settings::RightStick::DPad;
+                    settings::save();
+                }
+            }
+        #else
+            // Keep the entire existing Camera / D-pad / Off block here.
+            static const char *const kModes[] = {"Camera", "D-pad", "Off"};
+        
+            const int current = static_cast<int>(s.right_stick);
+            if (const int delta = choice_row("Camera stick", kModes[current],
+                    options_for("input.right_stick",
+                        "Camera uses the HD release's own right-stick camera. D-pad "
+                        "presses the D-pad instead, like the PSP's camera controls. "
+                        "It is the right stick unless the preset moves with it."))) {
+                s.right_stick = static_cast<settings::RightStick>(cycle(current, delta, 3));
+                settings::save();
+            }
+        #endif
     }
+#ifndef MHP_UI_CORE_ONLY
     // On Android a finger drag drives the analog camera whatever the right
     // stick does, so the row stays open there.
     const bool camera =
@@ -1087,6 +1156,7 @@ void Menu::controls() {
             settings::save();
         }
     }
+#endif
     {
         RowOptions o = options_for("input.right_stick_zone",
             "How far the camera stick moves before it presses the "
@@ -1120,6 +1190,7 @@ void Menu::controls() {
                 "Letters, digits, spaces and simple punctuation.")))
         settings::save();
 
+#ifndef MHP_UI_CORE_ONLY
     section("Keyboard and mouse");
     {
         RowOptions o = options_for("input.mouse",
@@ -1162,6 +1233,7 @@ void Menu::controls() {
         }
     }
 
+#endif
     ImGui::Dummy({0.0f, font_gap()});
     if (button_row("Restore control defaults",
             {false, {},
@@ -1199,9 +1271,18 @@ void Menu::controls() {
         restore("experimental.free_camera_speed", s.free_camera_speed, d.free_camera_speed);
         if (settings::overridden_by("input.preset") == nullptr) settings::choose_preset(s, d.control_preset);
         preset_notice_.clear();
+        #ifdef MHP_UI_CORE_ONLY
+                s.right_stick = settings::RightStick::DPad;
+                s.analog_camera = false;
+                s.lock_on = false;
+                s.mouse = false;
+                s.touch_controls = false;
+                s.free_camera = false;
+        #endif
         settings::save();
     }
 
+#ifndef MHP_UI_CORE_ONLY
     section("Touch screen");
     {
         RowOptions o = options_for("input.touch_controls",
@@ -1328,8 +1409,10 @@ void Menu::controls() {
         info_row("Back to the game's camera", "R, or Y");
         info_row("Screenshot", binds_of(input::Action::Screenshot));
     }
+#endif
 }
 
+#ifndef MHP_UI_CORE_ONLY
 std::string format_duration(std::uint64_t ms) {
     const std::uint64_t seconds = ms / 1000u;
     if (seconds < 60u) return std::to_string(seconds) + " s";
@@ -1649,15 +1732,29 @@ void Menu::mods() {
     }
 }
 
+#else
+void Menu::network() {
+    section("Network");
+    info_row("Status", "Multiplayer is not connected for this profile.");
+}
+
+void Menu::mods() {
+    section("Mods");
+    info_row("Status", "MHP2G-specific mods are unavailable for this profile.");
+}
+#endif
+
 void Menu::system() {
-    if (save_screen(back_)) {
-        if (take_restart_request()) {
-            install::request_restart_on_exit();
-            quit_ = true;
-            close_ = true;
+    #ifndef MHP_UI_CORE_ONLY
+        if (save_screen(back_)) {
+            if (take_restart_request()) {
+                install::request_restart_on_exit();
+                quit_ = true;
+                close_ = true;
+            }
+            return;
         }
-        return;
-    }
+    #endif
     std::string data_dir;
     try {
         data_dir = install::path_to_utf8(install::user_data_directory());
@@ -1688,6 +1785,7 @@ void Menu::system() {
         }
     }
 #endif
+#ifndef MHP_UI_CORE_ONLY
     settings::Settings &s = settings::current();
     if (toggle_row("Pause the game when the menu opens", s.menu_pause,
             options_for("ui.menu_pause",
@@ -1705,6 +1803,7 @@ void Menu::system() {
         s.menu_pause_multiplayer = !s.menu_pause_multiplayer;
         settings::save();
     }
+#endif
 #if defined(MHP2G_ANDROID_APP)
     // An Android app's data folder is out of the file manager's reach; its
     // log goes where the player picks instead, to send with a report.
@@ -1725,18 +1824,27 @@ void Menu::system() {
             std::cout << "[menu] cannot open " << data_dir << ": " << SDL_GetError() << "\n";
     }
 #endif
+#ifndef MHP_UI_CORE_ONLY
     if (button_row("Set up game data again…",
             {false, {}, "Choose the disc image again, for example after moving it. The game closes first."}))
         confirm_ = Confirm::Setup;
+#endif
     if (button_row("Quit game", {false, {}, "Close Poke. Progress since your last save is lost."}, colors::kDanger))
         confirm_ = Confirm::Quit;
 
-    section("Saves");
-    save_rows();
+    #ifndef MHP_UI_CORE_ONLY
+        section("Saves");
+        save_rows();
+    #endif
 
     section("About");
     info_row("Poke", std::string(kPokeVersion));
-    info_row("Game", std::string(install::kGameTitle) + " (" + install::kDiscIdDisplay + ")");
+    #ifdef MHP_UI_CORE_ONLY
+        info_row("Game", "Monster Hunter Portable / FreedomDX (ULJM05066)");
+    #else
+        info_row("Game",
+            std::string(install::kGameTitle) + " (" + install::kDiscIdDisplay + ")");
+    #endif
     {
         std::string where = data_dir;
         try {
@@ -1803,7 +1911,9 @@ bool Menu::confirm_dialog() {
         const float gap = font * 0.6f;
         const float width = (ImGui::GetContentRegionAvail().x - gap) * 0.5f;
         if (big_button(quit ? "Quit" : "Close and set up", width, true)) {
-            if (!quit) install::request_setup_on_exit();
+            #ifndef MHP_UI_CORE_ONLY
+                        if (!quit) install::request_setup_on_exit();
+            #endif
             quit_ = true;
             keep_open = false;
         }
@@ -1876,6 +1986,7 @@ void draw_gpu_problem(const std::string &problem) {
 }
 
 // The network overlay: a few lines in the top-right corner.
+#ifndef MHP_UI_CORE_ONLY
 void draw_network_overlay() {
     const adhoc::Diagnostics d = adhoc::Client::get().diagnostics();
     const ImGuiIO &io = ImGui::GetIO();
@@ -1908,6 +2019,7 @@ void draw_network_overlay() {
     ImGui::End();
     ImGui::PopStyleVar();
 }
+#endif
 
 // The free camera's indicator: one small line at the top while it flies.
 // Left out of window captures, which are for pictures of the game; the game
@@ -1999,6 +2111,7 @@ void draw_note(const Note &n) {
 // For a moment after the HUD is hidden or shown (gpu/game_hud.hpp): a short
 // line at the top, fading out. Left out of window captures, as the free
 // camera's line is.
+#ifndef MHP_UI_CORE_ONLY
 void draw_hud_note(double seconds_left, bool below_free_camera) {
     const ImGuiIO &io = ImGui::GetIO();
     const float font = Layer::get().font_size();
@@ -2021,6 +2134,7 @@ void draw_hud_note(double seconds_left, bool below_free_camera) {
     ImGui::End();
     ImGui::PopStyleVar(2);
 }
+#endif
 
 // The menu while it is open over the running game, and a quit chosen in it.
 std::optional<Menu> &menu_over_game_state() {
@@ -2125,6 +2239,40 @@ std::string take_screenshot() {
     return where;
 }
 
+
+#ifdef MHP_UI_CORE_ONLY
+
+void draw_over_game() {
+    Layer &layer = Layer::get();
+    if (!layer.attached()) return;
+
+    auto &menu = menu_over_game_state();
+    const bool keyboard = text_input_open();
+    const double hint_left = menu || settings::current().menu_hint_seen ? -1.0 : hint_seconds_left();
+    const bool noted = !note().text.empty() && Clock::now() < note().until &&
+        !layer.renderer().window_capture_pending();
+    if (!keyboard && !menu && hint_left <= 0.0 && !noted) return;
+
+    layer.begin_frame();
+    if (keyboard && !menu) {
+        text_input_frame();
+    } else {
+        if (hint_left > 0.0) draw_hint(hint_left);
+        if (noted) draw_note(note());
+        if (menu && !menu->frame()) {
+            const bool quit = menu->quit() || layer.window_closed();
+            menu.reset();
+            layer.set_interactive(false);
+            layer.renderer().set_game_input(true);
+            note_menu_closed(quit);
+            if (quit) quit_requested() = true;
+        }
+    }
+    layer.end_frame();
+}
+
+#else
+
 void draw_over_game() {
     Layer &layer = Layer::get();
     if (!layer.attached()) return;
@@ -2179,9 +2327,17 @@ void draw_over_game() {
     layer.end_frame();
 }
 
+#endif
+
 bool menu_pauses() {
-    const settings::Settings &s = settings::current();
-    return adhoc_session_active() ? s.menu_pause_multiplayer : s.menu_pause;
+    #ifdef MHP_UI_CORE_ONLY
+        return false;
+    #else
+        const settings::Settings &s = settings::current();
+        return adhoc_session_active()
+            ? s.menu_pause_multiplayer
+            : s.menu_pause;
+    #endif
 }
 
 void open_menu_over_game() {

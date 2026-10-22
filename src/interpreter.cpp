@@ -266,7 +266,16 @@ bool execute_simple(Runtime &rt, AllegrexContext &ctx, const DecodedInstruction 
     case OpcodeKind::Sync:
         memory.memory_barrier();
         break;
-
+    case OpcodeKind::Addi: {
+        const std::uint32_t result = rs + imm;
+        if (((~(rs ^ imm) & (rs ^ result)) & 0x80000000u) != 0u) {
+            ctx.pc = pc;
+            rt.arithmetic_overflow(pc, d.word);
+            return false;
+        }
+        ctx.set_gpr(d.rt, result);
+        break;
+    }
     case OpcodeKind::Addiu:
         ctx.set_gpr(d.rt, rs + imm);
         break;

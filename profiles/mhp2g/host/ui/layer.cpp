@@ -185,8 +185,11 @@ bool Layer::attach(gpu::VulkanRenderer &renderer) {
     // the overlays drawn then must not show it again.
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     if (renderer.gamepad() != nullptr) device_ = InputDevice::Gamepad;
-    note_unknown_controllers();
-    script::attach();
+    #ifndef MHP_UI_CORE_ONLY
+        note_unknown_controllers();
+        script::attach();
+    #endif
+    
     return true;
 }
 
@@ -406,8 +409,11 @@ bool Layer::handle_event(const SDL_Event &event) {
         break;
     case SDL_EVENT_JOYSTICK_ADDED:
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+
         // A controller nothing reads yet says so (#147).
-        note_unknown_controller(event);
+        #ifndef MHP_UI_CORE_ONLY
+                note_unknown_controller(event);
+        #endif
         return false;
     case SDL_EVENT_GAMEPAD_ADDED:
     case SDL_EVENT_GAMEPAD_REMOVED:
@@ -520,7 +526,9 @@ void Layer::end_frame() {
 bool Layer::run(const std::function<bool()> &frame, bool show_game) {
     for (;;) {
         const Clock::time_point start = Clock::now();
-        script::tick();
+        #ifndef MHP_UI_CORE_ONLY
+            script::tick();
+        #endif
         if (!renderer_->pump_events()) window_closed_ = true;
         if (window_closed_) return false;
         begin_frame();

@@ -980,6 +980,7 @@ void GeState::handle_command(const GuestMemory &memory, std::uint32_t command, s
     }
 
     case kNop:
+    case 0xFF: // GE NOP_FF
     case kTextureFlush:
         break;
 
@@ -1006,6 +1007,7 @@ void GeState::handle_command(const GuestMemory &memory, std::uint32_t command, s
             std::uint32_t &color = at % 3u == 0u ? light.ambient : at % 3u == 1u ? light.diffuse : light.specular;
             color = data & 0x00FFFFFFu;
         } else {
+            if (state_command_sink_ && state_command_sink_(command, data)) break;
             ++unhandled_commands_;
             trace_unhandled(command, data);
             break;

@@ -246,6 +246,12 @@ public:
     using SignalSink = std::function<void(std::uint32_t signal, std::uint32_t pc)>;
     using TransferSink = std::function<void(const BlockTransfer &)>;
 
+    // Optional profile extension for state commands not consumed by this decoder.
+    // Returning true accepts a register write; its 24-bit value is retained below.
+    using StateCommandSink = std::function<bool(std::uint32_t, std::uint32_t)>;
+    void set_state_command_sink(StateCommandSink sink) { state_command_sink_ = std::move(sink); }
+    [[nodiscard]] const std::array<std::uint32_t, 256> &command_registers() const noexcept { return registers_; }
+
     void set_draw_sink(DrawSink sink) { draw_sink_ = std::move(sink); }
     void set_signal_sink(SignalSink sink) { signal_sink_ = std::move(sink); }
     // Block transfers are carried out by the sink, which can write guest memory.
@@ -326,6 +332,7 @@ private:
     std::uint32_t command_pc_{};
     DrawCall call_; // reused by draw_primitive for every draw
     DrawSink draw_sink_;
+    StateCommandSink state_command_sink_;
     SignalSink signal_sink_;
     TransferSink transfer_sink_;
     ViewHook view_hook_;

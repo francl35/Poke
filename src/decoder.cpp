@@ -348,6 +348,10 @@ DecodedInstruction decode_allegrex(std::uint32_t word) {
         d.kind = OpcodeKind::Bgtzl;
         d.mnemonic = "bgtzl";
         break;
+    case 0x08:
+        d.kind = OpcodeKind::Addi;
+        d.mnemonic = "addi";
+        break;
     case 0x09:
         d.kind = OpcodeKind::Addiu;
         d.mnemonic = "addiu";

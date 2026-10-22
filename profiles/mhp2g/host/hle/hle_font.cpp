@@ -339,7 +339,7 @@ void register_font(HleRegistrar &hle) {
                 static_cast<std::int32_t>(m.load32(image + 8u)), ctx.gpr[31] == kGlyphImageCaller);
             // Record the actual destination before the blit, so direct atlas
             // writes can be reconstructed without game-specific object offsets.
-#ifdef MHP2G_HAS_RENDERER
+#if defined(MHP2G_HAS_RENDERER) || defined(MHP1_HAS_VULKAN)
             gpu::ui::note_direct_glyph(rt.memory(), image, arg(ctx, 1));
 #endif
             blit_glyph(rt.memory(), image, arg(ctx, 1));

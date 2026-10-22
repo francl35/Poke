@@ -68,7 +68,8 @@ void log_once(const std::string &key, const std::string &message);
 
 void register_threadman(HleRegistrar &hle);
 void register_sysmem(HleRegistrar &hle);
-void register_io(HleRegistrar &hle, const std::filesystem::path &disc_image, const std::filesystem::path &memory_stick);
+void register_io(HleRegistrar &hle, const std::filesystem::path &disc_image, const std::filesystem::path &memory_stick,
+    bool async_services = false);
 void register_system(HleRegistrar &hle);
 void register_media(HleRegistrar &hle);
 void register_atrac(HleRegistrar &hle);
