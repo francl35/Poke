@@ -1,7 +1,6 @@
 #include "psprecomp/runtime.hpp"
 #include "psprecomp/common.hpp"
 #include "psprecomp/interpreter.hpp"
-#include "gather_patch_trace.hpp"
 
 #include <algorithm>
 #include <array>
@@ -1237,7 +1236,6 @@ void Runtime::invoke_import_cached(
 
     (*bound)(*this, ctx);
     if (!stopped_ && g_post_import_hook != nullptr) g_post_import_hook(*this, ctx);
-    if (!stopped_) gather_patch_trace::observe(*this);
 }
 
 void Runtime::invoke_import(std::string_view library, std::uint32_t nid, AllegrexContext &ctx) {
@@ -1256,7 +1254,6 @@ void Runtime::invoke_import(std::string_view library, std::uint32_t nid, Allegre
     }
     function_it->second(*this, ctx);
     if (!stopped_ && g_post_import_hook != nullptr) g_post_import_hook(*this, ctx);
-    if (!stopped_) gather_patch_trace::observe(*this);
 }
 
 AllegrexContext &Runtime::cpu() noexcept {
