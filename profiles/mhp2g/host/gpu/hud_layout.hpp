@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -121,6 +122,49 @@ public:
                  same(draw.uv, {232, 240, 244, 256}));
             if (plate || label || icon) return {HudGroup::TopLeft, 8, 8};
         }
+        // Item and ammo panels share the HUD-sheet frame and the same
+        // bottom-right anchor. A bowgun's open selector starts much higher
+        // than the melee item wheel. Infer the panel extent from its opener
+        // instead of recognizing only the two short melee rectangles.
+        const bool selector_left = std::abs(b.left - 312.0f) < 0.51f ||
+                                   std::abs(b.left - 328.0f) < 0.51f;
+        const bool selector_corner = hud_sheet && selector_left &&
+            b.top >= 112.0f && b.top <= 216.0f &&
+            std::abs((b.right - b.left) - 16.0f) < 0.51f &&
+            std::abs((b.bottom - b.top) - 8.0f) < 0.51f &&
+            same(draw.uv, {0, 208, 16, 216});
+        // The idle ammunition label uses the name/banner atlas strip rather
+        // than a framed-panel opener. Its location separates it from player
+        // names and companion rows. Admit only banner pieces, not every draw
+        // near the bottom right.
+        const bool ammo_banner = hud_sheet &&
+            inside(b, {312, 180, 472, 204}) &&
+            std::abs((b.bottom - b.top) - 16.0f) < 0.51f &&
+            inside(draw.uv, {120, 16, 156, 32});
+        if (selector_corner || ammo_banner) {
+            // Eight pixels of trim admit the selection arrows and controller
+            // prompts protruding beyond the frame. Each independent panel can
+            // extend the bounds; an ammo banner must not shrink a tall panel.
+            const HudRect bounds = selector_corner
+                ? HudRect{b.left - 8.0f, b.top - 8.0f, 480, 272}
+                : HudRect{304, b.top - 8.0f, 480, b.bottom + 8.0f};
+            if (!items_) item_bounds_ = bounds;
+            else {
+                item_bounds_.left = std::min(item_bounds_.left, bounds.left);
+                item_bounds_.top = std::min(item_bounds_.top, bounds.top);
+                item_bounds_.right = std::max(item_bounds_.right, bounds.right);
+                item_bounds_.bottom = std::max(item_bounds_.bottom, bounds.bottom);
+            }
+            items_ = true;
+        }
+        const bool selector_content = !draw.textured || hud_sheet || draw.glyph_page ||
+            (draw.width == 16u && draw.height == 8u) ||
+            (draw.width == 256u && draw.height == 256u);
+        // An established selector owns its contents before map-marker
+        // classification. The expanded ammo panel overlaps the map's original
+        // coordinate range, but its icons must use the HUD size, not map size.
+        if (items_ && inside(b, item_bounds_) && selector_content)
+            return {HudGroup::Items, 472, 260};
         // Captured detection halo: a textured yellow sprite from the same
         // atlas cell as the monster dot, drawn BEFORE the map surface. It
         // uses the expanded-map coordinate plane (anchor 468,32), even while
@@ -150,25 +194,6 @@ public:
                  same(draw.uv, {0, 224, 16, 232}) ||
                  same(draw.uv, {32, 224, 48, 232}))) && inside(b, map_bounds_))
             return map_anchor_;
-        // Recognize only traced item-selector openers on the quest HUD sheet.
-        // FUComplete widens the idle panel by 16 pixels on the left; holding L
-        // moves its top up by 8 pixels and extends its bottom to 264.
-        // Keep per-layout bounds instead of widening every quest/menu draw.
-        if (hud_sheet && same(draw.uv, {0, 208, 16, 216})) {
-            if (same(b, {328, 208, 344, 216})) {
-                items_ = true;
-                item_bounds_ = {328, 200, 472, 260};
-            } else if (same(b, {312, 208, 328, 216}) ||
-                       same(b, {312, 200, 328, 208})) {
-                items_ = true;
-                item_bounds_ = {312, 200, 472, 264};
-            }
-        }
-        if (items_ && inside(b, item_bounds_) &&
-            (!draw.textured || hud_sheet || draw.glyph_page ||
-                (draw.width == 16u && draw.height == 8u) ||
-                (draw.width == 256u && draw.height == 256u)))
-            return {HudGroup::Items, 472, 260};
         return {};
     }
 

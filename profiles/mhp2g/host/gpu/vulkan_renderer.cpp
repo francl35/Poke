@@ -7504,8 +7504,44 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
             address >= 0x04000000u && address < 0x04200000u;
         if (zero_depth) {
             hud_anchor = impl.hud_layout.classify(impl.frames, call.target.color_address, probe);
+            // Idle bowgun ammo label: separate from the opened selector panel.
+            // Preserve any existing classification, including map markers.
+            if (!hud_anchor &&
+                impl.hud_layout.quest_hud_active(impl.frames, call.target.color_address) &&
+                probe.screen.left >= 312.0f &&
+                probe.screen.right <= 472.0f &&
+                probe.screen.top >= 180.0f &&
+                probe.screen.bottom <= 204.0f) {
+                hud_anchor = {ui::HudGroup::Items, 472.0f, 260.0f};
+            }
             hud_factor = hud_anchor.group == ui::HudGroup::Map ? map_choice_factor : hud_choice_factor;
             if (hud_factor == 1.0f) hud_anchor = {};
+        }
+        // Optional selector/weapon capture for layouts not yet recognized.
+        // Keep descriptions independent of frame number so held menus do not
+        // flood the log. No classification or vertex data is changed here.
+        static const bool trace_hud_layout = std::getenv("MHP2G_TRACE_HUD_LAYOUT") != nullptr;
+        if (trace_hud_layout && impl.hud_layout.quest_hud_active(impl.frames, call.target.color_address) &&
+            ((probe.screen.left >= 296.0f && probe.screen.top >= 104.0f) ||
+             (probe.screen.left <= 180.0f && probe.screen.bottom <= 116.0f))) {
+            std::ostringstream line;
+            line << "target=0x" << std::hex << call.target.color_address << std::dec
+                 << " pos=" << probe.screen.left << ',' << probe.screen.top << ','
+                 << probe.screen.right << ',' << probe.screen.bottom
+                 << " uv=" << probe.uv.left << ',' << probe.uv.top << ',' << probe.uv.right << ',' << probe.uv.bottom
+                 << " tex=0x" << std::hex << probe.texture_address << std::dec
+                 << " size=" << probe.width << 'x' << probe.height
+                 << " textured=" << probe.textured << " glyph=" << probe.glyph_page
+                 << " zero_depth=" << zero_depth << " primitive=" << static_cast<int>(call.primitive)
+                 << " group=" << static_cast<int>(hud_anchor.group)
+                 << " anchor=" << hud_anchor.x << ',' << hud_anchor.y
+                 << " factor=" << (hud_anchor ? hud_factor : 1.0f);
+            static std::set<std::string> seen_hud_layout;
+            if (seen_hud_layout.size() < 4096u && seen_hud_layout.insert(line.str()).second) {
+                std::cerr << "[hud-layout] frame=" << impl.frames << ' ' << line.str() << '\n';
+                if (seen_hud_layout.size() == 4096u)
+                    std::cerr << "[hud-layout] capture-limit=4096 reached\n";
+            }
         }
         // Capture after the quest clock, not title/menu text. Include rejected
         // draws and nonzero-depth layers; no colour/texture-size assumptions.
