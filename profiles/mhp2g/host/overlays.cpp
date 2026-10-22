@@ -7,6 +7,7 @@
 #include "overlays.hpp"
 
 #include "app_paths.hpp"
+#include "fuc_code_patches.hpp"
 #include "hle/hle_common.hpp"
 #include "overlay_module.hpp"
 #include "platform/utf8_path.hpp"
@@ -329,7 +330,7 @@ void revalidate_overlays(Runtime &runtime) {
         // Cheap first: the header settles almost every call without touching the
         // code behind it.
         if (const std::uint64_t head = header_hash(runtime.memory(), slot_start);
-            head == installed_headers()[slot_start]) {
+            head == installed_headers()[slot_start] && !fuc_code_patches::active(runtime)) {
             ++it;
             continue;
         }

@@ -1,6 +1,7 @@
 #include "psprecomp/runtime.hpp"
 #include "psprecomp/common.hpp"
 #include "psprecomp/interpreter.hpp"
+#include "gather_patch_trace.hpp"
 
 #include <algorithm>
 #include <array>
@@ -1138,6 +1139,40 @@ void Runtime::unregister_functions(std::uint32_t start, std::uint32_t end) {
     }
 }
 
+std::size_t Runtime::invalidate_generated_code_unit(std::uint32_t address) {
+    if (!generated_unit_layout_valid_ || generated_unit_span_ == 0u) return 0u;
+    const std::uint32_t c = memory_.canonical(address);
+    if (c < generated_unit_base_) return 0u;
+    const std::size_t unit = (c - generated_unit_base_) / generated_unit_span_;
+    if (unit >= kGeneratedUnitFastCapacity) return 0u;
+    const std::uint64_t start = static_cast<std::uint64_t>(generated_unit_base_) +
+        unit * static_cast<std::uint64_t>(generated_unit_span_);
+    const std::uint64_t end = start + generated_unit_span_;
+    // Both the outer dispatcher and fixed-target native chaining must stop
+    // selecting the retired unit. Exact import/native overrides remain usable.
+    generated_unit_disabled_[unit] = 1u;
+    generated_units_[unit] = nullptr;
+    generated_unit_entries_[unit] = nullptr;
+    std::size_t removed = 0u;
+    for (auto it = functions_.begin(); it != functions_.end();) {
+        const auto pc = memory_.canonical(it->first);
+        if (pc < start || pc >= end || !it->second.name.starts_with("recomp_unit_")) {
+            ++it;
+            continue;
+        }
+        if (pc >= direct_base_) {
+            const std::size_t index = static_cast<std::size_t>(pc - direct_base_) / 4u;
+            if (index < direct_functions_.size()) {
+                direct_functions_[index] = nullptr;
+                direct_chainable_[index] = nullptr;
+            }
+        }
+        it = functions_.erase(it);
+        ++removed;
+    }
+    return removed;
+}
+
 void Runtime::register_native_fast_path(std::uint32_t address, NativeFastPath function) {
     const std::uint32_t canonical_address = memory_.canonical(address);
     if (!function) {
@@ -1202,6 +1237,7 @@ void Runtime::invoke_import_cached(
 
     (*bound)(*this, ctx);
     if (!stopped_ && g_post_import_hook != nullptr) g_post_import_hook(*this, ctx);
+    if (!stopped_) gather_patch_trace::observe(*this);
 }
 
 void Runtime::invoke_import(std::string_view library, std::uint32_t nid, AllegrexContext &ctx) {
@@ -1220,6 +1256,7 @@ void Runtime::invoke_import(std::string_view library, std::uint32_t nid, Allegre
     }
     function_it->second(*this, ctx);
     if (!stopped_ && g_post_import_hook != nullptr) g_post_import_hook(*this, ctx);
+    if (!stopped_) gather_patch_trace::observe(*this);
 }
 
 AllegrexContext &Runtime::cpu() noexcept {

@@ -120,6 +120,10 @@ public:
     // Removes every registration in [start, end). A profile calls this before
     // installing a different overlay into the same guest address window.
     void unregister_functions(std::uint32_t start, std::uint32_t end);
+    // Retire translated entries in the main generated unit containing address.
+    // Preserves exact host/import overrides and all unrelated units. Does not
+    // change class layout, so existing overlay-library object offsets stay valid.
+    std::size_t invalidate_generated_code_unit(std::uint32_t address);
     void register_native_fast_path(std::uint32_t address, NativeFastPath function);
     void invoke_native_fast_path(std::uint32_t address, AllegrexContext &ctx);
 

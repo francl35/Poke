@@ -5,6 +5,7 @@
 #include "mods/mhp2g_mods.hpp"
 
 #include "overlays.hpp"
+#include "fuc_code_patches.hpp"
 
 #include "psprecomp/common.hpp"
 
@@ -72,6 +73,7 @@ void register_utils(HleRegistrar &hle) {
         // until MHP2G overlay locations and hook addresses are identified.
         //mods::code_loaded(rt);
 
+        fuc_code_patches::synchronize(rt);
         forget_unmatched_overlays();
         revalidate_overlays(rt);
 

@@ -3,6 +3,7 @@
 #include "hle/hle_common.hpp"
 #include "kernel/kernel.hpp"
 #include "overlays.hpp"
+#include "fuc_code_patches.hpp"
 
 #include "psprecomp/common.hpp"
 
@@ -110,6 +111,11 @@ void install_profile(Runtime &runtime, const psprecomp::Elf32Image &elf, const P
     ctx.set_gpr(5, kBootArgumentAddress);
     //ctx.set_gpr(4, 0u);
     //ctx.set_gpr(5, 0u);
+#if defined(MHP2G_AOT_ELF_SHA256)
+    fuc_code_patches::initialize(runtime, elf, kLoadBase, MHP2G_AOT_ELF_SHA256);
+#else
+    fuc_code_patches::initialize(runtime, elf, kLoadBase, "");
+#endif
     kernel().start_loader_thread(ctx, elf.runtime_entry(kLoadBase), 0u);
 }
 
