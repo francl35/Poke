@@ -1,5 +1,5 @@
 // The in-game menu: Esc, or L3+R3 on a gamepad. It holds every player setting;
-// each change applies at once and is saved to settings.ini straight away. It
+// changes are saved to settings.ini straight away; restart-only choices say so. It
 // pauses the game, or, as the settings say, stays over the running game.
 
 #include "ui/ui.hpp"
@@ -41,6 +41,7 @@
 #include "perf/frame_stats.hpp"
 #include "save_data/save_transfer.hpp"
 #include "settings/settings.hpp"
+#include "fuc_code_patches.hpp"
 #include "poke_version.hpp"
 #if defined(MHP2G_ANDROID_APP)
 #include "platform/android_fatal.hpp"
@@ -1689,6 +1690,24 @@ void Menu::system() {
     }
 #endif
     settings::Settings &s = settings::current();
+    if (settings::fuc_runtime_patches_supported()) {
+        RowOptions o = options_for("gameplay.fuc_runtime_patches",
+            "Supports FUComplete features that patch game code, including continuous gathering. "
+            "May reduce performance because modified code runs through the interpreter. "
+            "Restart required: save your game, fully quit Poke and relaunch it after changing "
+            "this option. Closing the menu or changing areas does not apply it.");
+        if (!o.disabled) o.note = "Restart required after changing this option";
+        if (toggle_row("FUComplete runtime patches", s.fuc_runtime_patches, o)) {
+            s.fuc_runtime_patches = !s.fuc_runtime_patches;
+            settings::save();
+        }
+        // Always visible, not just a help description or hover tooltip.
+        info_row("Restart required", "Save, quit Poke completely and relaunch after changing this option.");
+        if (fuc_code_patches::restart_pending()) {
+            const bool was_on = fuc_code_patches::startup_choice().value_or(false);
+            info_row("Pending restart", was_on ? "This session still uses On." : "This session still uses Off.");
+        }
+    }
     if (toggle_row("Pause the game when the menu opens", s.menu_pause,
             options_for("ui.menu_pause",
                 "On: the game stops while this menu is open. Off: it keeps running "

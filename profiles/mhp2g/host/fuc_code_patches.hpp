@@ -4,6 +4,8 @@
 #include "psprecomp/runtime.hpp"
 #include "psprecomp/elf32.hpp"
 #include "psprecomp/common.hpp"
+#include "settings/settings.hpp"
+#include <optional>
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
@@ -21,14 +23,28 @@ inline auto &states() {
     return value;
 }
 inline bool requested() {
-    const char *value = std::getenv("MHFUC_RUNTIME_PATCH_COMPAT");
-    return value && std::string_view(value) == "1";
+    // Environment overrides are applied and displayed by the settings system.
+    return settings::current().fuc_runtime_patches;
+}
+inline std::optional<bool> &startup_choice() {
+    static std::optional<bool> value;
+    return value;
+}
+inline bool restart_pending() {
+    const auto value = startup_choice();
+    return value.has_value() && *value != requested();
 }
 inline bool active(psprecomp::Runtime &runtime) { return states().contains(&runtime); }
 inline void initialize(psprecomp::Runtime &runtime, const psprecomp::Elf32Image &elf,
                        std::uint32_t load_base, std::string_view corpus_hash) {
     states().erase(&runtime);
-    if (!requested()) return;
+    // Capture once. Menu changes must not affect this running session, since
+    // disabled compiled units cannot safely be restored without a fresh runtime.
+    startup_choice() = requested();
+    if (!*startup_choice()) {
+        std::cerr << "[fuc-code] disabled by startup setting; changing it requires restarting Poke\n";
+        return;
+    }
     constexpr std::string_view expected =
         "02811bb3a529d48d707072a726e87106d0ecdab62aa7e494b23ecf1469eb662f";
     if (corpus_hash != expected) {

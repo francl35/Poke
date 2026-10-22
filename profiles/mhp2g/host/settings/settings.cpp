@@ -192,6 +192,13 @@ const std::vector<Field> &fields() {
         {"video.window_scale", nullptr,
             [](Settings &s, const std::string &t) { return parse_uint(t, 1u, kMaxWindowScale, s.window_scale); },
             [](const Settings &s) { return std::to_string(s.window_scale); }, nullptr},
+        {"gameplay.fuc_runtime_patches", "MHFUC_RUNTIME_PATCH_COMPAT",
+            [](Settings &s, const std::string &t) { return parse_bool(t, s.fuc_runtime_patches); },
+            [](const Settings &s) { return std::string(s.fuc_runtime_patches ? "1" : "0"); },
+            [](Settings &s, const char *t) {
+                if (!parse_bool(t, s.fuc_runtime_patches))
+                    std::cerr << "[settings] MHFUC_RUNTIME_PATCH_COMPAT: expected 0 or 1\n";
+            }},
         BOOL_FIELD("video.fullscreen", fullscreen),
         {"video.present_mode", nullptr,
             [](Settings &s, const std::string &t) { return kPresentModes.parse(t, s.present_mode); },
@@ -892,8 +899,18 @@ Settings &current() {
     return s.values;
 }
 
+bool fuc_runtime_patches_supported() noexcept {
+#if defined(MHP2G_AOT_ELF_SHA256)
+    return std::string_view(MHP2G_AOT_ELF_SHA256) ==
+        "02811bb3a529d48d707072a726e87106d0ecdab62aa7e494b23ecf1469eb662f";
+#else
+    return false;
+#endif
+}
+
 Settings defaults_for(Platform platform) {
     Settings values{};
+    values.fuc_runtime_patches = fuc_runtime_patches_supported();
     if (platform == Platform::Android) {
         values.aspect = Aspect::Fill;
         values.fullscreen = true;

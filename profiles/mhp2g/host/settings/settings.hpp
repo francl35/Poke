@@ -80,6 +80,11 @@ struct Settings {
     PerfDisplay perf{PerfDisplay::Off};
     GpuCompat gpu_compat{GpuCompat::Auto};
 
+    // FUComplete runtime compatibility, sampled only at guest startup.
+    // defaults_for enables this for the verified FUComplete corpus only.
+    // Menu changes are saved immediately but require quitting/relaunching Poke.
+    bool fuc_runtime_patches{};
+
     // Text
     std::string font;              // the game's text font: path, "#face" for a collection; empty: the default
     std::uint32_t font_weight{1u}; // columns the game's glyphs are thickened by, 0 to kMaxFontWeight
@@ -206,11 +211,14 @@ inline constexpr Platform kPlatform = Platform::Android;
 #else
 inline constexpr Platform kPlatform = Platform::Desktop;
 #endif
-// The defaults on `platform`: Desktop is Settings{} as declared above;
+// Platform defaults start from Settings{}; verified FUComplete builds also
+// enable fuc_runtime_patches. Desktop otherwise uses the declarations above;
 // Android differs in video.aspect (fill: a phone is wider than the PSP),
 // video.fullscreen (on: there is no window) and input.mouse (off: a phone
 // has no mouse to capture, and an emulator's pointer would turn the camera).
 [[nodiscard]] Settings defaults_for(Platform platform);
+// True only for the compiled FUComplete corpus supported by the compatibility layer.
+[[nodiscard]] bool fuc_runtime_patches_supported() noexcept;
 
 // Loads the settings on first use, starting from defaults().
 [[nodiscard]] Settings &current();
