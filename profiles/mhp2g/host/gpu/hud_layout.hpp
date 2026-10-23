@@ -27,8 +27,11 @@ struct HudAnchor {
     float apply_y(float value, float factor) const { return y + (value - y) * factor; }
 };
 
+enum class HudProfile { Mhp2g, Mhp1 };
+
 class HudLayout {
 public:
+    explicit HudLayout(HudProfile profile = HudProfile::Mhp2g) : profile_(profile) {}
     // Diagnostic gate: menus cannot consume the map capture budget before
     // the same clock signature used by HUD scaling has appeared.
     bool quest_hud_active(std::uint64_t frame, std::uint32_t target) const {
@@ -42,24 +45,30 @@ public:
             hud_texture_ = 0u;
             party_rows_ = 0u;
         }
+        const bool mhp1 = profile_ == HudProfile::Mhp1;
+        const HudRect clock_bounds = mhp1 ? HudRect{8, 6, 60, 54} : HudRect{8, 8, 60, 56};
+        const float top = mhp1 ? 6.0f : 8.0f;
+        const float right = mhp1 ? 346.0f : 344.0f;
         const HudRect &b = draw.screen;
         if (!valid(b) || !valid(draw.uv)) return {};
         // The normal quest clock: this combination distinguishes gameplay
         // from title screens, inventory icons, and full-screen transitions.
         if (draw.textured && draw.width == 256u && draw.height == 256u &&
-            same(b, {8, 8, 60, 56}) && same(draw.uv, {0, 32, 52, 80})) {
+            same(b, clock_bounds) && same(draw.uv, {0, 32, 52, 80})) {
             clock_ = true;
             hud_texture_ = draw.texture_address;
         }
         if (!clock_) return {};
         const bool hud_sheet = draw.textured && draw.texture_address == hud_texture_;
-        if (inside(b, {8, 8, 344, 74})) {
+        if (inside(b, {8, top, right, 74})) {
             const bool bar_fill = !draw.textured && inside(b, {56, 12, 344, 29});
             const bool bar_strip = draw.textured && draw.width == 16u && draw.height == 8u &&
                 inside(b, {56, 12, 344, 29});
             const bool name = draw.glyph_page && inside(b, {24, 56, 112, 74});
             const bool name_icon = draw.textured && draw.width == 256u && draw.height == 256u &&
-                inside(b, {8, 56, 24, 72}) && same(draw.uv, {48, 192, 60, 208});
+                inside(b, {8, 56, 24, 72}) && (mhp1 ? same(b, {8, 56, 20, 72}) &&
+       (same(draw.uv, {12, 192, 24, 208}) || same(draw.uv, {24, 192, 36, 208}))
+                      : same(draw.uv, {48, 192, 60, 208}));
             // Weapon icons use a separate 256x256 sheet. These are the
             // traced weapon cells in the player-name slot.
             const bool weapon_icon = draw.textured && !draw.glyph_page &&
@@ -79,9 +88,9 @@ public:
                 same(b, {66, 44, 162, 50}) && same(draw.uv, {0, 0, 96, 6});
             // The main sheet also contains menu corners. Screen position
             // alone is insufficient: accept only the traced HUD UV regions.
-            const bool clock_piece = hud_sheet && inside(b, {8, 8, 60, 56}) &&
+            const bool clock_piece = hud_sheet && inside(b, clock_bounds) &&
                 inside(draw.uv, {0, 32, 108, 80});
-            const bool gauge_cap = hud_sheet && inside(b, {56, 9, 344, 33}) &&
+            const bool gauge_cap = hud_sheet && inside(b, {56, 9, right, 33}) &&
                 inside(draw.uv, {52, 32, 76, 56});
             const bool sharpness = hud_sheet &&
                 ((inside(b, {56, 30, 112, 48}) &&
@@ -94,10 +103,15 @@ public:
             const bool status_icon = hud_sheet && inside(b, {56, 8, 344, 48}) &&
                 inside(draw.uv, {184, 0, 256, 80}) &&
                 b.right - b.left <= 24.0f && b.bottom - b.top <= 24.0f;
-            if (clock_piece || gauge_cap || sharpness || name_plate || status_icon ||
+            const bool bowgun_notice = mhp1 && hud_sheet &&
+                ((same(b, {60, 32, 116, 44}) &&
+                  same(draw.uv, {152, 84, 208, 96})) ||
+                 (same(b, {60, 32, 132, 44}) &&
+                  same(draw.uv, {152, 72, 224, 84})));
+            if (bowgun_notice || clock_piece || gauge_cap || sharpness || name_plate || status_icon ||
                 bar_fill || bar_strip || name || name_icon || weapon_icon ||
                 spirit_cap || spirit_strip)
-                return {HudGroup::TopLeft, 8, 8};
+                return {HudGroup::TopLeft, 8, top};
         }
         // Recognize additional name rows only after their HUD-sheet opener.
         // The companion trace uses y76, twenty pixels below the first row.
@@ -120,7 +134,7 @@ public:
                  same(draw.uv, {232, 224, 244, 240}) ||
                  same(draw.uv, {220, 240, 232, 256}) ||
                  same(draw.uv, {232, 240, 244, 256}));
-            if (plate || label || icon) return {HudGroup::TopLeft, 8, 8};
+            if (plate || label || icon) return {HudGroup::TopLeft, 8, top};
         }
         // Item and ammo panels share the HUD-sheet frame and the same
         // bottom-right anchor. A bowgun's open selector starts much higher
@@ -138,9 +152,12 @@ public:
         // names and companion rows. Admit only banner pieces, not every draw
         // near the bottom right.
         const bool ammo_banner = hud_sheet &&
-            inside(b, {312, 180, 472, 204}) &&
-            std::abs((b.bottom - b.top) - 16.0f) < 0.51f &&
-            inside(draw.uv, {120, 16, 156, 32});
+            (mhp1
+                ? same(b, {336, 184, 348, 200}) &&
+                  same(draw.uv, {156, 16, 168, 32})
+                : inside(b, {312, 180, 472, 204}) &&
+                  std::abs((b.bottom - b.top) - 16.0f) < 0.51f &&
+                  inside(draw.uv, {120, 16, 156, 32}));
         if (selector_corner || ammo_banner) {
             // Eight pixels of trim admit the selection arrows and controller
             // prompts protruding beyond the frame. Each independent panel can
@@ -165,6 +182,40 @@ public:
         // coordinate range, but its icons must use the HUD size, not map size.
         if (items_ && inside(b, item_bounds_) && selector_content)
             return {HudGroup::Items, 472, 260};
+        if (mhp1) {
+            // Captured MHP1 local and expanded maps share one coordinate plane.
+            const float screen_width = b.right - b.left;
+            const float screen_height = b.bottom - b.top;
+            const float uv_width = draw.uv.right - draw.uv.left;
+            const float uv_height = draw.uv.bottom - draw.uv.top;
+
+            const bool map_projection =
+                draw.map_surface && !draw.glyph_page &&
+                screen_width > 0.0f && screen_height > 0.0f &&
+                inside(b, {324, 36, 476, 188}) &&
+                inside(draw.uv, {0, 0, 152, 152}) &&
+                std::abs((b.left - draw.uv.left) - 324.0f) < 0.51f &&
+                std::abs((b.top - draw.uv.top) - 36.0f) < 0.51f &&
+                std::abs(screen_width - uv_width) < 0.51f &&
+                std::abs(screen_height - uv_height) <= 1.01f;
+
+            if (map_projection) {
+                map_ = true;
+                // Include marker geometry extending beyond the map edges.
+                map_bounds_ = {312, 24, 488, 200};
+                map_anchor_ = {HudGroup::Map, 476, 36};
+                return map_anchor_;
+            }
+
+            const bool marker_cell =
+                same(draw.uv, {48, 244, 60, 256}) ||
+                same(draw.uv, {24, 244, 36, 256});
+
+            if (map_ && draw.textured && !draw.glyph_page && !hud_sheet &&
+                draw.width == 256u && draw.height == 256u &&
+                marker_cell && inside(b, map_bounds_))
+                return map_anchor_;
+        } else {
         // Captured detection halo: a textured yellow sprite from the same
         // atlas cell as the monster dot, drawn BEFORE the map surface. It
         // uses the expanded-map coordinate plane (anchor 468,32), even while
@@ -194,6 +245,7 @@ public:
                  same(draw.uv, {0, 224, 16, 232}) ||
                  same(draw.uv, {32, 224, 48, 232}))) && inside(b, map_bounds_))
             return map_anchor_;
+        }
         // Recognize only traced item-selector openers on the quest HUD sheet.
         // Also recognize the L-held variant (top at 200, bottom up to 264).
         // The wider x=312 forms were confirmed in FUComplete captures.
@@ -233,6 +285,7 @@ private:
         return a.left >= b.left - 0.01f && a.top >= b.top - 0.01f &&
             a.right <= b.right + 0.01f && a.bottom <= b.bottom + 0.01f;
     }
+    HudProfile profile_{HudProfile::Mhp2g};
     std::uint64_t frame_{~0ull};
     std::uint32_t target_{}, hud_texture_{};
     bool clock_{}, items_{}, map_{};

@@ -1960,7 +1960,11 @@ struct VulkanRenderer::Impl {
     // effect at the next begin_frame().
     std::unique_ptr<TexturePack> pack;
     std::unique_ptr<TextureDumper> dumper;
+#if defined(MHP1_HAS_VULKAN)
+    ui::HudLayout hud_layout{ui::HudProfile::Mhp1};
+#else
     ui::HudLayout hud_layout;
+#endif
     ReplacementTextures replacements;
     bool pack_wanted{};
     bool pack_applied{};
@@ -7450,7 +7454,8 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
     // Classify only untransformed screen-space UI rendered to the displayed
     // surface. Keep vertices and their sampling coordinates unchanged; the
     // vertex shader applies the display-size transform after UV setup.
-    if ((hud_choice_factor != 1.0f || map_choice_factor != 1.0f) &&
+    if ((hud_choice_factor != 1.0f || map_choice_factor != 1.0f ||
+            std::getenv("MHP2G_TRACE_MAP_LAYOUT") != nullptr) &&
         call.through && !raw && !call.clear_mode &&
         framebuffer_source.target == nullptr && impl.shows(call.target.color_address)) {
         ui::HudProbe probe;
@@ -7485,12 +7490,21 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
         probe.height = call.texture.height;
         probe.glyph_page = call.texture.enabled && ui::is_glyph_page(call.texture);
         const std::uint32_t address = call.texture.address & 0x0FFFFFFFu;
+#if defined(MHP1_HAS_VULKAN)
+        // The MHP1 classifier also requires the exact captured screen/UV layout.
+        // Its map texture stride/swizzle are not assumed to match MHP2G.
+        probe.map_surface = call.texture.enabled && call.texture.format == TextureFormat::Clut8 &&
+            call.texture.width == 256u && call.texture.height == 256u &&
+            address >= 0x04000000u && address < 0x04200000u;
+#else
         probe.map_surface = call.texture.enabled && call.texture.format == TextureFormat::Clut8 &&
             call.texture.swizzled && call.texture.width == 256u && call.texture.height == 256u &&
             (call.texture.buffer_width & 0x7FFu) == 160u &&
             address >= 0x04000000u && address < 0x04200000u;
+#endif
         if (zero_depth) {
             hud_anchor = impl.hud_layout.classify(impl.frames, call.target.color_address, probe);
+#if !defined(MHP1_HAS_VULKAN)
             // Idle bowgun ammo label: separate from the opened selector panel.
             // Preserve any existing classification, including map markers.
             if (!hud_anchor &&
@@ -7501,6 +7515,7 @@ void VulkanRenderer::submit(const DrawCall &call, const GuestMemory &memory) {
                 probe.screen.bottom <= 204.0f) {
                 hud_anchor = {ui::HudGroup::Items, 472.0f, 260.0f};
             }
+#endif
             hud_factor = hud_anchor.group == ui::HudGroup::Map ? map_choice_factor : hud_choice_factor;
             if (hud_factor == 1.0f) hud_anchor = {};
         }

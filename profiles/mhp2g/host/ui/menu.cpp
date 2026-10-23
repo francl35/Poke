@@ -534,6 +534,27 @@ void Menu::video() {
         info_row("Texture pack status", renderer().texture_pack_status());
     #endif
 
+#ifdef MHP_UI_CORE_ONLY
+    section("HUD layout (experimental)");
+    {
+        static const char *const sizes[] = {"Original (100%)", "Medium (75%)", "Small (50%)"};
+        if (const int delta = choice_row("HUD size", sizes[static_cast<int>(s.hud_size)],
+                options_for("video.hud_size",
+                    "Scales recognized MHP1 health/name and item-selector groups. "
+                    "Unknown layouts remain unchanged. Test at Original aspect ratio."))) {
+            s.hud_size = static_cast<settings::HudSize>(cycle(static_cast<int>(s.hud_size), delta, 3));
+            settings::save();
+        }
+        if (const int delta = choice_row("Map size", sizes[static_cast<int>(s.map_size)],
+                options_for("video.map_size",
+                    "Experimental: scales the captured local-map layout and its two known marker cells. "
+                    "Other areas, expanded maps and unrecognized markers are not validated."))) {
+            s.map_size = static_cast<settings::HudSize>(cycle(static_cast<int>(s.map_size), delta, 3));
+            settings::save();
+        }
+    }
+#endif
+
     section("Timing");
     {
         struct Mode {
