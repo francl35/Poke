@@ -3,7 +3,9 @@
 **[English](README.md) | [日本語](README.jp.md)**
 
 
-**Poke** is an experimental native recompilation project focused on **Monster Hunter Portable 2nd G** (MHP2G, known internationally as *Monster Hunter Freedom Unite*) for PSP.
+**Poke** is an experimental native recompilation project focused on **Monster Hunter Portable 2nd G** (MHP2G, known internationally as *Monster Hunter Freedom Unite*) released originally on the PSP and **Monster Hunter Freedom Complete** a modded game version adding english patch, events quests and other QOL features. (See [FU Complete](https://fucomplete.github.io/) for details)
+
+The current version do NOT support MHFU EU or US.
 
 Poke is a **derivative of [TeamGDB/Yakumo](https://github.com/TeamGDB/Yakumo)**. The PSP runtime, recompilation framework, and substantial portions of the host implementation build on work done by Yakumo's original contributors. **Poke is not the original Yakumo project, is not maintained by the Yakumo team, and is not an official successor.** Please refer to the upstream project for its own releases, development, and support. Credit for the original work belongs to its respective authors and contributors.
 
@@ -16,11 +18,20 @@ This fork focuses on adapting that technology to MHP2G. The inherited MHP3rd pro
 - The MHP2G executable has been analyzed and its main code generated as native C++.
 - The Linux Vulkan build has booted successfully and village gameplay has been tested.
 - The Apple Silicon macOS Vulkan/MoltenVK build has also been tested in gameplay, including GPU vertex decoding and 60 FPS frame interpolation in the tested house scene.
-- Quest, combat, zone-transition, and overlay compatibility testing is still in progress.
+- Quest, combat, zone-transition, and overlay compatibility is tested but edge cases might still impact the game.
 - The MHP2G CMake target and executable are both named `Poke`.
-- Some guest code can fall back to an interpreter; the project is not exclusively ahead-of-time execution.
+- Some guest code can fall back to an interpreter; the project is targetting ahead-of-time execution but some cases might not be covered.
+- Fixed UI display issues
 
 These observations are development test results, not a claim of full game compatibility or platform support.
+
+
+## Exclusive features ##
+
+- In menu FOV slidder to choose custom FOV values
+- Scalable UI and MAP HUD, both can separately be set to 100%, 75% and 50% original size
+- Up to 120 fps with frame interpolation
+- Support of HD textures packs in ktx2 format ( a compressed file format to create smaller sized texture packs)
 
 ## Game files and legal notice
 
