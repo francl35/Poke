@@ -584,12 +584,24 @@ void Menu::video() {
         RowOptions o = options_for("video.frame_rate",
             "Frames between the game's 30 a second, blending its movement. Steps down by "
             "itself rather than slow the game.");
+#if defined(MHP1_HAS_FRAME_INTERPOLATION)
+        o.description = "Off keeps original guest pictures. Higher targets interpolate display pictures only; "
+            "guest timing is unchanged. Test particles, transparent meshes and scene changes.";
+#endif
         if (s.unthrottled && !o.disabled) {
             o.disabled = true;
             o.note = "Game speed is Unlimited";
         }
         const int current = static_cast<int>(s.frame_rate);
         std::string value = kRates[current];
+#if defined(MHP1_HAS_FRAME_INTERPOLATION)
+        if (s.frame_rate == settings::FrameRate::Fps30) value = "Off (original pictures)";
+#endif
+#if defined(MHP1_HAS_FAST_FORWARD) && !defined(MHP1_HAS_FRAME_INTERPOLATION)
+        o.disabled = true;
+        o.note = "Guest timing is original; interpolation hookup is not enabled in this build";
+        value = "Off";
+#endif
         if (s.frame_rate == settings::FrameRate::Display && renderer().display_refresh() > 0.0f)
             value += "  " + std::to_string(static_cast<int>(std::lround(renderer().display_refresh()))) + " Hz";
         if (s.frame_rate != settings::FrameRate::Fps30 && !o.disabled) {
@@ -607,7 +619,12 @@ void Menu::video() {
                     : "Lowered to keep the game at full speed; it tries the chosen rate again later.";
             }
         }
-        if (const int delta = choice_row("Frame rate", value, o)) {
+#if defined(MHP1_HAS_FAST_FORWARD)
+        const char *rate_label = "Frame interpolation";
+#else
+        const char *rate_label = "Frame rate";
+#endif
+        if (const int delta = choice_row(rate_label, value, o)) {
             s.frame_rate = static_cast<settings::FrameRate>(cycle(current, delta, 6));
             renderer().set_frame_rate(s.frame_rate);
             settings::save();
@@ -631,7 +648,7 @@ void Menu::video() {
         s.unthrottled = !s.unthrottled;
         settings::save();
     }
-#ifndef MHP_UI_CORE_ONLY
+#if !defined(MHP_UI_CORE_ONLY) || defined(MHP1_HAS_FAST_FORWARD)
     {
         RowOptions o = options_for("video.fast_loading",
             "Lets the game run ahead of real time while it loads and is silent, so loads "
@@ -648,7 +665,11 @@ void Menu::video() {
     }
     {
         // Single player only: during ad hoc play the bind does nothing.
+#if defined(MHP1_HAS_FAST_FORWARD)
+        const bool online = s.adhoc;
+#else
         const bool online = adhoc_networking_on() || adhoc_session_active();
+#endif
         const auto guarded = [&](RowOptions o) {
             if (o.disabled) return o;
             if (s.unthrottled) {
@@ -686,6 +707,8 @@ void Menu::video() {
             settings::save();
         }
     }
+#endif
+#ifndef MHP_UI_CORE_ONLY
     {
         const std::string key = input::format(s.controls.keys[static_cast<std::size_t>(input::Action::HideHud)]);
         RowOptions o;
@@ -1819,7 +1842,6 @@ void Menu::system() {
         }
     }
 #endif
-#ifndef MHP_UI_CORE_ONLY
     settings::Settings &s = settings::current();
     if (toggle_row("Pause the game when the menu opens", s.menu_pause,
             options_for("ui.menu_pause",
@@ -1829,6 +1851,7 @@ void Menu::system() {
         s.menu_pause = !s.menu_pause;
         settings::save();
     }
+#ifndef MHP_UI_CORE_ONLY
     if (toggle_row("Pause during multiplayer", s.menu_pause_multiplayer,
             options_for("ui.menu_pause_multiplayer",
                 "In ad hoc play the game keeps running behind the menu unless this is on: a paused "
@@ -2282,12 +2305,16 @@ void draw_over_game() {
 
     auto &menu = menu_over_game_state();
     const bool keyboard = text_input_open();
+    const bool fast = !keyboard && !menu && fast_forward::active() &&
+    !layer.renderer().window_capture_pending();
     const double hint_left = menu || settings::current().menu_hint_seen ? -1.0 : hint_seconds_left();
     const bool noted = !note().text.empty() && Clock::now() < note().until &&
         !layer.renderer().window_capture_pending();
-    if (!keyboard && !menu && hint_left <= 0.0 && !noted) return;
+    if (!keyboard && !menu && hint_left <= 0.0 && !noted && !fast) return;
 
     layer.begin_frame();
+    if (fast) draw_fast_forward();
+    
     if (keyboard && !menu) {
         text_input_frame();
     } else {
@@ -2365,7 +2392,7 @@ void draw_over_game() {
 
 bool menu_pauses() {
     #ifdef MHP_UI_CORE_ONLY
-        return false;
+        return settings::current().menu_pause;
     #else
         const settings::Settings &s = settings::current();
         return adhoc_session_active()

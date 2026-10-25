@@ -6,6 +6,10 @@
 #include "hle/hle_common.hpp"
 #include "kernel/kernel.hpp"
 #include "psprecomp/common.hpp"
+#if defined(MHP1_HAS_VULKAN)
+#include "perf/frame_stats.hpp"
+#include "settings/settings.hpp"
+#endif
 #include <array>
 #include <cstring>
 #include <deque>
@@ -18,6 +22,14 @@ namespace {
 using namespace mhp2g;
 using psprecomp::Runtime;
 using psprecomp::AllegrexContext;
+// Time CPU-side GE and presentation work, including the waits the shared
+// renderer already measures. The shared summary subtracts those waits once.
+struct RenderMeasurement {
+#if defined(MHP1_HAS_VULKAN)
+    perf::Clock::time_point start{perf::Clock::now()};
+    ~RenderMeasurement() { perf::add_render_time(perf::Clock::now() - start); }
+#endif
+};
 struct List {
     std::uint32_t pc{}, stall{};
     std::int32_t callback{};
@@ -31,6 +43,9 @@ struct Graphics {
     std::uint32_t next_list{1};
     std::int32_t next_callback{1};
     bool announced{};
+    bool decode_state_announced{};
+    bool last_gpu_decode{};
+    bool last_decode_check{};
     std::filesystem::path capture_dir;
     unsigned captures{};
     std::uint64_t next_gpu_capture_vblank{};
@@ -47,9 +62,19 @@ struct Graphics {
         }
         return true;
     }
-    void present(Runtime &rt, const char *kind) {
+    void present(Runtime &rt, const char *kind, bool guest_flip) {
         if (video) {
-            video->present(displayed.address, displayed.stride, displayed.format, rt.memory());
+            {
+                const RenderMeasurement measurement;
+                video->present(displayed.address, displayed.stride, displayed.format, rt.memory());
+            }
+#if defined(MHP1_HAS_VULKAN)
+            // Present FPS includes repeated vblank pictures. Game FPS counts
+            // only framebuffer updates requested by the guest, not every vblank.
+            // The backend counts only pictures actually shown; fast loads
+            // can submit GPU work without presenting to the swapchain.
+            if (guest_flip) perf::end_frame(kernel().now_us(), false);
+#endif
             if (!capture_dir.empty() && displayed.address && captures < 8u &&
                 kernel().vblank_count() >= next_gpu_capture_vblank) {
                 std::filesystem::create_directories(capture_dir);
@@ -77,7 +102,23 @@ struct Graphics {
     void pump(Runtime &rt) {
         ensure_video();
         if (!poll(rt)) return;
-        if (video) video->begin_list();
+        const RenderMeasurement measurement;
+        // Match MHP2G: the GE must receive the renderer's raw-vertex policy.
+        // Query per pump so menu changes and renderer compatibility fallbacks
+        // take effect; unsupported formats still decode on the CPU in GeState.
+        const bool raw = video && video->gpu_decode();
+        const bool check = raw && video->check_gpu_decode();
+        ge.set_raw_vertices(raw, check);
+        if (video) {
+            if (!decode_state_announced || raw != last_gpu_decode || check != last_decode_check) {
+                std::cout << "[mhp1-ge] vertex_decode=" << (raw ? "gpu-eligible" : "cpu")
+                          << " cpu_comparison=" << (check ? "on" : "off") << "\n";
+                decode_state_announced = true;
+                last_gpu_decode = raw;
+                last_decode_check = check;
+            }
+            video->begin_list();
+        }
         while (!pending.empty()) {
             auto &list = lists.at(pending.front());
             ge.set_signal_sink([this, &list](std::uint32_t signal, std::uint32_t pc) {
@@ -107,6 +148,9 @@ struct Graphics {
             });
             ge.set_draw_sink([this, &rt](const gpu::DrawCall &draw) {
                 if (video) {
+#if defined(MHP1_HAS_VULKAN)
+                    perf::count_draw();
+#endif
                     video->submit(draw, rt.memory());
                     return;
                 }
@@ -163,12 +207,26 @@ void register_headless_ge(mhp2g::HleRegistrar &hle, const std::filesystem::path 
         *hooked = true;
         kernel().set_poll_hook([state, &rt] { state->poll(rt); });
         kernel().add_vblank_hook([state, &rt] {
+            const bool guest_flip = state->display_pending;
             if (state->display_pending) {
                 state->displayed = state->pending_display;
                 state->display_pending = false;
             }
+            // Diagnostic opt-in: preserve every guest vblank, but do not submit
+            // the same displayed picture again without a guest buffer update.
+            // Event polling must continue even when no picture is presented.
+            bool skip_repeat = std::getenv("MHP1_PRESENT_ON_FLIP") != nullptr;
+#if defined(MHP1_HAS_VULKAN)
+            // Interpolation consumes true guest flips. A repeat at each vblank
+            // would reset its pair/cycle as if the guest had supplied 60 frames.
+            skip_repeat = skip_repeat || mhp2g::settings::current().frame_rate != mhp2g::settings::FrameRate::Fps30;
+#endif
+            if (!guest_flip && skip_repeat) {
+                state->poll(rt);
+                return;
+            }
             try {
-                state->present(rt, "vblank");
+                state->present(rt, "vblank", guest_flip);
             } catch (const psprecomp::Error &e) {
                 rt.stop(e.what());
             }
@@ -191,7 +249,7 @@ void register_headless_ge(mhp2g::HleRegistrar &hle, const std::filesystem::path 
             state->display_pending = false;
             try {
                 state->ensure_video();
-                state->present(rt, "display");
+                state->present(rt, "display", true);
             } catch (const psprecomp::Error &e) {
                 rt.stop(e.what());
                 return;
@@ -237,6 +295,9 @@ void register_headless_ge(mhp2g::HleRegistrar &hle, const std::filesystem::path 
             rt.stop("Headless GE head insertion into an active queue is not supported yet");
             return;
         }
+#if defined(MHP1_HAS_VULKAN)
+        perf::count_display_list();
+#endif
         const auto id = state->next_list++;
         state->lists.emplace(id, List{pc, stall, callback, false});
         state->pending.push_back(id);

@@ -1,4 +1,5 @@
 #include "boot_host.hpp"
+#include "main_native.hpp"
 #include "app_paths.hpp"
 #include "target.hpp"
 
@@ -72,6 +73,7 @@ int main(int argc, char **argv) {
         std::cout << "[mhp1-boot] target=FreedomDX entry=" << psprecomp::hex32(elf.runtime_entry())
                   << " gp=" << psprecomp::hex32(module->gp) << " image_end=" << psprecomp::hex32(image_end)
                   << "\n[mhp1-boot] memory_stick=" << memory_stick.string() << "\n";
+        mhp1::prepare_main_native(runtime, elf, imports);
         mhp1::BootHost host(runtime, imports, module->gp, image_end, argv[2], memory_stick);
         const auto audit = mhp2g::executable_directory().parent_path() / "import-audit.csv";
         host.write_import_audit(audit);

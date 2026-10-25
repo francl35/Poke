@@ -5,6 +5,8 @@
 #include "audio/guest_pcm.hpp"
 #include "audio/sas_core.hpp"
 #include "kernel/load_trace.hpp"
+#include "kernel/fast_loading.hpp"
+#include "kernel/fast_forward.hpp"
 #include <algorithm>
 #include <array>
 #include <vector>
@@ -55,8 +57,9 @@ void audio_output(Runtime &rt, AllegrexContext &ctx) {
             // everything while the player fast-forwards: the sound is muted
             // rather than sped up. The channel's cursor stays where it was
             // and catches up with the device when sound comes back.
-            const bool silent_load = false;
-            if (!silent_load) audio::AudioSink::instance().mix(state.cursor, staging.data(), frames, left, right);
+            const bool silent_load = fast_loading::note_audio(peak);
+            if (!silent_load && !fast_forward::active())
+                audio::AudioSink::instance().mix(state.cursor, staging.data(), frames, left, right);
         } else {
             log_once("audio-buffer", "[audio] output buffer is not a single mapped range; dropping it");
         }

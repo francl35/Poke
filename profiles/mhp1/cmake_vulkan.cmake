@@ -67,3 +67,33 @@ add_dependencies(mhp1_boot_host mhp1_menu_version)
 target_include_directories(mhp1_boot_host PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}/generated_version"
 )
+
+# Shared pure detector, with MHP1-specific host guards and event wiring.
+target_sources(mhp1_boot_host PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/host/fast_loading.cpp"
+    "${shared}/host/kernel/load_detector.cpp")
+
+# Public deterministic detector regression; no game corpus is needed.
+add_executable(mhp1_fast_loading_tests EXCLUDE_FROM_ALL
+    "${shared}/tests/fast_loading_tests.cpp"
+    "${shared}/host/kernel/load_detector.cpp")
+target_include_directories(mhp1_fast_loading_tests PRIVATE "${shared}/host")
+set_target_properties(mhp1_fast_loading_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+# Manual fast-forward uses the shared switch and MHP1's host policy.
+target_compile_definitions(mhp1_boot_host PRIVATE MHP1_HAS_FAST_FORWARD=1)
+target_sources(mhp1_boot_host PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/host/fast_forward.cpp"
+    "${shared}/host/kernel/fast_forward_switch.cpp")
+add_executable(mhp1_fast_forward_tests EXCLUDE_FROM_ALL
+    "${shared}/tests/fast_forward_tests.cpp"
+    "${shared}/host/kernel/fast_forward_switch.cpp")
+target_include_directories(mhp1_fast_forward_tests PRIVATE "${shared}/host")
+set_target_properties(mhp1_fast_forward_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+target_compile_definitions(mhp1_boot_host PRIVATE MHP1_HAS_FRAME_INTERPOLATION=1)
+
+include("${PROJECT_SOURCE_DIR}/profiles/mhp2g/cmake/KTX2.cmake")
+mhp2g_use_ktx2(mhp1_boot_host)

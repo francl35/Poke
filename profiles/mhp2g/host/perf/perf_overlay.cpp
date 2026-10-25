@@ -118,7 +118,11 @@ void draw_overlay(std::uint32_t *pixels) {
     char line[96];
     std::uint32_t y = kMargin;
     if (s.valid) {
+#if defined(MHP1_HAS_VULKAN)
+        std::snprintf(line, sizeof(line), "PRES %.1f GAME %.1f SPD %.0f%%", s.fps, s.game_fps, s.speed * 100.0);
+#else
         std::snprintf(line, sizeof(line), "FPS %.1f GAME %.1f SPD %.0f%%", s.fps, s.game_fps, s.speed * 100.0);
+#endif
         draw_text(pixels, kMargin, y, line);
         if (s.gpu_valid)
             std::snprintf(

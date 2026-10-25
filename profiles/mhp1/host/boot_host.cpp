@@ -1,4 +1,5 @@
 #include "boot_host.hpp"
+#include "main_native.hpp"
 #include <fstream>
 #include "headless_ge.hpp"
 
@@ -14,6 +15,7 @@
 
 #include "install/user_data.hpp"
 #include "settings/settings.hpp"
+#include "overlays.hpp"
 
 namespace mhp1 {
 void register_audio_services(mhp2g::HleRegistrar &);
@@ -39,9 +41,14 @@ void register_boot_services(mhp2g::HleRegistrar &hle, std::uint32_t image_end) {
     hle.add("sceGe_user", "sceGeEdramGetSize", [](psprecomp::Runtime &, psprecomp::AllegrexContext &ctx) {
         kernel().finish(ctx, psprecomp::GuestMemory::kVramSize);
     });
-    const auto coherent_cache = [](psprecomp::Runtime &, psprecomp::AllegrexContext &ctx) {
-        // The interpreter fetches current guest memory. No native game/overlay
-        // corpus is registered, so there is no translated instruction cache.
+    const auto coherent_cache = [](
+        psprecomp::Runtime &runtime,
+        psprecomp::AllegrexContext &ctx) {
+        mhp1::revalidate_main_native(runtime);
+        if (std::getenv("MHP1_NATIVE_OVERLAYS") != nullptr) {
+            mhp1::forget_unmatched_overlays();
+            mhp1::revalidate_overlays(runtime);
+        }
         kernel().finish(ctx, 0u);
     };
     for (const char *name :
@@ -136,7 +143,7 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
         player.mouse = false;
     #endif
     if (active_ != nullptr) throw psprecomp::Error("Only one MHP1 diagnostic host may be active");
-    if (runtime.function_count() != 0u)
+    if (runtime.function_count() != 0u && !mhp1::main_native_active(runtime))
         throw psprecomp::Error("The diagnostic host requires an empty registry; do not link a game AOT corpus");
     if (image_end < psprecomp::kDefaultPspUserLoadBase || image_end > 0x09F00000u)
         throw psprecomp::Error("Invalid image end or insufficient space for the diagnostic loader stack");
@@ -215,6 +222,11 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
         if (bound_[pc]) ++bound_imports_;
         runtime.register_function(pc, &import_bridge, "mhp1_import_bridge");
     }
+
+    if (std::getenv("MHP1_NATIVE_OVERLAYS") != nullptr)
+        mhp1::install_overlay_support(runtime);
+
+    mhp1::bind_main_native_import_bridge(runtime, &import_bridge);
     active_ = this;
     psprecomp::set_runtime_missing_function_hook(&missing_function);
     psprecomp::set_runtime_pre_dispatch_hook(&pre_dispatch);
@@ -223,6 +235,7 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
 }
 
 BootHost::~BootHost() {
+    mhp1::reset_main_native(runtime_);
     psprecomp::set_runtime_missing_function_hook(nullptr);
     psprecomp::set_runtime_pre_dispatch_hook(nullptr);
     psprecomp::set_runtime_starvation_hook(nullptr, 0u);
@@ -235,9 +248,14 @@ void BootHost::check_deadline() {
         runtime_.stop("MHP1 diagnostic wall-time limit reached");
 }
 
-bool BootHost::missing_function(psprecomp::Runtime &, psprecomp::AllegrexContext &, std::uint32_t) {
+bool BootHost::missing_function(
+    psprecomp::Runtime &runtime,
+    psprecomp::AllegrexContext &,
+    std::uint32_t pc) {
     active_->check_deadline();
-    return false; // The runtime interprets current memory, including overlay code.
+    if (std::getenv("MHP1_NATIVE_OVERLAYS") != nullptr)
+        return mhp1::try_install_overlay(runtime, pc);
+    return false;
 }
 
 void BootHost::pre_dispatch(psprecomp::Runtime &, psprecomp::AllegrexContext &, std::uint32_t, std::int32_t) {
@@ -301,7 +319,9 @@ void BootHost::run(std::uint32_t entry, unsigned seconds, std::uint64_t max_disp
 
     if (seconds == 0u)
         max_dispatches = std::numeric_limits<std::uint64_t>::max();
-    std::cout << "[mhp1-boot] execution=interpreter seconds=" << seconds << " max_dispatches=" << max_dispatches
+    std::cout << "[mhp1-boot] execution="
+              << (mhp1::main_native_active(runtime_) ? "native-main+fallback" : "interpreter-main")
+              << " seconds=" << seconds << " max_dispatches=" << max_dispatches
               << "\n";
     runtime_.run(entry, max_dispatches);
     running_ = false;

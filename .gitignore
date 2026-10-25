@@ -43,6 +43,8 @@ overlay_*.bin
 /profiles/*/analysis/
 /profiles/*/progress/
 /profiles/*/captures/
+
+
 # The MHP3rd AOT corpora are derived from the user's executable
 /profiles/mhp3rd/generated/
 /profiles/mhp3rd/overlays/
@@ -100,3 +102,5 @@ __pycache__/
 /profiles/mhp1/overlays/
 /profiles/mhp1/*.mhp1-step1.bak
 /profiles/mhp1/*.mhp1-headless.bak
+/mhp1/
+/out/

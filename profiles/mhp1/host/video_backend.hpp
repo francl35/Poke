@@ -14,6 +14,9 @@ struct Pad {
 class VideoBackend {
 public:
     virtual ~VideoBackend() = default;
+    // Backends opt in only when the renderer supports and enables raw vertices.
+    virtual bool gpu_decode() const { return false; }
+    virtual bool check_gpu_decode() const { return false; }
     virtual void begin_list() = 0;
     virtual void submit(const mhp2g::gpu::DrawCall &, psprecomp::GuestMemory &) = 0;
     virtual void read_back(std::uint32_t, psprecomp::GuestMemory &) = 0;

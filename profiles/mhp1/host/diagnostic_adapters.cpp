@@ -33,19 +33,27 @@ Settings &current() {
 } // namespace mhp2g::settings
 #endif
 
+#if !defined(MHP1_HAS_VULKAN)
 namespace mhp2g::fast_loading {
 void note_disc_read() {}
+bool note_audio(int) { return false; }
+void note_buttons(bool) {}
 void update() {}
 bool active() {
     return false;
 }
 } // namespace mhp2g::fast_loading
+#endif
 
+#if !defined(MHP1_HAS_VULKAN)
 namespace mhp2g::fast_forward {
+void note_bind(bool) {}
+bool active() { return false; }
 double speed() {
     return 1.0;
 }
 } // namespace mhp2g::fast_forward
+#endif
 
 #if !defined(MHP1_HAS_VULKAN)
 namespace mhp2g::perf {

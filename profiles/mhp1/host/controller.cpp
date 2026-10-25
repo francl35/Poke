@@ -1,5 +1,6 @@
 #include "video_backend.hpp"
 #include "hle/hle_common.hpp"
+#include "kernel/fast_loading.hpp"
 #include <array>
 #include <memory>
 namespace mhp1 {
@@ -32,6 +33,8 @@ void register_controller(mhp2g::HleRegistrar &hle, std::function<Pad(psprecomp::
         }
         const auto pad = sample(rt);
         if (rt.stopped()) return;
+        fast_loading::note_buttons(pad.buttons != 0u);
+        fast_loading::update();
         for (std::uint32_t i = 0; i < count; ++i) {
             const auto entry = address + i * 16u;
             rt.memory().store32(entry, static_cast<std::uint32_t>(kernel().now_us()));
