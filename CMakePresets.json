@@ -1,0 +1,71 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 22,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "mhp1-release-base",
+      "hidden": true,
+      "cacheVariables": {
+        "PSPRECOMP_PROFILE": "mhp1",
+        "CMAKE_BUILD_TYPE": "Release",
+        "MHP1_BUILD_BOOT": true,
+        "MHP1_BUILD_PROBE": false,
+        "MHP1_BUILD_NATIVE_MAIN": true,
+        "MHP1_VULKAN": true,
+        "MHP1_CODECS": true,
+        "MHP2G_FFMPEG": "bundled",
+        "MHP2G_KTX2": "bundled",
+        "PSPRECOMP_BUILD_TESTS": true,
+        "PSPRECOMP_BUILD_PROFILE_TESTS": true,
+        "PSPRECOMP_GENERATED_JOBS": "2",
+        "PSPRECOMP_GENERATED_OPT_LEVEL": "2"
+      }
+    },
+    {
+      "name": "mhp1-linux-release",
+      "displayName": "MHP1 linux release",
+      "inherits": "mhp1-release-base",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/mhp1-linux-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "mhp1-macos-release",
+      "displayName": "MHP1 macos release",
+      "inherits": "mhp1-release-base",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/out/mhp1-macos-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "mhp1-linux-release",
+      "configurePreset": "mhp1-linux-release",
+      "targets": [
+        "PokeFreedomDXBoot"
+      ],
+      "jobs": 2
+    },
+    {
+      "name": "mhp1-macos-release",
+      "configurePreset": "mhp1-macos-release",
+      "targets": [
+        "PokeFreedomDXBoot"
+      ],
+      "jobs": 2
+    }
+  ]
+}
