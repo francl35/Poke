@@ -1,0 +1,1244 @@
+{
+  "schema": 1,
+  "purpose": "MHP1 host relocation test; not an independent export",
+  "source_relative": "profiles/mhp2g",
+  "source_root_at_copy": "/run/host/home/deck/Documents/Dev/Recomp/Kokoto",
+  "files": [
+    {
+      "path": "cmake/FFmpeg.cmake",
+      "sha256": "965846056221b12fcb6f122cef8d83079a75e77cda372972cefe5acaedc9a781",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "cmake/KTX2.cmake",
+      "sha256": "5043c91cfd123f2e646cfb07b500d47bb66c415de837c834160147fd6e6d138c",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/adhoc/client.hpp",
+      "sha256": "5c41ac3e9386ce504cf13dea41c40b1aee3f7d7aac62b866e7124c875cd5258b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/adhoc/discovery.hpp",
+      "sha256": "27cfc340a840252474e78fee59d10a98a45536069774c27788347025550fc231",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/adhoc/protocol.hpp",
+      "sha256": "114871c5932f6c83c20e73afe53a7d7e7836c2fa2d3055bba93adbd6c465d5c2",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/adhoc/server.hpp",
+      "sha256": "75e7f9f9f179ede9777e743fb0e8e7c2c8ddd3ccaeb464281552791d5e7f06e8",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/adhoc/session.hpp",
+      "sha256": "5653ef900350a7aa0c392d2abb8a9f9a84792b5ef770399277c20c04f5dc6733",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/adhoc/sockets.hpp",
+      "sha256": "94d65ca41d2f4dce675b19bc59b87832cbf316d0860a4651385e9ee4dbb6261e",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/app_paths.cpp",
+      "sha256": "a616431c056f1506227fb3f5e6e75b5c67b0e75ecc6249f77a89628af849efab",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/app_paths.hpp",
+      "sha256": "ff73ba211e34baad35ff027f757643c45f486eb4cc87fb5646c22fdd570c3e99",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/atrac_decoder.cpp",
+      "sha256": "6676ba2a53488346569fe0f878d7a98ebc0d8678c5377a31914c2966c72f3448",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/atrac_decoder.hpp",
+      "sha256": "94c161fe8ad76a707188388cd659b30cfeb6daeb3c7573909770381f3b0f96ae",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/audio_sink.cpp",
+      "sha256": "54884635f25a117fc6d2964ab0aa05e3314886973c5a19b421aa4e04dcbdd4e3",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/audio_sink.hpp",
+      "sha256": "7b043f8014feeae32a8cd4fdf517a56e3372388a5f79e5466a9915a8370725b0",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/guest_pcm.cpp",
+      "sha256": "22a256a2095c0ec13f713fbdab00cbdfcba6637efea3cbca6888eaa544eacf69",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/guest_pcm.hpp",
+      "sha256": "332429a7d120021376f66d90d017bad84f24b2ad64d19ef5f6595042e4e4045a",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/sas_core.cpp",
+      "sha256": "738ca74d8acd94b4e1bf12337a05742b2bc64d6430f2ac70e935be5bee7fffb6",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/audio/sas_core.hpp",
+      "sha256": "5d5c4dbe3e94bfa5f0d43860ba4263575b29314189c146efb0f1719b9c3357b0",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/camera/camera_input.hpp",
+      "sha256": "5dc154fbded6a876bf54187f219537cfdae727c69e86331f8ea7213d2d5648b2",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/camera/fov.hpp",
+      "sha256": "1d6d3162a82f0f3b3b3c1fb16b010d64450f8bd778e46be1a9b92dc68682808c",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/camera/free_camera.hpp",
+      "sha256": "35d6a633dfa0dab1e4775798b3ebacda844452b048639a4a38c364e498e4a2e0",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/camera/game_aspect.hpp",
+      "sha256": "9316e28dc1eafbcb44b537d0e9efb5881c82a532a50939843b6e10ef8d1e229d",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/camera/game_camera.hpp",
+      "sha256": "08c7570a66349a94a3376d3184be4b9ae574d071299af47cc4a59375fd1ef680",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/camera/lock_on.hpp",
+      "sha256": "f1e3f78c299f8e6d3ea1a969e83efbeb989cc6ad47e6b68a9ad8a08558b47a3e",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/camera_probe.hpp",
+      "sha256": "8959191664ba5cd515f5782963e16fe48b42e3c4b3b3df1ae22dff8949d4534c",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/debug/debug_console.hpp",
+      "sha256": "f0605a20debfe78a6e9a9e91c53a757052cf91fc24f909acb22db47790ef05b2",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/debug/debug_tools.hpp",
+      "sha256": "46d0170e1c387eff9e813c0efca19097c40fa828ea77728ebbd46f094e4321c1",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/debug/game_state.hpp",
+      "sha256": "b1985d52b8fdf17399b8f76c6d14caa644dc6749adcfbbe72101fecba4d980e6",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/debug/quest_start.hpp",
+      "sha256": "a2e634990856211b6ca56f961c67594c83278e677cea76997f81c9d67884f2da",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/fonts/game_font.cpp",
+      "sha256": "2fe417b420328f3c854770bd27bbd6e30d628bac261af2f211c910169d32e4a2",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/fonts/game_font.hpp",
+      "sha256": "80fa9c351476196101507a8e7347393a374521faefd0bb80bebd3a72175a4e49",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/game/equipment_models.hpp",
+      "sha256": "36fa7ad6204f69a09c88d8b870b2d84f636542d6e430d02f3ec8f23d13b8a2d2",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/game/game_data.hpp",
+      "sha256": "9bb5efa57bf6978d22039fc4e56ebc597581d31e6dbe18e6dfeff20f7616ee95",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/game/guest_ram.hpp",
+      "sha256": "2d7680e9e6603c8a379889a1c71d800b02135a8ab5fcf63cbe51f5567f11762d",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/game/layered_armor.hpp",
+      "sha256": "d16f3ff1acbc49868c1590ff1befb3a005ab970b752f288178043eb0a17a1163",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/gpu/descriptor_pools.cpp",
+      "sha256": "49d78af715ca012538f6500da8fa411b7205dd32ca5e60a54e1c238e857893f5",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/descriptor_pools.hpp",
+      "sha256": "09f89ff5914aa34ed5b3feaa68e0d8b0dd6bb8251fc2baa0bd1373cb8d12dc75",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/device_report.cpp",
+      "sha256": "3670afda0c790eea99c44bfa8ebde0cf11721ba8d9d58b253fc95d2685a9e6f3",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/device_report.hpp",
+      "sha256": "7ea0febf6a5b1b6c00e63d26f9e245c46606de22eb63e6e4468baac30917013e",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/frame_interpolation.cpp",
+      "sha256": "5ad53b771ab7a311bede463f8aea0c4f32eb267da6043ebbffd91e38e0e06871",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/frame_interpolation.hpp",
+      "sha256": "9e241322e6a0fd4a2f1813cb8ce23e017b4d02989b61bb356da4189314ea3e2e",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/frame_pacing.cpp",
+      "sha256": "9260ae1923a2814acd2c2022615e5c86b5fc35f8edf5c10e5c70c77dc5543540",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/frame_pacing.hpp",
+      "sha256": "aacfb14e8c607c84f4b547d4ff05a1b4eaaebe631aa4a77c1cbed639ef3dd74d",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/game_hud.hpp",
+      "sha256": "1c89ca97feeac5bcd311caa872dfac3386e5cff9f6b3a5000098d6b07f5826c7",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/ge_state.cpp",
+      "sha256": "1a3e464fbde684f81b78aecd971c3122c24d6a15919f01bc47773ac8a04c2526",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/ge_state.hpp",
+      "sha256": "44ca6251150cdb23d525334d94b423e7efc89033b3b410a9a74f5a672ab861ba",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/hud_layout.hpp",
+      "sha256": "2ce2b99e0fb7638e3c2f5c1a267462fd12221df2177bf35aa4e4d983eacab9f0",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/mmpx.cpp",
+      "sha256": "b86daf55b7fe4b59b890b2aa0c3d47de5538953c59caa629cd3932ebba6641d0",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/mmpx.hpp",
+      "sha256": "71f768ecca69ad6a48d7de9e78d84b5ed24dd790c2b2cd67de0e4d61a86303e6",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/replacement_textures.cpp",
+      "sha256": "692ff0e78d8dd2fc4c2b98b7cd56b8c9fd60fc549c36f0cb9ccad8c24d1567e4",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/replacement_textures.hpp",
+      "sha256": "bdb2dd67496e2d7c825b0d412f700d0e73647ddf2faf5a91f11ebd344e1d207c",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/screenshot.cpp",
+      "sha256": "86a3ed641b7c9180fade73ce65285ea2e017b002ad94d478c61229a427f7b2ce",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/screenshot.hpp",
+      "sha256": "124b54fa29eb175ff5bb95ab48a751a591410473856c59b9350f1522d0702a55",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/shaders/ge.frag",
+      "sha256": "e3885a3ab702bc0e99239818511c9f4ea03e5b52bb1087c2d60f5639ccdd56b6",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/gpu/shaders/ge.vert",
+      "sha256": "2b0d6f4eb383fa1c449656f4cebf402e2c4eb3a27ca497215c89689f2950f81d",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/gpu/shaders/rotate.frag",
+      "sha256": "333739e386561a87834b4e4b7eac9228b71f06435dc03deda4f4af4e49b4b9de",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/gpu/shaders/rotate.vert",
+      "sha256": "81db9058dc638d34537845d18e7be10e3e908bd336fb17d98968804f4901a97e",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "host/gpu/texture_decode.cpp",
+      "sha256": "07760771d613c57f8c12cbf2a3083b69247a009df4451dad9fd2f54860fcc1f2",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_decode.hpp",
+      "sha256": "199793981ea49c3ae07a031d902cd34c49cd70b8e05a638f65c96f6295a83afe",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_pack.cpp",
+      "sha256": "92759121e2f7e05ff74abc660ac6260b66381077ace21a542fe7be82c1d099f2",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_pack.hpp",
+      "sha256": "e44f058a3895357ffd990e838714872e6569a27386162023ca8b1cf2369e228b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_pack_import.cpp",
+      "sha256": "2cb920eeee06e02c0a4cbece2eee78258230fa8d0852b1236172ff1c048e50b1",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_pack_import.hpp",
+      "sha256": "602232eaba2619d882f8b6d6631ea0ce19bb6f42898486fbc94401440d19a33d",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_pack_ktx.cpp",
+      "sha256": "881918b5c1bdc5f7a1cb0496ba2e9ea60fd19c734a640d71bc666c7af2aa5025",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_pack_ktx.hpp",
+      "sha256": "859a81337c7ca5ce7c190b1b47b69cd0b6b2d169cbdb163d577cb95ef3185c3a",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/texture_pack_quick.hpp",
+      "sha256": "4482c00116d7e4be8a55c05af493f3d6d4a647895baf52a3706c8247d2f68dff",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/triangle_indices.hpp",
+      "sha256": "707fec070865fa9021991498db59886fc4c565ecb014fe0188660fb86f4a0f19",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/ui_selection.hpp",
+      "sha256": "02af2c239792671d502f52938d354712b7ff134209bc3022ce00a5da2259d5e3",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/ui_textures.cpp",
+      "sha256": "ef5a8d960019c62d2ac5fc925cde1f8d3a31d1a3c4ed6ad97c8095e4dd00bde4",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/ui_textures.hpp",
+      "sha256": "533ab4d28b8881d5559ea19e8bc812d48c343f1807f9d3a514a50b6c999c9651",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/vertex_upload_window.hpp",
+      "sha256": "61416225304c726a4e6220e6669c03ec9c19964f053630210b528d2767ca571b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/vulkan_renderer.cpp",
+      "sha256": "999eecd2c55c80c230bb9f05d863b88f6b87b268fb906e8d7a102aba16f5ec67",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/gpu/vulkan_renderer.hpp",
+      "sha256": "84577aec2b9002d1551d78e6c34fe79ccaa1e9c53df5b89b354a4193103bea71",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_atrac.cpp",
+      "sha256": "ad39b441113a4f96989d0f6b5d8115613181317b3ac2cd2e501500c5fe2ea32a",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_common.cpp",
+      "sha256": "a446466cfe2315f4e5e232aa8434163952517e3c03c89ad6eb074845ffc6c863",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_common.hpp",
+      "sha256": "efdbc5fe3e3607d999f28d9eb47af3792e0a149f7dd856b2bcd281cc3c034cbd",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_font.cpp",
+      "sha256": "fe49c863ae587bb2878c97ecd895caaed2e67c1c7b32e5bb686eb58ed4b8c227",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_io.cpp",
+      "sha256": "5e19ab18f56ff437cdef5e7da2f2be749453f769d3930e44369f5b82c11ba0a1",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_mpeg.cpp",
+      "sha256": "dab6c6f8c0d657ffc8731a35bcf532c9b62b552184c1cb68908fa09289b13072",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_savedata.cpp",
+      "sha256": "98efeb0b49fec2638e0d8704db469362ef6b1727490c5965f67589fc226d8556",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_sysmem.cpp",
+      "sha256": "2d496dda571a1edc8e8639b6037363c161fc321bb2e8751018d82e823588e8ea",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_threadman.cpp",
+      "sha256": "1bf98024ec00db9d3592acddf2623567af7ec0b93ea4b9515157499a82fc0fe8",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/hle_utility.cpp",
+      "sha256": "303c8ec3f67ddf7f678a9971c590aebdb22238c71f0440003a9a4d82f73ce1b3",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/hle/utility_dialog.hpp",
+      "sha256": "2c30bc7efdea2bbdecdea0fc1b062cd9a52b0ee1d44872c3f991a397892ab024",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/bindings.cpp",
+      "sha256": "352b129525b964a0389bc9c39fd18cddee70696c4b32887a833e8b1fcc37675f",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/bindings.hpp",
+      "sha256": "fba5b03b1899dca5086edf21289d2a1e76d175e1f4ab90cb139bde867a6e575c",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/chords.cpp",
+      "sha256": "f930783f2b6ed34cd45f0ac697cd47f1bb65219c55c7e8b9168fd240dd7db284",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/chords.hpp",
+      "sha256": "0649b76fd72f79c33997a33e2826b1fdecc19b9b3f1fcffa12a11a2f33a3b351",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/gamepad_devices.cpp",
+      "sha256": "659172ed9befff51f2857402d332a0329dd1bff7af9489f1bc68ef42734ca9f3",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/gamepad_devices.hpp",
+      "sha256": "a18d884eaf08c425e0797a471fb50ae68d4f3eec6361722f0172f3dc6c0c1f34",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/gamepad_mapping.cpp",
+      "sha256": "590dd2d79b6a2c84ca6311bf4a974f4ab224f9d57d30d4307fe2027ba928977a",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/gamepad_mapping.hpp",
+      "sha256": "02d5995accae12e6a1479561457286cdcc506e7d7b5abdce890f05af999522a7",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/presets.cpp",
+      "sha256": "1b9d0b54b4cbfc83c1ba925f4ee045a580fd2c931d8f24f7ed14c06f0d05053a",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/presets.hpp",
+      "sha256": "06a62329c960fcebf63dac9cdff2af2f8bf4e31e8d0d77df3e5de4cfa626fa67",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/touch_action.cpp",
+      "sha256": "3570cb72dac3a4bc08a324658bf86272f303efa3eb05372cc33b9ac6c3f07f8b",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/touch_action.hpp",
+      "sha256": "d310ec80e27f70dfcc94c1cfafef8bbbe9828c5ebc43efa0990752f4856aad3b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/touch_controls.cpp",
+      "sha256": "2a12f303cd77688be417056f31ae6b76d827c53e187fac4c9361ec29b0b68c18",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/input/touch_controls.hpp",
+      "sha256": "e43bcfa40f3dc84f60f709427f1592381b3770bdc2c969bc3474105e51ab5510",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/install/executable_preparation.hpp",
+      "sha256": "a8d877ffc0821a4448414f918b7dd85fd72cfdac06de25e7718a3bd2c5813352",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/install/game_identity.hpp",
+      "sha256": "eb66170fc4bcf3110c8bff3ba85b93c6934b53e2c5b08c5cbf520195b86d48b7",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/install/installer.hpp",
+      "sha256": "7d5c474dbf123cba22c88100baf817a394ba676d0b9a0997f6f08f0596b744b0",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/install/user_data.cpp",
+      "sha256": "f349f102bc31f6ec62389bfb4d3e25c5735111580716c2230f40fec0ab22cb70",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/install/user_data.hpp",
+      "sha256": "d775922958176e2a610f760fa78ad6d7e0275fb8d4dfcd6b7cbe9315d5d113b1",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/fast_forward.hpp",
+      "sha256": "ce148470aecaa992f88345f587b7ebce947f4785a6f68bd0e9a8483e3d893719",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/fast_forward_switch.cpp",
+      "sha256": "3cbec9cb9f34922f883b9b2b14fd54d385b575a10c0202f839b0cc23373dcc51",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/fast_loading.hpp",
+      "sha256": "bdbe23302a457f8883847d843176a3d3291fad0fe52c7efb6f6e0d429d89442c",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/iso_image.cpp",
+      "sha256": "709b4f1815e4b0ee845e1de6d02a8cd15e3591b9d1841d21be7c3f8611484b53",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/iso_image.hpp",
+      "sha256": "bbabb0d6b576570d31b4ef672c4cb951f56ec4eaf5057c34ba24af3e60f9e97e",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/kernel.cpp",
+      "sha256": "610979f723f25d389f55fce01b531a5809c80d4c7e10ea4b798c4bcda202d00e",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/kernel.hpp",
+      "sha256": "43f085358ed0d037e5f8952010d13b844cd6a06fcff7025a634f5eb44fb184f1",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/load_detector.cpp",
+      "sha256": "47112f247ee5798114c24bb06a5a5a931c6ecdc15b65de9b94281813fef828ad",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/load_trace.cpp",
+      "sha256": "c3d998187bb1edd99888ab6cc41510ac49d400193334a0c2aaf4830f514cf114",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/kernel/load_trace.hpp",
+      "sha256": "2e10db581e26c555a0f8d9ea1038516cfca0d7061f0157967a8959ca0e5f7358",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mhp2g_profile.hpp",
+      "sha256": "1a9a3c5c3e00ff88ed27e3032d88af88b14c77cb0c992135d0dcf8dc877f8fd8",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/file_overlay.hpp",
+      "sha256": "14d0350b7bc3520e75d8083c4ac545ee1e3757c3f32af7edc018d412017a5372",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/mhp2g_data_bin.hpp",
+      "sha256": "0e7dced8f8a97322c28635f7724875ebbe31307bc6bc04173d111f700fe40a94",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/mhp2g_mod_format.hpp",
+      "sha256": "3d9d46f436873ff3d457f26af54aa263d9adc66cc82b30f938b72fbf28429a80",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/mhp2g_mods.hpp",
+      "sha256": "f2f03890a510c51ce0c83a164c768fbf4ace060e034b08834f51b752a01b131e",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/mod_import.hpp",
+      "sha256": "f4a1655aeac209f611b477d46ea1b3769d769cdab7604418e49790c12efb91d2",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/mod_ini.hpp",
+      "sha256": "72a0c81e3b97ecf0f32ff3b83cab158f93a9bad68dec62ce082a7de217e8efd8",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/mod_library.hpp",
+      "sha256": "0bb2eb80ed1da7e69ed9e141dd15d24e52661ad5be62f7d3351fffdb3a3a11bd",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/mods/mod_session.hpp",
+      "sha256": "cf3f0dce7edde7e2a36d7cd1c3752069d8ea57967436fe2c6f568c53c29c6216",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/movie/avc_decoder.cpp",
+      "sha256": "dee8ec71dc642cc9100971c377a86b69dc93e07c58f37cbe0c9499dc872397c1",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/movie/avc_decoder.hpp",
+      "sha256": "447cbbdaf7eff3e8a089e676934fdce3316e196f2d4d84b8d042fe23d0c0acbd",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/movie/psmf_demuxer.cpp",
+      "sha256": "5a0a86ac7b873d5943ff420b5617ebc3df663a4f18eb3f4492f35100e501572c",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/movie/psmf_demuxer.hpp",
+      "sha256": "a7b53bb2870c966c53047b6f81a4b8035cfc80182a3357f13f66afa73a9bd7db",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/overlay_module.cpp.in",
+      "sha256": "07e1497602e5c18136dcf370b457c6b178d6008d4cadff806f39674d1bda039b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/overlay_module.hpp",
+      "sha256": "f4436a2d9f77bdd0fd1b674b4be73e57aa6cbddc54d234c4d225874f8e6f8855",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/overlays.hpp",
+      "sha256": "b2bb4e7965a7bec8012692889eec25849ef51189156bed5b32e95980eccdf4e8",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/perf/frame_stats.cpp",
+      "sha256": "0c438c8905de2e610da3211020a5bbef3478c1729ea990950c1a28f19922f39a",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/perf/frame_stats.hpp",
+      "sha256": "0ecdaa9074ba7364ec97a6d240df1db37f1ef0be588dcf60aee3f43ce17b2c1c",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/perf/perf_overlay.cpp",
+      "sha256": "cd0088d7784dd21c6a602b5407c212dc7a5923afc2310052494c0768aa79c1bb",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/perf/perf_overlay.hpp",
+      "sha256": "c70ea3c8b624e244d42f60ab3a408902fda782eb0622425dc670565bb01eaf09",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/perf/process_memory.hpp",
+      "sha256": "80f9d3a03fee0aa7d9b2385260e006504511dd0d18099a525e6b8074bc9b1c3b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/perf/resource_stats.hpp",
+      "sha256": "c126e0ab833a5cad533569032ab13e226a91846ee4f696cad0abf3515dc11676",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/platform/android_documents.hpp",
+      "sha256": "57c68b891672dda9b6e3e3a6320d5ec129a54b67e4b46295eb71690bcc925329",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/platform/android_fatal.hpp",
+      "sha256": "c77947ff9e70633e57cb3e45cd716e5c7c57e02532ee370617a0a597678f6cc3",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/platform/android_jni.hpp",
+      "sha256": "e87345379b12e133350766e61e18844f5ee502e7b10a8f021a217cdb59050569",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/platform/android_performance.hpp",
+      "sha256": "7a2a29c0fcc5f372b91c4dbf7d9c329aff050e11d970caae590f68e58aad2316",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/platform/utf8_path.cpp",
+      "sha256": "fc27db2b5112705a74400e61ae2597d4a4dab0ddd50e36d3c361c58189bba08b",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/platform/utf8_path.hpp",
+      "sha256": "b2671cd60f6848666c5b4e67ac8b609b3bb7e057feaba01aa12e2587f62ae9a7",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/aes128.cpp",
+      "sha256": "89c6c62dd8def267a974506f29f9f1a487f86a802ff8c47f041d36c6eebbda3c",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/aes128.hpp",
+      "sha256": "8e49084af0a6998ed0583066c83dfd24ff9680f451b827d756d77046b2d4b49d",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/param_sfo.cpp",
+      "sha256": "9b9ce388c443459a30f6d53034b836773a89eefbaf3fa144a8621c707f058a77",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/param_sfo.hpp",
+      "sha256": "bb083f77a054834d50a1ee598e9989938452b96b8db2d842f78234a963a260b4",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/save_transfer.cpp",
+      "sha256": "0a5aeff2cce619ee336e38b141479eb0b8e3f9f46623eb345a37943fc6da0331",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/save_transfer.hpp",
+      "sha256": "8518005f98a072f745ef6b656d9d1d7e633f37ca4588ff88ad7aa766e636fd7a",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/savedata_crypto.cpp",
+      "sha256": "46cd8dac42688cd1d12072f6eda79e34a321816b826776ec28d872f7d9bbd46b",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/savedata_crypto.hpp",
+      "sha256": "8a1b44fa340b83607b4cff9677e6c0209eb7e4e234983064ed16f7c31317ed8f",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/savedata_store.cpp",
+      "sha256": "35f8e43d12fff6311cae920001aa80b93bccdd373f08679be565a4ddca8e8799",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/save_data/savedata_store.hpp",
+      "sha256": "47d850c9987c1dd8cf5c060886fe176abfd022ce4b4fc381d21f4077aa2302c1",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/settings/settings.cpp",
+      "sha256": "42306e6630652671d17f97be791fd49a000084b4ee9f7fedec34b4d0e98701a5",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/settings/settings.hpp",
+      "sha256": "8189f6aa42a6e3c623586bde77984415abf4286ce1f553a21a2ba9b6a44abb75",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/bindings_editor.cpp",
+      "sha256": "bfb0ccb29a101a23d9c6bcbeae6c12f3502195312e087979895970d4031a0667",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/bindings_editor.hpp",
+      "sha256": "a99a0370e8b0b3e0091fbb4342f853d090d6bf4ffe48fe0498ac08da66a57f88",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/controllers_screen.cpp",
+      "sha256": "8ed2617c5c3472c18e261e3569901391e648c2462ed12abdff6d9d51d438711e",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/controllers_screen.hpp",
+      "sha256": "cd74fce43498ecd4d2416b737821db1d638b79aad65194d8e948d7ca0121386d",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/debug_screen.hpp",
+      "sha256": "e560aff24e90de5d9f4d946e01c20b86f575037440ea2fdea1ef053cd9eebb58",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/file_browser.hpp",
+      "sha256": "de173f0ead153f7d613bf4ff88e44d5d069146965eb13b3cc37f1f83eafbeb6a",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/font_menu.hpp",
+      "sha256": "9d75c359a2729faac1af835c0d67fc5e035ca6248ae401e044697264359b34ab",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/input_script.hpp",
+      "sha256": "f0e458f5a9b0cc19d02ca92cc498c607ef6aaa7fde9cb3eaf081489bdfbb3330",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/layer.cpp",
+      "sha256": "e01009fe9a75c91abaf6ced6b9dfdce335170cfe60045fc6a1fef621684b220a",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/layer.hpp",
+      "sha256": "59555c486d56be35082461f9b461853b779478abeaeb60e76cdb82ee13a3cc0c",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/layered_armor_screen.hpp",
+      "sha256": "5344bc134b3bf28ec511824a0b63fefb1ed06622885133ad76d93cfa435cf8a9",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/menu.cpp",
+      "sha256": "5b871caeefbb2c6d312f54462fe2b8c8cbabd177329ea16944a078f843943d72",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/mods_screen.hpp",
+      "sha256": "999f93bcb9d5180fed5cffe9915d076181b8794f53fcae28652f795354b00dc6",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/save_screen.hpp",
+      "sha256": "e701547ceec76083027b2c6746acc6b3853014d3edcceca5a1890547bdc7858b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/text_input.cpp",
+      "sha256": "f2c422f17884dce03df3f51632ce5cb9a91981474441304bd392d117a327b79a",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/text_input.hpp",
+      "sha256": "e532959da92f3835895b70e8162ac2792776eb865aa9aca344d893a64bec2f0b",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/texture_pack_screen.hpp",
+      "sha256": "2e824a2ded18c8a462fa7dd96a0f3bd191bf5215df102eab35d2acf21fcf5157",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/touch_editor.hpp",
+      "sha256": "d07909c9982bf9505d5b0f37156f3b94b961eaa39ff580f0422f3e790381007f",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/touch_overlay.hpp",
+      "sha256": "82d354c88252ced8c1ca22ccbc30f0616a7ec9ee5b0745a228a2c183f38a8240",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/ui.hpp",
+      "sha256": "e961e69082f4da23ecb056c6441999202709cb3db55d9a6b8878f05ee3821ad8",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/widgets.cpp",
+      "sha256": "1e475e5a49d8bae6e73ad6a00a6b9a5b5189ec57755907186df8b7fbb699505b",
+      "reason": "translation unit in reviewed MHP1 compile database",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "host/ui/widgets.hpp",
+      "sha256": "5e719b418ae5adb437a6ce5b2c424e2093b51fecdaf54b762f0724f30ef468dc",
+      "reason": "conservative header/template/asset support",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "tests/fast_forward_tests.cpp",
+      "sha256": "19237e54158b3892df437969632e4fdef36a178dfa632e19fca75d36bdad336d",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "tests/fast_loading_tests.cpp",
+      "sha256": "68616bde5670ea98647af13b6cbd3f6dafdf30d9b06de249b02a49b1c614ce00",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "tests/savedata_tests.cpp",
+      "sha256": "882671ab0c76071be5ac9c386e9476ee394b2e9f561fecf4dc785819cf7d7612",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "third_party/imgui/LICENSE.txt",
+      "sha256": "173506a2d6f7fb67990d257fb2507f188690eca39060c39469ae7bef43aae2a3",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/README.md",
+      "sha256": "ba48741acde8219f768bcd2fe0ee25f2795d6fbad8b3fa804bcdebc5ef9c79a6",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/backends/imgui_impl_sdl3.cpp",
+      "sha256": "306060dffa276b574f0541194e8e079c1685c29c1095602a3972de0bb23171e7",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/backends/imgui_impl_sdl3.h",
+      "sha256": "fa184f17d59d31e986df2e827ef964d7b3c28bcba7789643a4aaaed344cb868e",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/backends/imgui_impl_vulkan.cpp",
+      "sha256": "659590d8b74bcbd2ba6612d84a6d8871f97314f04da06a8a05508244adabf086",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/backends/imgui_impl_vulkan.h",
+      "sha256": "351aa104d643f8a575b891d99645389d45d321bcbd33d41270d2ebf0276351f3",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imconfig.h",
+      "sha256": "5755e1b8d6ab0d7811a9d7cac0f509878b51fc5ee77e09bd0f235bcb414971e7",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imgui.cpp",
+      "sha256": "6d3d1621bcb477087d3aeee9d2807745ec9842754005784b1484553c77e81461",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imgui.h",
+      "sha256": "0b17568717857761c182c7deb81b1cf2daf555c02a96470192f6226c3ab89502",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imgui_draw.cpp",
+      "sha256": "a05b20f9987b764fc6f07e316ca0ef47195e2523f7a8dfa424127c5b1e7f7ede",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imgui_internal.h",
+      "sha256": "efba9bccc971cc49ec3da3168968ba412c7ea89745c104a7f5c004c8349bc71f",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imgui_tables.cpp",
+      "sha256": "b5deabe5b569ab712c11b6556562a646bf88327320fc60a451071b2a36498d72",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imgui_widgets.cpp",
+      "sha256": "a8a0b2f65caa5711467d9e3ca4028fded48329ea65e11ec92a968293dc2aa231",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imstb_rectpack.h",
+      "sha256": "889b396795202d1457560a797a7242e96f6f132d4b88ca2d69be58bf05e1771f",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imstb_textedit.h",
+      "sha256": "a985f5fa0ed97353d493b497961e9eef52082edcd045cf6954b69990ec9d0741",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/imgui/imstb_truetype.h",
+      "sha256": "c7481307d5c4c957c77ee579c19ce54c055a6735140afb656fbaee5eb9613391",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/stb_image.h",
+      "sha256": "c31e4dca001a2194396ce94932284efcb072346c3ed848610a2b7938c8a92de1",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/stb_image_write.h",
+      "sha256": "a72da5994915ec49dc25bbbcd9c3a966b3d1a90a35bc936acd19f912a612ba7f",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/stb_truetype.h",
+      "sha256": "2e20feaeecec6615d41721ea336681805672adef7f93cfa0461482ded66fb0af",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/tiny_aes/README.md",
+      "sha256": "71ff4ca753b3e389024e8c05174da7a6ad421f476034e270938e25c5c6bfdcbf",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/tiny_aes/UNLICENSE",
+      "sha256": "7e12e5df4bae12cb21581ba157ced20e1986a0508dd10d0e8a4ab9a4cf94e85c",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/tiny_aes/aes.c",
+      "sha256": "f7f78b44654efd3542b6886923dd05194286807ebcfeb078ea05d21fe901ee9e",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/tiny_aes/aes.h",
+      "sha256": "9f74a4de3bd11621ff6e8fb9b352b060f699e6c1c67f81a22d104aacad61a23b",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/xxhash/LICENSE",
+      "sha256": "6ffedbc0f7878612d2b23589f1ff2ab15633e1df7963a5d9fc750ec5500c7e7a",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "third_party/xxhash/xxhash.h",
+      "sha256": "17973c0dc49d9854ca26caa191f0e12f7a424b68858d9a78de3860d959d85e4b",
+      "reason": "vendored dependency/support/license; not minimized yet",
+      "matched_reviewed_hash": null
+    },
+    {
+      "path": "tools/embed_nids.cmake",
+      "sha256": "7f37498fd4bc48ba6f7834a2c7dad2f03ba5b8c9cc9d9994e156dae320126df3",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "tools/embed_shaders.py",
+      "sha256": "a80616b303f710cf98b80d1e45ef728b9a0eba7c79f7b2975a2571efdabd79c4",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    },
+    {
+      "path": "tools/write_version.cmake",
+      "sha256": "00a9e16dbfb3a8907a8761d306ff745100aa24b8ad7b6988673c1c1ad7e45b6f",
+      "reason": "explicit dependency of MHP1 CMake",
+      "matched_reviewed_hash": true
+    }
+  ]
+}

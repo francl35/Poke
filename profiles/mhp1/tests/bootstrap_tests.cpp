@@ -361,7 +361,7 @@ void test_services() {
         0x3529002Au, 0xAD090028u, jump(kCode + 40u), 0u, 0u, 0x24020007u, 0x3C080883u, 0xAD020000u, jump(kImport + 8u)};
     for (std::size_t i = 0; i < code.size(); ++i)
         runtime.memory().store32(kCode + static_cast<std::uint32_t>(4u * i), code[i]);
-    rejects([&] { host.run(kCode, 0u); });
+    rejects([&] { host.run(kCode + 1u, 1u, 1000u); });
     rejects([&] { host.run(kCode, 1u, 0u); });
     host.run(kCode, 5u, 1000u);
     check(runtime.memory().load32(kData) == 42u, "Modified instruction was not executed");

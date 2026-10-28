@@ -2,7 +2,7 @@
 find_package(SDL3 CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_program(MHP1_GLSLANG NAMES glslangValidator glslang REQUIRED)
-set(shared "${PROJECT_SOURCE_DIR}/profiles/mhp2g")
+set(shared "${MHP1_SHARED_PROFILE_DIR}")
 set(shader_inc "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders/ge_shaders.inc")
 add_custom_command(OUTPUT "${shader_inc}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders"
@@ -95,5 +95,5 @@ set_target_properties(mhp1_fast_forward_tests PROPERTIES
 
 target_compile_definitions(mhp1_boot_host PRIVATE MHP1_HAS_FRAME_INTERPOLATION=1)
 
-include("${PROJECT_SOURCE_DIR}/profiles/mhp2g/cmake/KTX2.cmake")
+include("${MHP1_SHARED_PROFILE_DIR}/cmake/KTX2.cmake")
 mhp2g_use_ktx2(mhp1_boot_host)

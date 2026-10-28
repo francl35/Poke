@@ -30,6 +30,10 @@ if(MHP1_BUILD_NATIVE_MAIN)
     endif()
     target_compile_definitions(mhp1_boot_host PRIVATE MHP1_HAS_MAIN_AOT=1)
     target_sources(PokeFreedomDXBoot PRIVATE $<TARGET_OBJECTS:mhp1_generated>)
+    if(TARGET mhp1_bootstrap_tests)
+        target_sources(mhp1_bootstrap_tests PRIVATE
+            $<TARGET_OBJECTS:mhp1_generated>)
+    endif()
     # Public synthetic regression; builds only when requested explicitly.
     add_executable(mhp1_main_native_tests EXCLUDE_FROM_ALL
         tests/main_native_tests.cpp host/main_native.cpp)

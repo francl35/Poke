@@ -1,3 +1,14 @@
+# Select the host support tree explicitly. The original location stays the
+# default until the relocated MHP1 build has passed its local checks.
+set(MHP1_SHARED_PROFILE_DIR "${PROJECT_SOURCE_DIR}/profiles/mhp2g" CACHE PATH
+    "Host support root for MHP1: contains host, tools, cmake and third_party")
+get_filename_component(MHP1_SHARED_PROFILE_DIR "${MHP1_SHARED_PROFILE_DIR}" ABSOLUTE
+    BASE_DIR "${PROJECT_SOURCE_DIR}")
+if(NOT EXISTS "${MHP1_SHARED_PROFILE_DIR}/host/overlay_module.hpp")
+    message(FATAL_ERROR "MHP1_SHARED_PROFILE_DIR does not contain the required host support tree")
+endif()
+message(STATUS "mhp1: shared host root ${MHP1_SHARED_PROFILE_DIR}")
+
 # First MHP1/FreedomDX milestone: build/link and inspect, without guest execution.
 option(MHP1_BUILD_PROBE "Build the MHP1 executable and generated-registry probe" OFF)
 
@@ -38,14 +49,14 @@ if(MHP1_BUILD_BOOT OR (PSPRECOMP_BUILD_TESTS AND PSPRECOMP_BUILD_PROFILE_TESTS))
     # Reuse PSP kernel/I/O services and the headless GE command decoder.
     # No MHP2G executable bootstrap,
     # game address hooks, overlay loader, mods, Vulkan frontend or persistent settings.
-    set(MHP1_SHARED_HOST "${PROJECT_SOURCE_DIR}/profiles/mhp2g/host")
+    set(MHP1_SHARED_HOST "${MHP1_SHARED_PROFILE_DIR}/host")
     set(MHP1_NIDS_INC "${CMAKE_CURRENT_BINARY_DIR}/generated_nids/nid_table.inc")
     add_custom_command(OUTPUT "${MHP1_NIDS_INC}"
         COMMAND ${CMAKE_COMMAND} -DINPUT=${PROJECT_SOURCE_DIR}/configs/nids.csv
             -DOUTPUT=${MHP1_NIDS_INC}
-            -P "${PROJECT_SOURCE_DIR}/profiles/mhp2g/tools/embed_nids.cmake"
+            -P "${MHP1_SHARED_PROFILE_DIR}/tools/embed_nids.cmake"
         DEPENDS "${PROJECT_SOURCE_DIR}/configs/nids.csv"
-            "${PROJECT_SOURCE_DIR}/profiles/mhp2g/tools/embed_nids.cmake")
+            "${MHP1_SHARED_PROFILE_DIR}/tools/embed_nids.cmake")
     add_library(mhp1_boot_host STATIC
         host/boot_host.cpp host/video_backend.cpp host/controller.cpp host/audio_services.cpp host/platform_services.cpp host/stock_modules.cpp host/headless_ge.cpp host/software_video.cpp host/diagnostic_adapters.cpp "${MHP1_NIDS_INC}"
         "${MHP1_SHARED_HOST}/gpu/ge_state.cpp"
@@ -82,13 +93,13 @@ if(MHP1_BUILD_BOOT OR (PSPRECOMP_BUILD_TESTS AND PSPRECOMP_BUILD_PROFILE_TESTS))
         "${MHP1_SHARED_HOST}/input/touch_controls.cpp")
     target_include_directories(mhp1_boot_host PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/host"
         PRIVATE "${MHP1_SHARED_HOST}" "${CMAKE_CURRENT_BINARY_DIR}/generated_nids")
-    set_source_files_properties("${PROJECT_SOURCE_DIR}/profiles/mhp2g/third_party/tiny_aes/aes.c" PROPERTIES LANGUAGE CXX)
-    target_sources(mhp1_boot_host PRIVATE "${PROJECT_SOURCE_DIR}/profiles/mhp2g/third_party/tiny_aes/aes.c")
-    target_include_directories(mhp1_boot_host PRIVATE "${PROJECT_SOURCE_DIR}/profiles/mhp2g/third_party")
+    set_source_files_properties("${MHP1_SHARED_PROFILE_DIR}/third_party/tiny_aes/aes.c" PROPERTIES LANGUAGE CXX)
+    target_sources(mhp1_boot_host PRIVATE "${MHP1_SHARED_PROFILE_DIR}/third_party/tiny_aes/aes.c")
+    target_include_directories(mhp1_boot_host PRIVATE "${MHP1_SHARED_PROFILE_DIR}/third_party")
     if(MHP1_CODECS)
         # Match the original profile: pinned bundled codecs by default, not
         # whichever architecture pkg-config happens to find on the host.
-        include("${PROJECT_SOURCE_DIR}/profiles/mhp2g/cmake/FFmpeg.cmake")
+        include("${MHP1_SHARED_PROFILE_DIR}/cmake/FFmpeg.cmake")
         if(NOT MHP2G_HAS_FFMPEG)
             message(FATAL_ERROR "MHP1_CODECS=ON requires MHP2G_FFMPEG=bundled or system")
         endif()
@@ -150,8 +161,8 @@ if(PSPRECOMP_BUILD_TESTS AND PSPRECOMP_BUILD_PROFILE_TESTS)
     target_link_libraries(mhp1_services_tests PRIVATE mhp1_boot_host)
     add_test(NAME mhp1_services_tests COMMAND mhp1_services_tests)
     set_tests_properties(mhp1_services_tests PROPERTIES TIMEOUT 30)
-    add_executable(mhp1_savedata_tests "${PROJECT_SOURCE_DIR}/profiles/mhp2g/tests/savedata_tests.cpp")
-    target_include_directories(mhp1_savedata_tests PRIVATE "${MHP1_SHARED_HOST}" "${PROJECT_SOURCE_DIR}/profiles/mhp2g/third_party")
+    add_executable(mhp1_savedata_tests "${MHP1_SHARED_PROFILE_DIR}/tests/savedata_tests.cpp")
+    target_include_directories(mhp1_savedata_tests PRIVATE "${MHP1_SHARED_HOST}" "${MHP1_SHARED_PROFILE_DIR}/third_party")
     target_link_libraries(mhp1_savedata_tests PRIVATE mhp1_boot_host)
     add_test(NAME mhp1_savedata_tests COMMAND mhp1_savedata_tests)
     set_tests_properties(mhp1_savedata_tests PROPERTIES TIMEOUT 30)
