@@ -29,7 +29,7 @@
 #include <sstream>
 #include <vector>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 namespace mpeg_error {

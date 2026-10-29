@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::ui {
+namespace mh::ui {
 namespace {
 
 using Clock = std::chrono::steady_clock;

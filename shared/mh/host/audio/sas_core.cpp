@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <map>
 
-namespace mhp2g::audio {
+namespace mh::audio {
 namespace {
 
 // The five SPU ADPCM predictor coefficient pairs, in 1/64ths.

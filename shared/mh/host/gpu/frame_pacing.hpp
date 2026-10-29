@@ -29,7 +29,7 @@
 // than keep every present late for two seconds. At 60 a frame is on screen as
 // it is 16.7 ms plus that time after its moment; without interpolation it is
 // shown when its code has run.
-namespace mhp2g::gpu::pacing {
+namespace mh::gpu::pacing {
 
 // Two vblanks of the PSP's display, in microseconds (kernel kVBlankPeriodUs).
 inline constexpr std::int64_t kGameFrameUs = 2 * 16'683;

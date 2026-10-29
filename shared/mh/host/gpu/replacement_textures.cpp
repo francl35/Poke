@@ -6,7 +6,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 namespace {
 
 // Replacements on the GPU at once, at most; each holds one descriptor set.

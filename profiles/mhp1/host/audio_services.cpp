@@ -12,7 +12,7 @@
 #include <vector>
 namespace mhp1 {
 namespace {
-using namespace mhp2g;
+using namespace mh;
 constexpr std::uint32_t kAudioSampleRate = 44100;
 struct AudioChannel {
     bool reserved{};
@@ -217,7 +217,7 @@ void register_audio_impl(HleRegistrar &hle) {
 }
 
 }
-void register_audio_services(mhp2g::HleRegistrar &hle) {
+void register_audio_services(mh::HleRegistrar &hle) {
     register_audio_impl(hle);
 }
 }

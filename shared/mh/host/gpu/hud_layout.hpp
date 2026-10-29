@@ -7,7 +7,7 @@
 // Conservative recognition of the normal MHP2G quest HUD from its submitted
 // geometry. No guest code patches, MHP3rd addresses, or texture-pack hashes.
 // Unknown layouts remain at their original size.
-namespace mhp2g::gpu::ui {
+namespace mh::gpu::ui {
 
 struct HudRect {
     float left{}, top{}, right{}, bottom{};

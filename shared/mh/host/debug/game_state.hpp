@@ -21,18 +21,18 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::game {
+namespace mh::game {
 class Ram;
 }
 
-namespace mhp2g::debug {
+namespace mh::debug {
 
 using game::Ram;
 
 namespace legacy_layout {
 
 // The character, the text and the equipment kinds.
-using namespace ::mhp2g::game;
+using namespace ::mh::game;
 
 // Money (zenny) and the two point balances, 32-bit each.
 inline constexpr std::uint32_t kPoints1 = 0x09FAC8CCu;

@@ -17,7 +17,7 @@
 //
 // Game-specific: the archive's directory, its obfuscation, and a view of the
 // archive with the mods' files in it that the file I/O serves to the game.
-namespace mhp2g::mods::legacy_archive {
+namespace mh::mods::legacy_archive {
 
 inline constexpr std::uint32_t kBlock = 2048u;
 

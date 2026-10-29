@@ -41,7 +41,7 @@
 #include <unistd.h>
 #endif
 
-namespace mhp2g::fonts {
+namespace mh::fonts {
 namespace {
 
 // Default fonts, in order: the first that loads is the fallback for every

@@ -19,7 +19,7 @@
 
 namespace mhp1 {
 namespace {
-using namespace mhp2g;
+using namespace mh;
 using psprecomp::Runtime;
 using psprecomp::AllegrexContext;
 // Time CPU-side GE and presentation work, including the waits the shared
@@ -186,7 +186,7 @@ struct Graphics {
     }
 };
 }
-void register_headless_ge(mhp2g::HleRegistrar &hle, const std::filesystem::path &data) {
+void register_headless_ge(mh::HleRegistrar &hle, const std::filesystem::path &data) {
     auto state = std::make_shared<Graphics>();
     state->renderer_data = data;
     if (const char *enabled = std::getenv("MHP1_RENDERER")) state->vulkan_requested = std::string_view(enabled) == "1";
@@ -219,7 +219,7 @@ void register_headless_ge(mhp2g::HleRegistrar &hle, const std::filesystem::path 
 #if defined(MHP1_HAS_VULKAN)
             // Interpolation consumes true guest flips. A repeat at each vblank
             // would reset its pair/cycle as if the guest had supplied 60 frames.
-            skip_repeat = skip_repeat || mhp2g::settings::current().frame_rate != mhp2g::settings::FrameRate::Fps30;
+            skip_repeat = skip_repeat || mh::settings::current().frame_rate != mh::settings::FrameRate::Fps30;
 #endif
             if (!guest_flip && skip_repeat) {
                 state->poll(rt);

@@ -8,7 +8,7 @@
 #include <vector>
 #include <string_view>
 
-namespace mhp2g::gpu::vertex_upload {
+namespace mh::gpu::vertex_upload {
 inline bool trim_enabled() {
     static const bool on = [] {
         const char *v = std::getenv("MHP2G_TRIM_DIRECT_VERTICES");

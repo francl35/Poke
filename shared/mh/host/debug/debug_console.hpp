@@ -11,11 +11,11 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::game {
+namespace mh::game {
 class Ram;
 }
 
-namespace mhp2g::debug {
+namespace mh::debug {
 
 using game::Ram;
 

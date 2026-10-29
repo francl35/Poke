@@ -14,7 +14,7 @@ namespace psprecomp {
 class Runtime;
 }
 
-namespace mhp2g {
+namespace mh {
 
 inline constexpr std::uint32_t kOverlayAbiVersion = 1u;
 
@@ -51,6 +51,6 @@ struct OverlayModuleInfo {
 #endif
 
 extern "C" {
-MHP2G_OVERLAY_EXPORT const mhp2g::OverlayModuleInfo *mhp2g_overlay_info();
+MHP2G_OVERLAY_EXPORT const mh::OverlayModuleInfo *mhp2g_overlay_info();
 MHP2G_OVERLAY_EXPORT void mhp2g_register_overlay(psprecomp::Runtime &runtime);
 }

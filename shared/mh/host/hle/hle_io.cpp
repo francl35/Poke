@@ -19,7 +19,7 @@
 #include <optional>
 #include <vector>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 namespace io_error {

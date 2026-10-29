@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace mhp2g::gpu::interpolation {
+namespace mh::gpu::interpolation {
 namespace {
 
 constexpr float kPi = 3.14159265358979f;

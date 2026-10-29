@@ -25,7 +25,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 class DescriptorPools {
 public:

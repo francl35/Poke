@@ -9,7 +9,7 @@
 
 // Graphics Engine state machine: turns a PSP display list into draw calls with
 // decoded vertices, independent of any rendering backend.
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 using psprecomp::GuestMemory;
 

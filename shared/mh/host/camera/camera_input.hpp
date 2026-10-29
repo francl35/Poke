@@ -14,7 +14,7 @@
 //
 // Signs: positive yaw turns right, positive pitch looks down, the way a
 // non-inverted stick or mouse is pushed. Inversion belongs to each source.
-namespace mhp2g::camera {
+namespace mh::camera {
 
 enum class Source : std::uint8_t { Stick, Keys, Mouse, Touch, Count };
 

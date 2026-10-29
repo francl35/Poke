@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::android {
+namespace mh::android {
 
 struct Insets {
     int left{};

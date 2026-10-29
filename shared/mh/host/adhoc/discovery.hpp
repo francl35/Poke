@@ -39,7 +39,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::adhoc {
+namespace mh::adhoc {
 
 inline constexpr std::uint16_t kDiscoveryPort = 27314;
 

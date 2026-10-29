@@ -5,7 +5,7 @@
 #include <functional>
 #include <cmath>
 
-namespace mhp2g::gpu::pacing {
+namespace mh::gpu::pacing {
 namespace {
 
 // A flip this far off the grid of frame moments moves the grid to it: the

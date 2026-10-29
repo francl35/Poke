@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstring>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 namespace {
 
 Block block_from_hex(const char *hex) {

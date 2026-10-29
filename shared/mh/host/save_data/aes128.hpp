@@ -7,7 +7,7 @@
 #include <array>
 #include <cstdint>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 
 using Block = std::array<std::uint8_t, 16>;
 

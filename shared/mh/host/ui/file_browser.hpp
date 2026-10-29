@@ -14,7 +14,7 @@
 // common places (home, downloads, SD cards and other removable drives) are one
 // press away, and only .iso files are listed unless the player asks for all.
 // The menu's save import and export use it to choose folders.
-namespace mhp2g::ui {
+namespace mh::ui {
 
 class FileBrowser {
 public:

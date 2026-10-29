@@ -4,7 +4,7 @@
 // (or dropped on the window), the pack found in it checked and shown beside
 // the installed one, then copied into the data folder on a thread of its own,
 // or used where it is (see gpu/texture_pack_import.hpp).
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // The rows under Texture pack: Import texture pack…, Open the textures
 // folder, and, for a pack used in place, a row that stops using it.

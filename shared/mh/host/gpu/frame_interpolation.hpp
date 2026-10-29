@@ -12,7 +12,7 @@
 // This part is independent of the backend: it recognises a draw of one frame
 // in the next, decides whether two frames may be blended at all, and blends
 // matrices. The renderer records the draws and replays them.
-namespace mhp2g::gpu::interpolation {
+namespace mh::gpu::interpolation {
 
 using Matrix = std::array<float, 16>; // column-major, as in DrawCall
 

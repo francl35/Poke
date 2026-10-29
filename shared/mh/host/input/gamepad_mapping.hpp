@@ -22,7 +22,7 @@
 // in turn, turns the answers into such a line, and keeps it in
 // gamecontrollerdb.txt in the data directory, the file format of SDL and of
 // the community's SDL_GameControllerDB.
-namespace mhp2g::input::mapping {
+namespace mh::input::mapping {
 
 // One input of a joystick as a mapping names it: button 3 is "b3", hat 0
 // pushed down "h0.4", axis 2 "a2", the positive half of axis 1 "+a1", and an

@@ -10,7 +10,7 @@
 // Reading the small INI files mods describe themselves with, and the list
 // values in them. Part of the game-independent mod machinery (host/mods/),
 // which knows nothing about any one game's archive or mod format.
-namespace mhp2g::mods {
+namespace mh::mods {
 
 // [section] headers and key=value lines. A value may be in double quotes; a
 // quote left open runs to the end of the line, as hand-written files have it.

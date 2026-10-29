@@ -20,7 +20,7 @@ class GuestMemory;
 // camera's angle and eye offset before the game runs its collision checks. The
 // game keeps every other decision: presets, recentring, cutscenes and every
 // camera mode that has no driver here yet, which then keeps the stock stick.
-namespace mhp2g::camera {
+namespace mh::camera {
 
 using RotationFunction = void (*)(psprecomp::Runtime &, psprecomp::AllegrexContext &);
 

@@ -11,7 +11,7 @@
 // folder of the same name that is already there moves to mods/.backup first.
 //
 // Game-independent; the game's ModFormat says what a mod folder is.
-namespace mhp2g::mods {
+namespace mh::mods {
 
 struct ImportCandidate {
     std::filesystem::path folder; // where it is now

@@ -11,7 +11,7 @@
 #include <optional>
 #include <string>
 
-namespace mhp2g::android {
+namespace mh::android {
 
 struct PickedImport {
     std::filesystem::path staged; // the local copy to look for saves in

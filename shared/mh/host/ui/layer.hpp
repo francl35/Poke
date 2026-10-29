@@ -13,7 +13,7 @@
 union SDL_Event;
 struct ImFont;
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 class VulkanRenderer;
 }
 
@@ -28,7 +28,7 @@ class VulkanRenderer;
 // together with the B button, and B is a button the game and the menu use. An
 // Esc that arrives within a moment of a gamepad button press is therefore
 // dropped; a real key press is acted on a few frames late, which nobody notices.
-namespace mhp2g::ui {
+namespace mh::ui {
 
 enum class InputDevice { Keyboard, Gamepad };
 

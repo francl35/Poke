@@ -12,7 +12,7 @@
 #include <string_view>
 #include <utility>
 
-namespace mhp2g {
+namespace mh {
 
 using HleFunction = std::function<void(Runtime &, AllegrexContext &)>;
 

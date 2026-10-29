@@ -15,7 +15,7 @@
 // path(std::string) use the ANSI code page there, which cannot hold most
 // names (a Cyrillic user name on a Western system, Japanese on a Russian one)
 // and throws or loses characters; so do main's argv and std::getenv.
-namespace mhp2g {
+namespace mh {
 
 // A path as UTF-8, for messages, settings and SDL.
 [[nodiscard]] std::string path_to_utf8(const std::filesystem::path &path);

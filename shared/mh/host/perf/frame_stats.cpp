@@ -14,7 +14,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace mhp2g::perf {
+namespace mh::perf {
 namespace {
 
 double to_ms(Clock::duration duration) {

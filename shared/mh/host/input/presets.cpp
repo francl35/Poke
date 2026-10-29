@@ -4,7 +4,7 @@
 #include <array>
 #include <cctype>
 
-namespace mhp2g::input {
+namespace mh::input {
 namespace {
 
 // Key positions by USB HID usage, the values SDL's scancodes have.

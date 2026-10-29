@@ -9,7 +9,7 @@
 #include <optional>
 #include <string>
 
-namespace mhp2g::install {
+namespace mh::install {
 
 // The per-user data directory holds what the installer sets up:
 //
@@ -116,7 +116,7 @@ struct Installation {
 
 // UTF-8 conversions for paths shown in dialogs, stored in settings or received
 // from SDL (platform/utf8_path.hpp).
-using mhp2g::path_from_utf8;
-using mhp2g::path_to_utf8;
+using mh::path_from_utf8;
+using mh::path_to_utf8;
 
 } // namespace mhp2g::install

@@ -3,7 +3,7 @@
 #include "gpu/ge_state.hpp"
 #include <filesystem>
 #include <memory>
-namespace mhp2g {
+namespace mh {
 class HleRegistrar;
 }
 namespace mhp1 {
@@ -18,7 +18,7 @@ public:
     virtual bool gpu_decode() const { return false; }
     virtual bool check_gpu_decode() const { return false; }
     virtual void begin_list() = 0;
-    virtual void submit(const mhp2g::gpu::DrawCall &, psprecomp::GuestMemory &) = 0;
+    virtual void submit(const mh::gpu::DrawCall &, psprecomp::GuestMemory &) = 0;
     virtual void read_back(std::uint32_t, psprecomp::GuestMemory &) = 0;
     virtual void present(std::uint32_t, std::uint32_t, std::uint32_t, psprecomp::GuestMemory &) = 0;
     virtual bool poll() = 0;
@@ -26,5 +26,5 @@ public:
     virtual bool capture(const std::filesystem::path &) = 0;
 };
 std::unique_ptr<VideoBackend> make_video_backend(const std::filesystem::path &data);
-void register_controller(mhp2g::HleRegistrar &hle, std::function<Pad(psprecomp::Runtime &)> sample);
+void register_controller(mh::HleRegistrar &hle, std::function<Pad(psprecomp::Runtime &)> sample);
 }

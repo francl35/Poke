@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include <string_view>
 
-namespace mhp2g::fast_forward {
+namespace mh::fast_forward {
 
 namespace {
 

@@ -21,7 +21,7 @@ class Runtime;
 // from it. With another aspect ratio the game keeps its vertical field of view
 // and widens (or narrows) the horizontal one, and draws that view into its
 // 480x272 screen; the renderer then spreads the screen over the window.
-namespace mhp2g::camera {
+namespace mh::camera {
 
 // Everything the aspect ratio relies on in the game's code, checked before
 // anything is written. Exposed for tests.

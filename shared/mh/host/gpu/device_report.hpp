@@ -15,7 +15,7 @@
 // meant to offer all of that, so a missing piece is named in the error rather
 // than assumed. Compressed texture formats (BC/DXT, which Mali and PowerVR
 // lack) are never used: the GE's DXT textures are decoded on the CPU.
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 inline constexpr std::uint32_t kVendorArm = 0x13B5u;
 inline constexpr std::uint32_t kVendorImagination = 0x1010u;

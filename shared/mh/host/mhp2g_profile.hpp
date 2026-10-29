@@ -8,7 +8,7 @@
 #include <iterator>
 #include <array>
 
-namespace mhp2g {
+namespace mh {
 
 inline constexpr std::uint32_t kLoadBase = psprecomp::kDefaultPspUserLoadBase;
 inline constexpr std::uint32_t kGuestRamBytes = 32u * 1024u * 1024u;

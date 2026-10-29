@@ -10,7 +10,7 @@
 #include <ktx.h>
 #endif
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 bool is_ktx2_image(std::span<const std::uint8_t> bytes) {
     constexpr std::array<std::uint8_t, 12> magic{0xABu, 0x4Bu, 0x54u, 0x58u, 0x20u, 0x32u,

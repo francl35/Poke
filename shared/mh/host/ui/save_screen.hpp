@@ -5,7 +5,7 @@
 // replace, and the import itself (see save_data/save_transfer.hpp).
 #include <filesystem>
 
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // The page's rows: Import save…, Export save…, Back up saves…, and the
 // buttons that open the saves and backups folders.

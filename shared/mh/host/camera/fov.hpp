@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <string_view>
 
-namespace mhp2g::camera::fov {
+namespace mh::camera::fov {
 using Matrix = std::array<float, 16>; // column-major, as supplied by the GE
 inline constexpr std::array<std::int32_t, 10> kOffsets{-15, -10, -5, 0, 5, 10, 15, 20, 25, 30};
 inline constexpr float kRadiansToDegrees = 57.29577951308232f;

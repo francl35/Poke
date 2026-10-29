@@ -1,4 +1,5 @@
 #include "video_backend.hpp"
+#include "app_branding.hpp"
 #include "psprecomp/common.hpp"
 #if defined(MHP1_HAS_VULKAN)
 #include "gpu/vulkan_renderer.hpp"
@@ -21,17 +22,17 @@ std::filesystem::path &renderer_data() {
 }
 namespace {
 class VulkanVideo final : public VideoBackend {
-    mhp2g::gpu::VulkanRenderer renderer_;
+    mh::gpu::VulkanRenderer renderer_;
     bool pause_menu_pending_{};
     bool quit_{};
 
     void update_speed_controls() {
         renderer_.sample_pad();
         const auto value = renderer_.pad();
-        mhp2g::fast_forward::note_bind(value.fast_forward);
-        mhp2g::fast_loading::note_buttons(value.buttons != 0u);
-        mhp2g::fast_loading::update();
-        const bool accelerated = mhp2g::fast_loading::active() || mhp2g::fast_forward::active();
+        mh::fast_forward::note_bind(value.fast_forward);
+        mh::fast_loading::note_buttons(value.buttons != 0u);
+        mh::fast_loading::update();
+        const bool accelerated = mh::fast_loading::active() || mh::fast_forward::active();
         renderer_.set_fast_forward(accelerated);
         if (accelerated) renderer_.pause_interpolation();
     }
@@ -41,29 +42,29 @@ public:
         renderer_data() = std::filesystem::absolute(data);
         std::filesystem::create_directories(renderer_data());
         std::string error;
-        if (!renderer_.initialize({"Monster Hunter Portable / FreedomDX (experimental)"}, error))
+        if (!renderer_.initialize({MH_APP_NAME " — Monster Hunter Portable / FreedomDX"}, error))
             throw psprecomp::Error("MHP1 Vulkan initialization failed: " + error);
         renderer_.set_texture_pack(
-            mhp2g::settings::current().texture_pack);
-        if (!mhp2g::ui::Layer::get().attach(renderer_))
+            mh::settings::current().texture_pack);
+        if (!mh::ui::Layer::get().attach(renderer_))
             throw psprecomp::Error("MHP1 could not initialize the shared UI layer");
-        renderer_.set_frame_rate(mhp2g::settings::current().frame_rate);
-        renderer_.set_frame_rate_auto(mhp2g::settings::current().frame_rate_auto);
+        renderer_.set_frame_rate(mh::settings::current().frame_rate);
+        renderer_.set_frame_rate_auto(mh::settings::current().frame_rate_auto);
         renderer_.begin_frame();
-        mhp2g::perf::restart_measurement();
+        mh::perf::restart_measurement();
         // Service host-only presents while the guest's unchanged clock waits.
-        mhp2g::kernel().set_idle_hook([this](std::chrono::steady_clock::time_point wake) {
+        mh::kernel().set_idle_hook([this](std::chrono::steady_clock::time_point wake) {
             renderer_.present_until(wake);
         });
         std::cout << "[mhp1-video] Vulkan renderer initialized; MHP2G camera/HUD/font enhancement hooks disabled\n";
     }
     ~VulkanVideo() override {
-        mhp2g::kernel().set_idle_hook({});
+        mh::kernel().set_idle_hook({});
     }
     bool gpu_decode() const override { return renderer_.gpu_decode(); }
     bool check_gpu_decode() const override { return renderer_.check_gpu_decode(); }
     void begin_list() override { renderer_.begin_display_list(); }
-    void submit(const mhp2g::gpu::DrawCall &draw, psprecomp::GuestMemory &memory) override {
+    void submit(const mh::gpu::DrawCall &draw, psprecomp::GuestMemory &memory) override {
         renderer_.submit(draw, memory);
     }
     void read_back(std::uint32_t source, psprecomp::GuestMemory &memory) override {
@@ -84,26 +85,26 @@ public:
         // draw_over_game handles both the menu and the game's text input.
         renderer_.set_ui_draw_data(nullptr);
         update_speed_controls();
-        mhp2g::ui::draw_over_game();
-        const auto moment = mhp2g::kernel().real_time_of(mhp2g::kernel().now_us());
+        mh::ui::draw_over_game();
+        const auto moment = mh::kernel().real_time_of(mh::kernel().now_us());
         const bool presented = renderer_.present(address, moment);
-        if (presented) mhp2g::perf::count_present();
+        if (presented) mh::perf::count_present();
         // Polling can occur inside GE recording: wait for a submitted frame.
         if (pause_menu_pending_) {
             pause_menu_pending_ = false;
             renderer_.pause_interpolation();
             renderer_.set_fast_forward(false);
-            auto &audio = mhp2g::audio::AudioSink::instance();
+            auto &audio = mh::audio::AudioSink::instance();
             audio.set_paused(true);
             const auto resume = [&] {
                 audio.set_paused(false);
                 renderer_.pause_interpolation();
-                mhp2g::kernel().resync_real_time();
-                mhp2g::perf::restart_measurement();
+                mh::kernel().resync_real_time();
+                mh::perf::restart_measurement();
             };
             try {
                 std::cout << "[mhp1-menu] guest paused\n";
-                quit_ = !mhp2g::ui::run_menu();
+                quit_ = !mh::ui::run_menu();
             } catch (...) {
                 resume();
                 throw;
@@ -118,14 +119,14 @@ public:
         if (quit_ || !renderer_.pump_events())
             return false;
 
-        if (mhp2g::ui::take_quit_request())
+        if (mh::ui::take_quit_request())
             return false;
 
-        if (!pause_menu_pending_ && !mhp2g::ui::menu_over_game() && mhp2g::ui::menu_requested()) {
-            if (mhp2g::ui::menu_pauses())
+        if (!pause_menu_pending_ && !mh::ui::menu_over_game() && mh::ui::menu_requested()) {
+            if (mh::ui::menu_pauses())
                 pause_menu_pending_ = true;
             else
-                mhp2g::ui::open_menu_over_game();
+                mh::ui::open_menu_over_game();
         }
 
         update_speed_controls();
@@ -149,7 +150,7 @@ std::unique_ptr<VideoBackend> make_video_backend(const std::filesystem::path &da
 //     return mhp1::renderer_data();
 // }
 // }
-namespace mhp2g::gpu::hud {
+namespace mh::gpu::hud {
 bool hides(std::uint32_t, std::uint32_t) {
     return false;
 }

@@ -11,7 +11,7 @@
 #include <optional>
 #include <string>
 
-namespace mhp2g::android {
+namespace mh::android {
 
 // "Android 14 (API 34), Infinix X6832 (mt6789)": what a report needs about
 // the phone, read from the system properties.

@@ -17,7 +17,7 @@
 //
 // Game-independent: the game supplies how to read one of its files and how to
 // apply a patch file to it.
-namespace mhp2g::mods {
+namespace mh::mods {
 
 // A write a patch makes to guest memory outside the file itself, done once the
 // game has finished loading the file (see ModPatcher).

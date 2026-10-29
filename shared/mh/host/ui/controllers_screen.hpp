@@ -6,7 +6,7 @@ union SDL_Event;
 // of it (name, USB ids, GUID, mapping, buttons, axes and hats), what each of
 // its inputs reports right now, and a setup that turns a controller SDL does
 // not know into a gamepad the game and the menu read.
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // The Controls page's first section: a row that opens the screen, marked as
 // a warning while a controller is connected that nothing reads yet.

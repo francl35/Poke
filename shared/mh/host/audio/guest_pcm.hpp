@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace mhp2g::audio {
+namespace mh::audio {
 
 // Validate the entire guest range before allocating or reading a stereo copy.
 // Invalid buffers leave the previous staging allocation untouched.

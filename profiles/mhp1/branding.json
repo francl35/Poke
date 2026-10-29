@@ -1,0 +1,6 @@
+{
+  "display_name": "Kokkotto",
+  "app_id": "io.github.francl35.Kokoto",
+  "command": "kokoto",
+  "data_subdir": "kokoto"
+}

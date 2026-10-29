@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace mhp2g::gpu::ui {
+namespace mh::gpu::ui {
 
 // Opt-in selection for the unmodified Japanese MHP2G sheets observed in a
 // texture dump. Keys use xxh64, ignoreAddress=true, as TextureDumper does.

@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 std::uint32_t as_unsigned(std::int32_t value) {

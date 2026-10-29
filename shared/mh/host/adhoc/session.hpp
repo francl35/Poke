@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace mhp2g {
+namespace mh {
 
 // Applies changed network settings (hle_adhoc.cpp). Turning ad hoc play off
 // takes the game off line at once, as a normal disconnect; a new server or

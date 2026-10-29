@@ -18,7 +18,7 @@
 // does and more (LB in LB + X for L + □), acts at once. An input tapped and
 // released inside the window still presses its action, for a moment, when
 // it is released. Nothing here needs SDL; the time is the caller's.
-namespace mhp2g::input {
+namespace mh::input {
 
 // What the window adds when a tap is released: at least this long pressed,
 // so a game reading 30 times a second sees it.

@@ -33,7 +33,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 namespace {
 
 // Seeds the format uses: one for texture data, one for the palette.

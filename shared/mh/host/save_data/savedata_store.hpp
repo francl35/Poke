@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 
 struct SaveFiles {
     std::string game_name;    // e.g. "ULJM05800"

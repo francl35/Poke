@@ -16,7 +16,7 @@
 // Sharper game UI at a high internal resolution (issue #164): the CPU side of
 // what the renderer draws instead of the game's own 2D textures. Nothing here
 // changes what the game reads; only the pictures the renderer samples.
-namespace mhp2g::gpu::ui {
+namespace mh::gpu::ui {
 
 // The game's glyph atlas (traced with MHP2G_TRACE_FONT and
 // MHP2G_TRACE_SPRITES in the village, the Guild Hall and a quest): the

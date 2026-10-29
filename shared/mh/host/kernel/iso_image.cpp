@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cctype>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 std::uint32_t read_le32(const std::vector<std::uint8_t> &data, std::size_t offset) {

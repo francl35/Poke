@@ -29,7 +29,7 @@
 #include <cstring>
 #include <string>
 
-namespace mhp2g::adhoc::net {
+namespace mh::adhoc::net {
 
 #if defined(_WIN32)
 using Socket = SOCKET;

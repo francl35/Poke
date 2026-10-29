@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace mhp2g::audio {
+namespace mh::audio {
 
 inline constexpr std::uint32_t kSampleRate = 44'100u;
 inline constexpr std::uint32_t kChannels = 2u;

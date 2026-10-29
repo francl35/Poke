@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 
-namespace mhp2g::input {
+namespace mh::input {
 namespace {
 
 struct KeyName {

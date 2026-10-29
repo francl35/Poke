@@ -13,7 +13,7 @@
 //
 // Game-independent. The game says whether a new set of mods can be switched
 // to while it runs, and switches.
-namespace mhp2g::mods {
+namespace mh::mods {
 
 class ModSession {
 public:

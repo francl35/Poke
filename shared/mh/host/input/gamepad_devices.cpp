@@ -13,7 +13,7 @@
 #include <sstream>
 #include <system_error>
 
-namespace mhp2g::input::devices {
+namespace mh::input::devices {
 namespace {
 
 struct State {

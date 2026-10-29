@@ -14,7 +14,7 @@
 #include <SDL3/SDL_stdinc.h>
 #endif
 
-namespace mhp2g::install {
+namespace mh::install {
 namespace {
 
 constexpr const char *kOrganization = "Poke";

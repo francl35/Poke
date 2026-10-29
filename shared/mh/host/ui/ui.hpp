@@ -10,14 +10,14 @@
 // The port's own interface, drawn with Dear ImGui over the game's window: the
 // in-game menu and the first-run setup screens. Only builds with the renderer
 // have it.
-namespace mhp2g::gpu {
+namespace mh::gpu {
 class VulkanRenderer;
 }
-namespace mhp2g::install {
+namespace mh::install {
 class InstallerUi;
 }
 
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // Puts the interface on the renderer's window. False when it cannot start;
 // the game then runs without a menu.

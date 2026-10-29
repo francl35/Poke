@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace mhp2g::gpu::ui {
+namespace mh::gpu::ui {
 
 // MMPX (Morgan McGuire and Mara Gagiu, "MMPX Style-Preserving Pixel Art
 // Magnification", Journal of Computer Graphics Techniques 10(2), 2021):

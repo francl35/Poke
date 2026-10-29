@@ -13,7 +13,7 @@
 #include <iostream>
 #include <thread>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 constexpr std::uint32_t kMemoryGranularity = 0x100u;

@@ -8,7 +8,7 @@
 
 struct ImDrawList;
 
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // Draws the on-screen touch controls over the game in the current ImGui frame,
 // behind any window: outlines at `opacity`, filled while held.

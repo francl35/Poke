@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cstdio>
 
-namespace mhp2g::perf {
+namespace mh::perf {
 namespace {
 
 // A 5x7 font written for this overlay: upper-case letters, digits and the

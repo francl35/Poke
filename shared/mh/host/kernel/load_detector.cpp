@@ -2,7 +2,7 @@
 // tests can drive it (tests/fast_loading_tests.cpp).
 #include "kernel/fast_loading.hpp"
 
-namespace mhp2g::fast_loading {
+namespace mh::fast_loading {
 
 const char *reason_name(Reason reason) {
     switch (reason) {

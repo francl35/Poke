@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 // The vertex of a draw at position `index` of its primitive: through the
 // index list when there is one, clamped to the vertices decoded.

@@ -4,7 +4,7 @@
 
 #include "psprecomp/runtime.hpp"
 
-namespace mhp2g {
+namespace mh {
 
 // Loads the overlay libraries and installs the dispatch-miss hook that
 // recognises the overlay currently in a slot and registers its recompiled

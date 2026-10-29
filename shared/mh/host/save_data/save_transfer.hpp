@@ -18,7 +18,7 @@
 #include <string_view>
 #include <vector>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 
 // The folders this game keeps on a memory stick: the game data, the
 // the install data (a cache the game can rebuild).

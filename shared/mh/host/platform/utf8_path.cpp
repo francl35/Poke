@@ -15,7 +15,7 @@
 #include <shellapi.h>
 #endif
 
-namespace mhp2g {
+namespace mh {
 
 std::string path_to_utf8(const std::filesystem::path &path) {
     const std::u8string text = path.u8string();

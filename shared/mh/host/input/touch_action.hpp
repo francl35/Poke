@@ -18,7 +18,7 @@
 // Every element can be moved, resized, rebound and hidden, and the layout is
 // kept in settings.ini. This part is pure logic, like touch_controls: where
 // the elements are on a screen, which finger holds what, and what comes out.
-namespace mhp2g::input::touch {
+namespace mh::input::touch {
 
 enum class Element : std::uint8_t {
     Stick, // the analog stick, fixed where it is placed

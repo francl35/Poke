@@ -16,7 +16,7 @@
 // could be gameplay keeps real time: sound coming out, a button held, a movie,
 // the in-game menu, ad hoc play (other players' time must stay real) and the
 // Game speed setting, which already lets time run free.
-namespace mhp2g::fast_loading {
+namespace mh::fast_loading {
 
 // How long after its last disc read the game still counts as loading, in
 // emulated microseconds. A load reads at least every few hundred milliseconds;

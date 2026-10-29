@@ -14,7 +14,7 @@
 #include <dlfcn.h>
 #endif
 
-namespace mhp2g {
+namespace mh {
 
 std::filesystem::path executable_path() {
 #if defined(_WIN32)

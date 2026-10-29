@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 // The GPU side of a texture pack: uploads decoded replacement images with a
 // full mip chain, hands out their descriptors, and keeps their memory within

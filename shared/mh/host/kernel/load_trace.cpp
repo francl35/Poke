@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::load_trace {
+namespace mh::load_trace {
 namespace {
 
 using Clock = std::chrono::steady_clock;

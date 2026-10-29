@@ -17,7 +17,7 @@ class GuestMemory;
 class Runtime;
 }
 
-namespace mhp2g::game {
+namespace mh::game {
 
 class Ram {
 public:

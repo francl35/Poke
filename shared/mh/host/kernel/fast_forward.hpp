@@ -20,7 +20,7 @@
 //
 // Single player only: during ad hoc play the other players' time is real, so
 // the bind does nothing there, and a press says so once on the console.
-namespace mhp2g::fast_forward {
+namespace mh::fast_forward {
 
 // What the bind does, from the settings.
 enum class Mode { Hold, Toggle, Off };

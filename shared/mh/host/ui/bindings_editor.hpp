@@ -12,7 +12,7 @@
 // back as the preset it was made from has it. Conflicts are listed under
 // their action with a one-click fix. Works with a gamepad alone, a keyboard,
 // a mouse and touch.
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // Draws the bindings into the menu's content. `notice` receives what an edit
 // did to the presets (a new preset of the player's, made from a shipped one).

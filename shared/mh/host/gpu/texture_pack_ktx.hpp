@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 struct KtxPackImage {
     std::uint32_t width{}, height{};

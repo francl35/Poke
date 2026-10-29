@@ -13,7 +13,7 @@ namespace psprecomp {
 class Runtime;
 class GuestMemory;
 }
-namespace mhp2g::gpu {
+namespace mh::gpu {
 struct DrawCall;
 }
 
@@ -35,7 +35,7 @@ struct DrawCall;
 //
 // What the game culls against its own camera it never draws, so it is not
 // in the picture from anywhere else either: see the profile README.
-namespace mhp2g::camera {
+namespace mh::camera {
 
 using Matrix = std::array<float, 16>; // column major, as the GE's matrices are expanded
 

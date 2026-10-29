@@ -24,7 +24,7 @@
 // context into `ctx`, and changes the runtime thread identity. The generated
 // import wrapper sees the identity change and leaves `ctx.pc` alone, so the
 // dispatcher continues in the new thread.
-namespace mhp2g {
+namespace mh {
 
 using psprecomp::AllegrexContext;
 using psprecomp::Runtime;

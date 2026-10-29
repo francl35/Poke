@@ -2,7 +2,7 @@
 
 // Identity used by this profile installer. The executable hash below
 // identifies its generated-code input; see the current profile configuration.
-namespace mhp2g::install {
+namespace mh::install {
 
 // DISC_ID in PSP_GAME/PARAM.SFO.
 inline constexpr const char *kDiscId = "ULJM05500";

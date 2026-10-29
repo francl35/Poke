@@ -4,7 +4,7 @@
 // testing without grinding. Only in developer builds, shown with
 // MHP2G_DEBUG_MENU=1.
 
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // Draws the page. `back`: the back button was pressed this frame.
 void debug_page(bool back);

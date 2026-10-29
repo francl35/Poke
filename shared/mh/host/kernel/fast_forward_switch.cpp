@@ -2,7 +2,7 @@
 // tests can drive it (tests/fast_forward_tests.cpp).
 #include "kernel/fast_forward.hpp"
 
-namespace mhp2g::fast_forward {
+namespace mh::fast_forward {
 
 const char *reason_name(Reason reason) {
     switch (reason) {

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 // Independently expressed from the legacy format's arithmetic semantics;
 // see docs/MHP2G_TEXTURE_PACKS.md and SOURCE_PROVENANCE.md. No ISA-specific

@@ -23,7 +23,7 @@
 // choice back.
 //
 // Only the main thread reads or writes these.
-namespace mhp2g::settings {
+namespace mh::settings {
 
 enum class PresentMode { Fifo, Mailbox, Immediate };
 // How the game's picture meets the window. Original keeps the PSP's shape with

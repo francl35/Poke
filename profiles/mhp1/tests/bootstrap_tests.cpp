@@ -106,7 +106,7 @@ void test_ge(std::string_view mode) {
         ctx.gpr[7] = 1;
         rt.invoke_import("sceDisplay", 0x289D82FEu, ctx);
         check(!std::filesystem::exists(capture_dir / "vblank_2.bmp"), "Deferred framebuffer captured before vblank");
-        mhp2g::kernel().on_vblank();
+        mh::kernel().on_vblank();
         check(std::filesystem::exists(capture_dir / "vblank_2.bmp"), "Deferred framebuffer was not captured");
         for (unsigned invalid = 0; invalid < 5; ++invalid) {
             ctx.gpr[4] = invalid == 0 ? 0x07000000u : 0x04000000u;
@@ -122,14 +122,14 @@ void test_ge(std::string_view mode) {
         ctx.gpr[6] = 0;
         ctx.gpr[7] = 0;
         rt.invoke_import("sceDisplay", 0x289D82FEu, ctx);
-        mhp2g::kernel().on_vblank();
+        mh::kernel().on_vblank();
         check(!std::filesystem::exists(capture_dir / "vblank_3.bmp"), "Disabled display was captured");
         ctx.gpr[4] = 0x04000000u;
         ctx.gpr[5] = 512;
         ctx.gpr[6] = 3;
         ctx.gpr[7] = 0;
         rt.invoke_import("sceDisplay", 0x289D82FEu, ctx);
-        for (unsigned i = 0; i < 10; ++i) mhp2g::kernel().on_vblank();
+        for (unsigned i = 0; i < 10; ++i) mh::kernel().on_vblank();
         check(!std::filesystem::exists(capture_dir / "vblank_8.bmp"), "Capture limit exceeded");
 
         return;
@@ -156,23 +156,23 @@ void test_ge(std::string_view mode) {
         rt.memory().store32(kData, 0x0E000003u);      // SIGNAL 3
         rt.memory().store32(kData + 4u, 0x0F000007u); // FINISH 7
         rt.memory().store32(kData + 8u, 0x0C000000u);
-        mhp2g::kernel().start_loader_thread(ctx, kCode + 0x40u, 0u);
+        mh::kernel().start_loader_thread(ctx, kCode + 0x40u, 0u);
         ctx.gpr[31] = kCode + 0x44u;
         call(0xAB49E76Au, kData, 0u, id);
-        check(mhp2g::kernel().in_interrupt() && ctx.pc == kCode && ctx.gpr[4] == 3u && ctx.gpr[5] == 0x1234u,
+        check(mh::kernel().in_interrupt() && ctx.pc == kCode && ctx.gpr[4] == 3u && ctx.gpr[5] == 0x1234u,
             "Signal callback was not delivered with its arguments");
-        mhp2g::kernel().interrupt_return_stub(ctx);
+        mh::kernel().interrupt_return_stub(ctx);
         check(ctx.pc == kCode + 0x20u && ctx.gpr[4] == 7u && ctx.gpr[5] == 0x5678u,
             "Finish callback was not delivered in order");
-        mhp2g::kernel().interrupt_return_stub(ctx);
-        check(!mhp2g::kernel().in_interrupt() && ctx.pc == kCode + 0x44u, "GE callbacks did not restore the caller");
+        mh::kernel().interrupt_return_stub(ctx);
+        check(!mh::kernel().in_interrupt() && ctx.pc == kCode + 0x44u, "GE callbacks did not restore the caller");
         return;
     }
     const auto list = call(0xAB49E76Au, kData, kData, 0xFFFFFFFFu);
     check(list > 0u && list < 0x80000000u, "List was not queued");
     check(call(0x03444EB4u, list, 1u) == 3u, "Stalled list was reported complete");
     if (mode == "ge-blocking" || mode == "ge-draw-blocking") {
-        auto &kernel = mhp2g::kernel();
+        auto &kernel = mh::kernel();
         kernel.start_loader_thread(ctx, kCode, 0);
         const auto main = kernel.current_uid();
         const auto worker = kernel.create_thread("GE producer", kCode + 0x100u, 0x40u, 0x4000u, 0, 0);
@@ -183,7 +183,7 @@ void test_ge(std::string_view mode) {
         else
             call(0xB287BD61u, 0);
         check(!rt.stopped() && kernel.current_uid() == worker &&
-                kernel.find_thread(main)->status == mhp2g::ThreadStatus::Waiting,
+                kernel.find_thread(main)->status == mh::ThreadStatus::Waiting,
             "GE sync did not yield to the producer");
         ctx.gpr[31] = kCode + 0x104u;
         call(0xE0D68148u, list, 0);
@@ -323,22 +323,22 @@ void test_services() {
     ctx.set_gpr(7, 123u);
     runtime.invoke_import("InterruptManager", 0xCA04A2B9u, ctx);
     runtime.invoke_import("InterruptManager", 0xFB8E22ECu, ctx);
-    check(ctx.gpr[2] == 0u && mhp2g::kernel().sub_interrupts[30u][0u].enabled, "Interrupt registration failed");
+    check(ctx.gpr[2] == 0u && mh::kernel().sub_interrupts[30u][0u].enabled, "Interrupt registration failed");
     runtime.invoke_import("InterruptManager", 0xD61E6961u, ctx);
-    check(ctx.gpr[2] == 0u && mhp2g::kernel().sub_interrupts[30u].empty(), "Interrupt release failed");
+    check(ctx.gpr[2] == 0u && mh::kernel().sub_interrupts[30u].empty(), "Interrupt release failed");
     // Exercise actual host allocation/free and memory-stick I/O implementations.
-    mhp2g::write_cstring(runtime.memory(), kData, "test", 32u);
+    mh::write_cstring(runtime.memory(), kData, "test", 32u);
     ctx.set_gpr(4, 2u);
     ctx.set_gpr(5, kData);
     ctx.set_gpr(6, 0u);
     ctx.set_gpr(7, 1024u);
     runtime.invoke_import("SysMemUserForUser", 0x237DBD4Fu, ctx);
-    const auto block = static_cast<mhp2g::SceUID>(ctx.gpr[2]);
-    check(block > 0 && mhp2g::kernel().find_block(block) != nullptr, "Memory allocation failed");
+    const auto block = static_cast<mh::SceUID>(ctx.gpr[2]);
+    check(block > 0 && mh::kernel().find_block(block) != nullptr, "Memory allocation failed");
     ctx.set_gpr(4, static_cast<std::uint32_t>(block));
     runtime.invoke_import("SysMemUserForUser", 0xB6D61D02u, ctx);
-    check(ctx.gpr[2] == 0u && mhp2g::kernel().find_block(block) == nullptr, "Memory free failed");
-    mhp2g::write_cstring(runtime.memory(), kData, "ms0:/fixture.bin", 64u);
+    check(ctx.gpr[2] == 0u && mh::kernel().find_block(block) == nullptr, "Memory free failed");
+    mh::write_cstring(runtime.memory(), kData, "ms0:/fixture.bin", 64u);
     ctx.set_gpr(4, kData);
     ctx.set_gpr(5, 1u);
     ctx.set_gpr(6, 0u);
@@ -365,7 +365,7 @@ void test_services() {
     rejects([&] { host.run(kCode, 1u, 0u); });
     host.run(kCode, 5u, 1000u);
     check(runtime.memory().load32(kData) == 42u, "Modified instruction was not executed");
-    check(mhp2g::kernel().now_us() >= 1000u, "DelayThread did not advance guest time");
+    check(mh::kernel().now_us() >= 1000u, "DelayThread did not advance guest time");
     check(runtime.stop_reason().find("Missing HLE import MHP1Test::") != std::string::npos,
         "Unknown import did not stop with its identity");
     check(host.import_calls() == 2u, "Unexpected bridge call count");

@@ -3,6 +3,10 @@ find_package(SDL3 CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_program(MHP1_GLSLANG NAMES glslangValidator glslang REQUIRED)
 set(shared "${MHP1_SHARED_PROFILE_DIR}")
+if(NOT EXISTS "${shared}/host/ui/theme_palette.hpp")
+    message(FATAL_ERROR "MHP1 font/theme support requires the updated shared/mh tree; "
+        "configure with -DMHP1_SHARED_PROFILE_DIR=${PROJECT_SOURCE_DIR}/shared/mh")
+endif()
 set(shader_inc "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders/ge_shaders.inc")
 add_custom_command(OUTPUT "${shader_inc}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated_shaders"
@@ -38,7 +42,11 @@ target_sources(mhp1_boot_host PRIVATE
 
 target_compile_definitions(mhp1_boot_host PRIVATE
     MHP_UI_CORE_ONLY=1
+    MH_HAS_FOV=1
+    MH_APP_BRANDING_HEADER="app_branding.hpp"
     MHP_HAS_TEXT_INPUT=1
+    MHP_UI_THEME_HEADER="ui/mhp1_theme.hpp"
+    MHP_UI_FONT_RESTART_REQUIRED=1
 )
 target_sources(mhp1_boot_host PRIVATE
     "${shared}/host/settings/settings.cpp"
@@ -46,6 +54,7 @@ target_sources(mhp1_boot_host PRIVATE
 )
 target_sources(mhp1_boot_host PRIVATE
     "${shared}/host/ui/menu.cpp"
+    "${shared}/host/ui/font_menu.cpp"
     "${shared}/host/ui/bindings_editor.cpp"
     "${shared}/host/ui/controllers_screen.cpp"
     "${shared}/host/gpu/screenshot.cpp"

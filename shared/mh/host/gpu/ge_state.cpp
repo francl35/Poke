@@ -10,7 +10,7 @@
 #include <map>
 #include <vector>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 namespace {
 
 // Display list opcodes (command = word >> 24).

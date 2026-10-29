@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 namespace {
 
 std::uint32_t environment_number(const char *name) {

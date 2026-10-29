@@ -31,7 +31,7 @@
 #include <vector>
 #include <chrono>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 // SceUtilitySavedataParam, after the common dialog header.

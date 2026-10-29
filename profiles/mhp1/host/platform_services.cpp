@@ -5,8 +5,8 @@
 #include <ctime>
 #include <memory>
 namespace mhp1 {
-void register_platform_services(mhp2g::HleRegistrar &hle) {
-    using namespace mhp2g;
+void register_platform_services(mh::HleRegistrar &hle) {
+    using namespace mh;
     hle.add("sceUtility", "sceUtilityLoadNetModule",[](Runtime &rt, AllegrexContext &ctx) {
         const auto id = arg(ctx, 0);
         if (id != 1u && id != 2u) {

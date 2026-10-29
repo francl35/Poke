@@ -7,7 +7,7 @@
 
 namespace mhp1 {
 namespace {
-using namespace mhp2g::gpu;
+using namespace mh::gpu;
 std::uint32_t bytes_per_pixel(std::uint32_t format) {
     if (format > 3u) throw psprecomp::Error("Unsupported framebuffer format");
     return format == 3u ? 4u : 2u;
@@ -53,7 +53,7 @@ bool retain_video_register(std::uint32_t cmd, std::uint32_t value) {
 }
 
 void rasterize_2d(
-    psprecomp::GuestMemory &memory, const mhp2g::gpu::DrawCall &d, const std::array<std::uint32_t, 256> &r) {
+    psprecomp::GuestMemory &memory, const mh::gpu::DrawCall &d, const std::array<std::uint32_t, 256> &r) {
     using psprecomp::Error;
     if (!d.through || d.texture.enabled || d.raw_vertices || !d.indices.empty() ||
         (d.primitive != PrimitiveType::Sprites && d.primitive != PrimitiveType::Triangles))

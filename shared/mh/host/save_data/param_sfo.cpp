@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstring>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 namespace {
 
 constexpr std::uint32_t kMagic = 0x46535000u; // "\0PSF"

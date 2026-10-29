@@ -6,7 +6,7 @@
 
 #include <cstring>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 constexpr std::uint32_t kEventFlagWaitMulti = 0x200u;

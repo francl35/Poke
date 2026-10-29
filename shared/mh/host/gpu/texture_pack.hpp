@@ -36,7 +36,7 @@
 // This file knows nothing about Vulkan: it hashes textures, finds their
 // replacement files and decodes those on worker threads. The renderer uploads
 // the decoded images (replacement_textures.hpp).
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 enum class ReplacementFilter : std::uint8_t { Auto, Nearest, Linear };
 

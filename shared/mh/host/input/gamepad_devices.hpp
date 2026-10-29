@@ -22,7 +22,7 @@
 //
 // Each joystick is logged once when it appears, with "[pad]": its name, USB
 // ids, GUID, buttons, axes and hats, and its mapping or the lack of one.
-namespace mhp2g::input::devices {
+namespace mh::input::devices {
 
 struct Info {
     SDL_JoystickID id{};

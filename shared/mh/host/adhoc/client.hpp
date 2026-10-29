@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::adhoc {
+namespace mh::adhoc {
 
 struct Identity {
     std::string server; // host name or address, optionally host:port for adhocctl

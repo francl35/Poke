@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace mhp2g::input::touch {
+namespace mh::input::touch {
 
 std::uint16_t psp_button(Control control) {
     switch (control) {

@@ -13,7 +13,7 @@
 // gamepads, every action included. A few ship with Yakumo and cannot be
 // changed; the player's own are kept in settings.ini by name. Nothing here
 // needs SDL.
-namespace mhp2g::input {
+namespace mh::input {
 
 struct Layout {
     Bindings keys{}; // the keyboard and the mouse

@@ -28,7 +28,7 @@
 
 namespace mhp1 {
 
-using namespace mhp2g;
+using namespace mh;
 
 // MHP1 overlay starts. The final value bounds the last lookup region,
 // below the diagnostic loader stack; it is not an overlay image size.

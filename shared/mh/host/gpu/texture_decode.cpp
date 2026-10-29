@@ -8,7 +8,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 namespace {
 
 std::uint32_t expand_5650(std::uint16_t value) {

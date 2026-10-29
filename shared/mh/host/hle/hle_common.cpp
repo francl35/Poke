@@ -6,7 +6,7 @@
 #include <iostream>
 #include <unordered_set>
 
-namespace mhp2g {
+namespace mh {
 
 std::string read_cstring(const psprecomp::GuestMemory &memory, std::uint32_t address, std::size_t max_length) {
     std::string text;

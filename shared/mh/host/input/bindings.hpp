@@ -20,7 +20,7 @@
 // to four held together on one device, in any order: the keyboard and the
 // mouse are one device, a gamepad another. Nothing here needs SDL, so
 // settings.ini is read the same way in every build.
-namespace mhp2g::input {
+namespace mh::input {
 
 enum class Action : std::uint8_t {
     StickUp,

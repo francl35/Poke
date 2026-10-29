@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
-namespace mhp2g::perf {
+namespace mh::perf {
 // Same thread as the renderer/performance overlay. Session peaks/counters
 // survive restart_measurement(), which only excludes pauses from timings.
 struct ResourceUsage {

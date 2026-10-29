@@ -12,7 +12,7 @@ namespace psprecomp {
 class Runtime;
 }
 
-namespace mhp2g {
+namespace mh {
 class IsoImage;
 }
 
@@ -26,7 +26,7 @@ class IsoImage;
 //   MHP2G_MODS_DIR    the mods folder, instead of mods/ in the data directory
 //   MHP2G_NO_MODS=1   no mod applies this run; the menu still lists them
 //   MHP2G_TRACE_MODS  logs what the mods change and every read they serve
-namespace mhp2g::mods {
+namespace mh::mods {
 
 // The disc image, once it is open, before the game runs. Reads the mods
 // folder and the choices in mods.ini.

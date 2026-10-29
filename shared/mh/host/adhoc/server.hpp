@@ -36,7 +36,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::adhoc {
+namespace mh::adhoc {
 
 struct ServerConfig {
     std::uint16_t adhocctl_port{kAdhocctlPort}; // the relay listens on relay_port_for() this

@@ -21,7 +21,7 @@ struct SDL_Window;
 struct SDL_Gamepad;
 struct ImDrawData;
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 // PSP pad state gathered from the keyboard, the mouse's buttons and the gamepad.
 struct PadState {

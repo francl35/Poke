@@ -7,7 +7,7 @@
 #include <span>
 #include <vector>
 
-namespace mhp2g::movie {
+namespace mh::movie {
 
 // Size of one MPEG program stream pack in a PSMF file.
 inline constexpr std::size_t kPackSize = 2048u;

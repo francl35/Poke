@@ -1,3 +1,4 @@
+#include "app_identity.hpp"
 // The in-game menu: Esc, or L3+R3 on a gamepad. It holds every player setting;
 // each change applies at once and is saved to settings.ini straight away. It
 // pauses the game, or, as the settings say, stays over the running game.
@@ -68,7 +69,7 @@
 #include <utility>
 #include <vector>
 
-namespace mhp2g::ui {
+namespace mh::ui {
 namespace {
 
 using Clock = std::chrono::steady_clock;
@@ -208,7 +209,8 @@ bool Menu::frame() {
     // Back closes the font list, or the save import and export, before it
     // closes the menu.
 #ifdef MHP_UI_CORE_ONLY
-    bool font_list_was_open = tab_ == 2 && controllers_screen_open();
+    bool font_list_was_open = (tab_ == 0 && font_list_open()) ||
+        (tab_ == 2 && controllers_screen_open());
 #else
     bool font_list_was_open = (tab_ == 0 && (font_list_open() || texture_pack_screen_open())) ||
         (tab_ == 2 && controllers_screen_open()) ||
@@ -228,7 +230,7 @@ bool Menu::frame() {
     }
 
 #endif
-    begin_panel("##menu", "Poke", paused_ ? "Paused" : "Running", true);
+    begin_panel("##menu", "" MH_APP_NAME "", paused_ ? "Paused" : "Running", true);
 #if defined(MHP2G_DEBUG_MENU)
     // The developer tools' page, in developer builds run with MHP2G_DEBUG_MENU=1.
     const int tab_count = debug::enabled() ? 7 : 6;
@@ -337,8 +339,8 @@ bool Menu::frame() {
 }
 
 void Menu::video() {
+    if (font_list(back_)) return;
     #ifndef MHP_UI_CORE_ONLY
-        if (font_list(back_)) return;
         if (texture_pack_screen(back_)) return;
     #endif
     settings::Settings &s = settings::current();
@@ -405,7 +407,7 @@ void Menu::video() {
             settings::save();
         }
     }
-#ifndef MHP_UI_CORE_ONLY
+#if !defined(MHP_UI_CORE_ONLY) || defined(MH_HAS_FOV)
     {
         static const char *const kFovLabels[] = {
             "-15 degrees", "-10 degrees", "-5 degrees", "Original", "+5 degrees",
@@ -740,7 +742,7 @@ void Menu::video() {
         RowOptions o = options_for("video.gpu_compat",
             "Leaves out what some older phone GPU drivers may get wrong: specialized shaders, robust buffer "
             "access, the pipeline cache and a second frame in flight. It costs speed, so Auto turns it on only "
-            "when the start-up test picture comes out wrong or the driver refuses a shader. Applies when Poke "
+            "when the start-up test picture comes out wrong or the driver refuses a shader. Applies when " MH_APP_NAME " "
             "starts next. Now: " +
                 renderer().gpu_compat_status() + ".");
         if (const int delta = choice_row("GPU compatibility", kCompat[current], o)) {
@@ -748,22 +750,10 @@ void Menu::video() {
             settings::save();
         }
     }
-    #ifndef MHP_UI_CORE_ONLY
-        font_rows();
-    #endif
-
-    #ifdef MHP_UI_CORE_ONLY
-    if (toggle_row("Crisp text", s.crisp_text,
-            options_for("text.crisp",
-                "Redraws supported font textures at higher resolution. "
-                "Requires an internal resolution above x1."))) {
-        s.crisp_text = !s.crisp_text;
-        settings::save();
-    }
-    #endif
+    font_rows();
 
     ImGui::Dummy({0.0f, font_gap()});
-    if (button_row("Restore video defaults", {false, {}, "Every setting on this page back to how Poke ships."})) {
+    if (button_row("Restore video defaults", {false, {}, "Every setting on this page back to how " MH_APP_NAME " ships."})) {
         const settings::Settings &d = settings::defaults();
         const auto restore = [&](const char *key, auto &value, const auto &fallback) {
             if (settings::overridden_by(key) == nullptr) value = fallback;
@@ -1295,7 +1285,7 @@ void Menu::controls() {
     if (button_row("Restore control defaults",
             {false, {},
                 "Every gamepad, keyboard, mouse, touch, name and free camera setting back to how "
-                "Poke ships, with the Default preset. Your own presets and the Action layout's "
+                "" MH_APP_NAME " ships, with the Default preset. Your own presets and the Action layout's "
                 "arrangement are kept."})) {
         const settings::Settings &d = settings::defaults();
         const auto restore = [&](const char *key, auto &value, const auto &fallback) {
@@ -1867,16 +1857,16 @@ void Menu::system() {
     (void)data_dir;
     if (button_row("Save the log…",
             {false, {},
-                "Copies Poke's logs (this run's, the previous run's, the last "
+                "Copies " MH_APP_NAME "'s logs (this run's, the previous run's, the last "
                 "error's and the logs folder) to a folder you pick, to send with a "
                 "problem report."})) {
         const auto saved = android::save_logs(install::user_data_directory(),
-            "Poke log " + savedata::timestamp_for_path(std::chrono::system_clock::now()));
+            "" MH_APP_NAME " log " + savedata::timestamp_for_path(std::chrono::system_clock::now()));
         if (saved) saved_log_path() = saved->error.empty() ? saved->where : "Not saved: " + saved->error;
     }
     if (!saved_log_path().empty()) info_row("Log", saved_log_path());
 #else
-    if (button_row("Open the data folder", {false, {}, "Show Poke's data folder in the file manager."})) {
+    if (button_row("Open the data folder", {false, {}, "Show " MH_APP_NAME "'s data folder in the file manager."})) {
         if (!SDL_OpenURL(folder_url(path_from_utf8(data_dir)).c_str()))
             std::cout << "[menu] cannot open " << data_dir << ": " << SDL_GetError() << "\n";
     }
@@ -1886,7 +1876,7 @@ void Menu::system() {
             {false, {}, "Choose the disc image again, for example after moving it. The game closes first."}))
         confirm_ = Confirm::Setup;
 #endif
-    if (button_row("Quit game", {false, {}, "Close Poke. Progress since your last save is lost."}, colors::kDanger))
+    if (button_row("Quit game", {false, {}, "Close " MH_APP_NAME ". Progress since your last save is lost."}, colors::kDanger))
         confirm_ = Confirm::Quit;
 
     #ifndef MHP_UI_CORE_ONLY
@@ -1895,7 +1885,7 @@ void Menu::system() {
     #endif
 
     section("About");
-    info_row("Poke", std::string(kPokeVersion));
+    info_row("" MH_APP_NAME "", std::string(kPokeVersion));
     #ifdef MHP_UI_CORE_ONLY
         info_row("Game", "Monster Hunter Portable / FreedomDX (ULJM05066)");
     #else
@@ -1961,7 +1951,7 @@ bool Menu::confirm_dialog() {
         const bool quit = confirm_ == Confirm::Quit;
         heading(quit ? "Quit the game?" : "Set up game data again?");
         paragraph(quit ? "Progress since your last save is lost."
-                       : "Poke closes the game and opens the setup, where you choose the disc image again. "
+                       : "" MH_APP_NAME " closes the game and opens the setup, where you choose the disc image again. "
                          "Progress since your last save is lost.",
             colors::kTextDim);
         ImGui::Dummy({0.0f, font * 0.6f});

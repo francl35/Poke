@@ -12,7 +12,7 @@
 #include <mutex>
 #include <system_error>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 namespace {
 
 namespace fs = std::filesystem;

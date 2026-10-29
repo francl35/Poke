@@ -19,7 +19,7 @@
 // centre. A drag anywhere else on the right half turns the camera, as the
 // mouse does. Every finger is independent, so moving, turning and pressing
 // work together.
-namespace mhp2g::input::touch {
+namespace mh::input::touch {
 
 enum class Control : std::uint8_t { Triangle, Circle, Cross, Square, L, R, Start, Select, Menu, Count };
 inline constexpr std::size_t kControls = static_cast<std::size_t>(Control::Count);

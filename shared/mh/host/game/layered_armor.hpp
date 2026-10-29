@@ -41,7 +41,7 @@ namespace psprecomp {
 class Runtime;
 }
 
-namespace mhp2g::game {
+namespace mh::game {
 
 class Ram;
 

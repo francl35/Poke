@@ -15,7 +15,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-namespace mhp2g::screenshot {
+namespace mh::screenshot {
 namespace {
 
 std::tm local_time(std::chrono::system_clock::time_point when) {

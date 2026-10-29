@@ -27,7 +27,7 @@
 #include <string>
 #include <string_view>
 
-namespace mhp2g::game {
+namespace mh::game {
 
 class Ram;
 

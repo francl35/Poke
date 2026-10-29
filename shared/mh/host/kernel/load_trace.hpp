@@ -10,7 +10,7 @@
 // disc and the memory stick, which of its threads had the CPU and how long the
 // host held the game back to real time. Collecting costs nothing while the
 // switch is off.
-namespace mhp2g::load_trace {
+namespace mh::load_trace {
 
 [[nodiscard]] bool enabled();
 

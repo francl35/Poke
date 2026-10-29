@@ -22,7 +22,7 @@ template <class F> void rejects(F f) {
     }
     check(rejected, "Unsupported draw was accepted");
 }
-using namespace mhp2g::gpu;
+using namespace mh::gpu;
 constexpr std::uint32_t fb = 0x04000000u;
 constexpr std::uint32_t zb = 0x04090000u;
 Vertex vertex(float x, float y, std::uint32_t color) {

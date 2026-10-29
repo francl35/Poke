@@ -21,11 +21,11 @@ namespace psprecomp {
 class Runtime;
 }
 
-namespace mhp2g::game {
+namespace mh::game {
 class Ram;
 }
 
-namespace mhp2g::debug {
+namespace mh::debug {
 
 namespace quests {
 struct Quest;

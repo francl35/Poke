@@ -42,16 +42,16 @@ int main() {
         check(call("sceCtrl", 0x1F803938, {data, 0}) >= 0x80000000u, "Zero controller count accepted");
         check(call("sceCtrl", 0x1F803938, {data, 65}) >= 0x80000000u, "Large controller count accepted");
         check(call("sceCtrl", 0x1F803938, {0x07000000, 1}) >= 0x80000000u, "Unmapped controller buffer accepted");
-        mhp2g::kernel().start_loader_thread(ctx, 0x08810000u, 0);
+        mh::kernel().start_loader_thread(ctx, 0x08810000u, 0);
         ctx.gpr[31] = 0x08810004u;
         check(call("sceCtrl", 0x1F803938, {data, 1}) == 1, "Controller read did not complete at vblank");
-        check(mhp2g::kernel().now_us() > 0 && rt.memory().load32(data + 4) == 0 && rt.memory().load8(data + 8) == 128,
+        check(mh::kernel().now_us() > 0 && rt.memory().load32(data + 4) == 0 && rt.memory().load8(data + 8) == 128,
             "Neutral pad or vblank timing failed");
         for (unsigned i = 10; i < 16; ++i)
             check(rt.memory().load8(data + i) == 0, "PSP controller reserved bytes not zero");
         call("sceCtrl", 0x6A2774F3, {6000});
-        const auto before = mhp2g::kernel().now_us();
-        check(call("sceCtrl", 0x1F803938, {data, 1}) == 1 && mhp2g::kernel().now_us() >= before + 6000,
+        const auto before = mh::kernel().now_us();
+        check(call("sceCtrl", 0x1F803938, {data, 1}) == 1 && mh::kernel().now_us() >= before + 6000,
             "Timed controller read failed");
         check(call("sceRtc", 0xE7C27D1B, {data}) == 0 && rt.memory().load16(data) >= 2020, "RTC output invalid");
         check(call("sceRtc", 0xE7C27D1B, {0x07000000}) >= 0x80000000u, "Invalid RTC output accepted");
@@ -64,10 +64,10 @@ int main() {
         check(call("sceWlanDrv", 0x0C622081, {0x07000000}) >= 0x80000000u, "Bad MAC output accepted");
         check(call("scePower", 0x04B7766E, {0, 999}) >= 0x80000000u, "Unknown power callback accepted");
         check(call("LoadExecForUser", 0x4AC57943, {999}) >= 0x80000000u, "Unknown exit callback accepted");
-        mhp2g::write_cstring(rt.memory(), data, "callback", 32);
+        mh::write_cstring(rt.memory(), data, "callback", 32);
         const auto callback = call("ThreadManForUser", 0xE81CAF8F, {data, 0x08811000u, 0});
         check(call("LoadExecForUser", 0x4AC57943, {callback}) == 0, "Exit callback registration failed");
-        check(call("scePower", 0x04B7766E, {0, callback}) == 0 && mhp2g::kernel().callbacks.at(callback).pending,
+        check(call("scePower", 0x04B7766E, {0, callback}) == 0 && mh::kernel().callbacks.at(callback).pending,
             "Power state notification missing");
         std::array<char, 256> prx{};
         prx[0] = '~';
@@ -80,7 +80,7 @@ int main() {
             std::ofstream module(folder / "stock.prx", std::ios::binary);
             module.write(prx.data(), prx.size());
         }
-        mhp2g::write_cstring(rt.memory(), data, "ms0:/stock.prx", 64);
+        mh::write_cstring(rt.memory(), data, "ms0:/stock.prx", 64);
         const auto module_fd = call("IoFileMgrForUser", 0x109F50BC, {data, 1, 0});
         const auto module = call("ModuleMgrForUser", 0xB7F46618, {module_fd});
         check(module < 0x80000000u, "Supported stock module rejected");
@@ -94,7 +94,7 @@ int main() {
         check(call("ModuleMgrForUser", 0x50F0C1EC, {module}) >= 0x80000000u, "Unloaded module was started");
         call("IoFileMgrForUser", 0x810C4BC3, {module_fd});
         // Real async read and 64-bit result polling use the same fd/position as sync I/O.
-        mhp2g::write_cstring(rt.memory(), data, "ms0:/fixture.bin", 64);
+        mh::write_cstring(rt.memory(), data, "ms0:/fixture.bin", 64);
         const auto fd = call("IoFileMgrForUser", 0x109F50BC, {data, 1, 0});
         check(fd < 0x80000000u, "Cannot open fixture");
         check(call("IoFileMgrForUser", 0xA0B5A7C2, {fd, data + 128, 3}) == 0, "Async read rejected");

@@ -4,8 +4,8 @@
 #include <array>
 #include <memory>
 namespace mhp1 {
-void register_controller(mhp2g::HleRegistrar &hle, std::function<Pad(psprecomp::Runtime &)> sample) {
-    using namespace mhp2g;
+void register_controller(mh::HleRegistrar &hle, std::function<Pad(psprecomp::Runtime &)> sample) {
+    using namespace mh;
     auto cycle = std::make_shared<std::uint32_t>(0u), mode = std::make_shared<std::uint32_t>(0u);
     hle.add("sceCtrl", "sceCtrlSetSamplingCycle", [cycle](Runtime &, AllegrexContext &ctx) {
         const auto value = arg(ctx, 0), previous = *cycle;

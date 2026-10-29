@@ -7,7 +7,7 @@
 #include <set>
 #include <thread>
 namespace {
-using namespace mhp2g::gpu;
+using namespace mh::gpu;
 Vertex vertex(float x, float y, float z, std::uint32_t color, float u = 0, float v = 0) {
     Vertex out;
     out.position = {x, y, z, 1};

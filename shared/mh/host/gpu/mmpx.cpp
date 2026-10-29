@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-namespace mhp2g::gpu::ui {
+namespace mh::gpu::ui {
 
 void mmpx_2x(const std::uint32_t *in, std::uint32_t width, std::uint32_t height, std::vector<std::uint32_t> &out) {
     out.assign(static_cast<std::size_t>(width) * height * 4u, 0u);

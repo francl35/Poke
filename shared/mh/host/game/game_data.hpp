@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace mhp2g::game {
+namespace mh::game {
 
 class Ram;
 

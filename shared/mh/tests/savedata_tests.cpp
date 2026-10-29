@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-using namespace mhp2g::savedata;
+using namespace mh::savedata;
 
 namespace {
 

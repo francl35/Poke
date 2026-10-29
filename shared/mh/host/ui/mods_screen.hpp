@@ -5,7 +5,7 @@
 // file, the conflicts, when a change applies, and importing a downloaded mod
 // with the file browser (or by dropping its folder on the window). Standard
 // rows only, so a gamepad, a keyboard, a mouse and a touch screen all work.
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // Draws the page, or the screen it opened (a mod's details, the import).
 // `back`: the back button was pressed this frame.

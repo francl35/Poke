@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 // The on-screen keyboard's parameters, as the game's requests show them

@@ -5,7 +5,7 @@
 #include <array>
 #include <cstdint>
 
-namespace mhp2g::audio {
+namespace mh::audio {
 
 inline constexpr std::uint32_t kSasMaxVoices = 32u;
 // SAS envelope heights are 0..0x40000000 on hardware; the rate encoding it

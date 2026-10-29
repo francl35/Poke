@@ -12,8 +12,8 @@
 #include <memory>
 #include <set>
 namespace mhp1 {
-void register_stock_modules(mhp2g::HleRegistrar &hle) {
-    using namespace mhp2g;
+void register_stock_modules(mh::HleRegistrar &hle) {
+    using namespace mh;
     auto modules = std::make_shared<std::set<std::uint32_t>>();
     hle.add("ModuleMgrForUser", "sceKernelLoadModuleByID", [modules](Runtime &rt, AllegrexContext &ctx) {
         std::array<std::uint8_t, 256> header{};

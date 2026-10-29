@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace mhp2g::movie {
+namespace mh::movie {
 namespace {
 
 constexpr std::uint8_t kPackStart = 0xBAu;

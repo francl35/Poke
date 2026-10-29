@@ -23,7 +23,7 @@
 #include <sstream>
 #include <vector>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 namespace atrac_error {

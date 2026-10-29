@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 // Decodes a PSP texture into RGBA8888 (one std::uint32_t per texel, red in the
 // low byte). Handles the direct colour formats, 4/8/16/32-bit palettes, DXT1/3/5

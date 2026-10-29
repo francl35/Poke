@@ -1,6 +1,6 @@
 #include "save_data/aes128.hpp"
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 
 Aes128::Aes128(const Block &key) {
     AES_init_ctx(&context_, key.data());

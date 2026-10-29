@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace mhp2g::perf {
+namespace mh::perf {
 
 // The overlay is drawn on the CPU into a small RGBA image, which the renderer
 // scales onto the top-left corner of the presented frame.

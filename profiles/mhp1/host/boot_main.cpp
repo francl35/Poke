@@ -26,12 +26,12 @@ unsigned parse_seconds(std::string_view text) {
 }
 
 void verify_disc(const std::filesystem::path &path) {
-    mhp2g::IsoImage disc(path);
+    mh::IsoImage disc(path);
     const auto entry = disc.find("PSP_GAME/SYSDIR/EBOOT.BIN");
     if (!entry || entry->directory || entry->size > 16u * 1024u * 1024u)
         throw psprecomp::Error("Disc has no supported EBOOT.BIN");
     std::vector<std::uint8_t> bytes(entry->size);
-    if (disc.read(static_cast<std::uint64_t>(entry->lba) * mhp2g::IsoImage::kSectorSize, bytes) != bytes.size())
+    if (disc.read(static_cast<std::uint64_t>(entry->lba) * mh::IsoImage::kSectorSize, bytes) != bytes.size())
         throw psprecomp::Error("Short read of disc EBOOT.BIN");
     mhp1::require_executable_hash(psprecomp::sha256_bytes(bytes));
 }
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
                   << "\n[mhp1-boot] memory_stick=" << memory_stick.string() << "\n";
         mhp1::prepare_main_native(runtime, elf, imports);
         mhp1::BootHost host(runtime, imports, module->gp, image_end, argv[2], memory_stick);
-        const auto audit = mhp2g::executable_directory().parent_path() / "import-audit.csv";
+        const auto audit = memory_stick.parent_path() / "import-audit.csv";
         host.write_import_audit(audit);
         std::cout << "[mhp1-boot] import_audit=" << audit.string() << "\n";
         host.run(elf.runtime_entry(), seconds);

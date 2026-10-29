@@ -2,7 +2,7 @@
 
 // The menu's Text section: the font the game's text is drawn with, its
 // weight, a preview, and the list of fonts to choose from.
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // The section's rows, for the menu's Video page.
 void font_rows();

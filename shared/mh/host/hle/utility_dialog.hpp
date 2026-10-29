@@ -11,7 +11,7 @@
 // on: every path, errors included, reaches QUIT within a few polls.
 #include <cstdint>
 
-namespace mhp2g {
+namespace mh {
 
 namespace dialog_status {
 inline constexpr std::uint32_t kNone = 0u;

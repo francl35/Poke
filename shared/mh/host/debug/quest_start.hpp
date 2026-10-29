@@ -26,11 +26,11 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::game {
+namespace mh::game {
 class Ram;
 }
 
-namespace mhp2g::debug::quests {
+namespace mh::debug::quests {
 
 using game::Ram;
 

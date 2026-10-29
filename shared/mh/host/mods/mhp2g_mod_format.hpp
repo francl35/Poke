@@ -20,7 +20,7 @@
 //   does, is taken as one mod.
 //
 // Game-specific: the machinery that uses this is in mod_library.hpp.
-namespace mhp2g::mods::legacy_archive {
+namespace mh::mods::legacy_archive {
 
 class ModFolderFormat final : public ModFormat {
 public:

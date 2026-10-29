@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::settings {
+namespace mh::settings {
 namespace {
 
 // One setting: its key in settings.ini, the variable that overrides it, and

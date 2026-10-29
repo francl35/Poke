@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace mhp2g::ui {
+namespace mh::ui {
 namespace {
 
 using input::Action;

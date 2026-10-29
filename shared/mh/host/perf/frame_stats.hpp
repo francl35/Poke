@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-namespace mhp2g::perf {
+namespace mh::perf {
 
 using Clock = std::chrono::steady_clock;
 

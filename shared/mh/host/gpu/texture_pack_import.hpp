@@ -28,7 +28,7 @@
 //
 // Folder names are compared without regard to case. Nothing here draws or
 // knows about the renderer.
-namespace mhp2g::gpu {
+namespace mh::gpu {
 
 // Where the pack is read from: the folder MHP2G_TEXTURE_PACK names, when it
 // names one; else the folder a pack used in place was left in (the

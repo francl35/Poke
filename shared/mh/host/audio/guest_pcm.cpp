@@ -3,7 +3,7 @@
 #include <bit>
 #include <limits>
 
-namespace mhp2g::audio {
+namespace mh::audio {
 
 bool stage_guest_pcm(const psprecomp::GuestMemory &memory, std::uint32_t buffer, std::uint32_t frames, bool mono,
     std::vector<std::int16_t> &staging) {

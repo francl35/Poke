@@ -10,7 +10,7 @@
 #include <system_error>
 #include <utility>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 namespace {
 
 namespace fs = std::filesystem;

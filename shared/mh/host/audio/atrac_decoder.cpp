@@ -12,7 +12,7 @@ extern "C" {
 }
 #endif
 
-namespace mhp2g::audio {
+namespace mh::audio {
 
 #if defined(MHP2G_HAS_FFMPEG)
 

@@ -38,7 +38,7 @@
 // large as the buffer and never overlap, and fits every glyph inside the cell,
 // away from its edges, by shifting it and, if it is still too large, scaling it
 // down. The metrics reported are those of the bitmap drawn.
-namespace mhp2g::fonts {
+namespace mh::fonts {
 
 // The game's glyph buffer and, with the metrics below, its atlas cell.
 inline constexpr int kCell = 20;

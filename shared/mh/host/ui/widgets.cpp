@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace mhp2g::ui {
+namespace mh::ui {
 namespace {
 
 bool focus_next = false;
@@ -248,18 +248,18 @@ ImGuiStyle make_style(float scale, float font_size) {
     c[ImGuiCol_TextDisabled] = rgba(colors::kTextDisabled);
     c[ImGuiCol_WindowBg] = rgba(colors::kPanel);
     c[ImGuiCol_ChildBg] = ImVec4(0, 0, 0, 0);
-    c[ImGuiCol_PopupBg] = rgba(IM_COL32(32, 43, 55, 252));
-    c[ImGuiCol_ModalWindowDimBg] = rgba(IM_COL32(7, 12, 18, 150));
+    c[ImGuiCol_PopupBg] = rgba(colors::kPopup);
+    c[ImGuiCol_ModalWindowDimBg] = rgba(colors::kModalDim);
     c[ImGuiCol_Border] = rgba(colors::kPanelEdge);
-    c[ImGuiCol_FrameBg] = rgba(IM_COL32(221, 238, 247, 20));
+    c[ImGuiCol_FrameBg] = rgba(colors::kFrame);
     c[ImGuiCol_FrameBgHovered] = rgba(colors::kRowHover);
     c[ImGuiCol_FrameBgActive] = rgba(colors::kRowFocus);
-    c[ImGuiCol_TextSelectedBg] = rgba(IM_COL32(162, 197, 217, 110));
+    c[ImGuiCol_TextSelectedBg] = rgba(colors::kSelection);
     c[ImGuiCol_ScrollbarBg] = ImVec4(0, 0, 0, 0);
-    c[ImGuiCol_ScrollbarGrab] = rgba(IM_COL32(105, 134, 154, 160));
-    c[ImGuiCol_ScrollbarGrabHovered] = rgba(IM_COL32(162, 197, 217, 200));
+    c[ImGuiCol_ScrollbarGrab] = rgba(colors::kScrollGrab);
+    c[ImGuiCol_ScrollbarGrabHovered] = rgba(colors::kScrollHover);
     c[ImGuiCol_ScrollbarGrabActive] = rgba(colors::kAccent);
-    c[ImGuiCol_Separator] = rgba(IM_COL32(105, 134, 154, 120));
+    c[ImGuiCol_Separator] = rgba(colors::kSeparator);
     // Rows draw their own focus; ImGui's rectangle would double it.
     c[ImGuiCol_NavCursor] = ImVec4(0, 0, 0, 0);
     return style;

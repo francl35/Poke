@@ -7,7 +7,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace mhp2g::gpu {
+namespace mh::gpu {
 namespace {
 
 std::string version_text(std::uint32_t version) {

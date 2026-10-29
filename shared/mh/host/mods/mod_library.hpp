@@ -13,7 +13,7 @@
 //
 // Game-independent: a game says how a mod folder describes itself and how its
 // files are numbered (ModFormat); nothing here knows an archive or a format.
-namespace mhp2g::mods {
+namespace mh::mods {
 
 // A file of the game's own, as the game's mods address it (for this game, an
 // entry of DATA.BIN).

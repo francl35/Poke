@@ -11,7 +11,7 @@
 // directory. The picture is the game's own render target, so nothing the
 // port draws over the window (the menu, notes, the free camera's line, the
 // performance overlay) is ever in it. Nothing here needs SDL or Vulkan.
-namespace mhp2g::screenshot {
+namespace mh::screenshot {
 
 // screenshots/ in the data directory, portable or per user.
 [[nodiscard]] std::filesystem::path folder();

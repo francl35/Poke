@@ -9,7 +9,7 @@ extern "C" {
 }
 #endif
 
-namespace mhp2g::movie {
+namespace mh::movie {
 
 #if defined(MHP2G_HAS_FFMPEG)
 

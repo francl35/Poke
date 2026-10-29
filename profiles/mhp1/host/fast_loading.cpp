@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include <string_view>
 
-namespace mhp2g::fast_loading {
+namespace mh::fast_loading {
 
 namespace {
 

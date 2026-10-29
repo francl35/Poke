@@ -1,6 +1,6 @@
-# Select the host support tree explicitly. The original location stays the
-# default until the relocated MHP1 build has passed its local checks.
-set(MHP1_SHARED_PROFILE_DIR "${PROJECT_SOURCE_DIR}/profiles/mhp2g" CACHE PATH
+# MHP1 uses its extracted support tree. Game-owned UI policy stays in this
+# profile; Complete retains its original host sources during the transition.
+set(MHP1_SHARED_PROFILE_DIR "${PROJECT_SOURCE_DIR}/shared/mh" CACHE PATH
     "Host support root for MHP1: contains host, tools, cmake and third_party")
 get_filename_component(MHP1_SHARED_PROFILE_DIR "${MHP1_SHARED_PROFILE_DIR}" ABSOLUTE
     BASE_DIR "${PROJECT_SOURCE_DIR}")

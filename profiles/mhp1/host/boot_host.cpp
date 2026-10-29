@@ -18,9 +18,9 @@
 #include "overlays.hpp"
 
 namespace mhp1 {
-void register_audio_services(mhp2g::HleRegistrar &);
-void register_platform_services(mhp2g::HleRegistrar &);
-void register_stock_modules(mhp2g::HleRegistrar &);
+void register_audio_services(mh::HleRegistrar &);
+void register_platform_services(mh::HleRegistrar &);
+void register_stock_modules(mh::HleRegistrar &);
 namespace {
 struct EmbeddedNid {
     const char *library;
@@ -33,8 +33,8 @@ constexpr EmbeddedNid kNids[] = {
 
 inline constexpr std::uint32_t kMainModuleId = 0x01000001u;
 
-void register_boot_services(mhp2g::HleRegistrar &hle, std::uint32_t image_end) {
-    using namespace mhp2g;
+void register_boot_services(mh::HleRegistrar &hle, std::uint32_t image_end) {
+    using namespace mh;
     hle.add("sceGe_user", "sceGeEdramGetAddr", [](psprecomp::Runtime &, psprecomp::AllegrexContext &ctx) {
         kernel().finish(ctx, psprecomp::GuestMemory::kVramPhysicalBase);
     });
@@ -130,12 +130,12 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
         const auto data_dir =
             std::filesystem::absolute(memory_stick).parent_path() / "renderer-data";
         std::filesystem::create_directories(data_dir);
-        mhp2g::install::set_data_directory_override(data_dir);
+        mh::install::set_data_directory_override(data_dir);
 
         // Preserve the current profile's unsupported-feature restrictions.
-        auto &player = mhp2g::settings::current();
+        auto &player = mh::settings::current();
         player.selective_ui = false;
-        player.right_stick = mhp2g::settings::RightStick::DPad;
+        player.right_stick = mh::settings::RightStick::DPad;
         player.touch_controls = false;
         player.free_camera = false;
         player.analog_camera = false;
@@ -160,24 +160,24 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
     runtime.nids().add("IoFileMgrForUser", 0xA0B5A7C2u, "sceIoReadAsync");
     runtime.nids().add("IoFileMgrForUser", 0x71B19E77u, "sceIoLseekAsync");
     for (const auto &nid : kNids) runtime.nids().add(nid.library, nid.nid, nid.name);
-    mhp2g::kernel().install(runtime, gp, image_end);
-    mhp2g::HleRegistrar hle(runtime);
-    mhp2g::register_threadman(hle);
-    mhp2g::register_sysmem(hle);
-    mhp2g::register_io(hle, disc, memory_stick, true);
+    mh::kernel().install(runtime, gp, image_end);
+    mh::HleRegistrar hle(runtime);
+    mh::register_threadman(hle);
+    mh::register_sysmem(hle);
+    mh::register_io(hle, disc, memory_stick, true);
     register_boot_services(hle, image_end);
     register_audio_services(hle);
-    mhp2g::register_atrac(hle);
-    mhp2g::register_mpeg(hle);
+    mh::register_atrac(hle);
+    mh::register_mpeg(hle);
     register_platform_services(hle);
     register_stock_modules(hle);
     //mhp2g::register_savedata(hle, memory_stick);
-    mhp2g::register_utility(hle, memory_stick);
-    mhp2g::register_font(hle);
+    mh::register_utility(hle, memory_stick);
+    mh::register_font(hle);
     register_headless_ge(hle, memory_stick.parent_path() / "renderer-data");
     hle.add(
         "sceGe_user", "sceGeEdramSetAddrTranslation", [this](psprecomp::Runtime &rt, psprecomp::AllegrexContext &ctx) {
-            const auto width = mhp2g::arg(ctx, 0);
+            const auto width = mh::arg(ctx, 0);
             const auto previous = edram_translation_width_;
             // PSPSDK: width zero leaves the setting unchanged; the return
             // value is the previously configured width, or zero before setup.
@@ -193,12 +193,12 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
             }
             // Store GE configuration only. The headless decoder does not rasterize
             // or implement translated GPU accesses.
-            mhp2g::kernel().finish(ctx, previous);
+            mh::kernel().finish(ctx, previous);
         });
     hle.add("sceDisplay", "sceDisplaySetMode", [this](psprecomp::Runtime &rt, psprecomp::AllegrexContext &ctx) {
-        const auto mode = mhp2g::arg(ctx, 0);
-        const auto width = mhp2g::arg(ctx, 1);
-        const auto height = mhp2g::arg(ctx, 2);
+        const auto mode = mh::arg(ctx, 0);
+        const auto width = mh::arg(ctx, 1);
+        const auto height = mh::arg(ctx, 2);
         // This bootstrap models the standard PSP LCD configuration. Other
         // configurations may be legal on hardware; report them as unsupported
         // here rather than fabricating a PSP error or silently accepting them.
@@ -210,12 +210,12 @@ BootHost::BootHost(psprecomp::Runtime &runtime, std::span<const psprecomp::PspIm
         if (!display_mode_.configured)
             std::cout << "[mhp1-boot] display_mode=" << mode << " size=" << width << "x" << height << " headless=1\n";
         display_mode_ = {true, mode, width, height};
-        mhp2g::kernel().finish(ctx, 0u);
+        mh::kernel().finish(ctx, 0u);
     });
     hle.add("SysMemUserForUser", "sceKernelSetCompiledSdkVersion",
         [this](psprecomp::Runtime &, psprecomp::AllegrexContext &ctx) {
-            compiled_sdk_version_ = mhp2g::arg(ctx, 0);
-            mhp2g::kernel().finish(ctx, 0u);
+            compiled_sdk_version_ = mh::arg(ctx, 0);
+            mh::kernel().finish(ctx, 0u);
         });
     for (const auto &[pc, import] : imports_) {
         bound_[pc] = hle.bound(import.library, import.nid);
@@ -308,10 +308,10 @@ void BootHost::run(std::uint32_t entry, unsigned seconds, std::uint64_t max_disp
     if ((entry & 3u) != 0u || !runtime_.memory().contains(entry, 4u))
         throw psprecomp::Error("Invalid diagnostic entry address");
     constexpr std::string_view boot_path = "disc0:/PSP_GAME/SYSDIR/EBOOT.BIN";
-    mhp2g::write_cstring(runtime_.memory(), mhp2g::kBootArgumentAddress, boot_path, boot_path.size() + 1u);
+    mh::write_cstring(runtime_.memory(), mh::kBootArgumentAddress, boot_path, boot_path.size() + 1u);
     runtime_.cpu().set_gpr(4u, static_cast<std::uint32_t>(boot_path.size() + 1u));
-    runtime_.cpu().set_gpr(5u, mhp2g::kBootArgumentAddress);
-    mhp2g::kernel().start_loader_thread(runtime_.cpu(), entry, 0u);
+    runtime_.cpu().set_gpr(5u, mh::kBootArgumentAddress);
+    mh::kernel().start_loader_thread(runtime_.cpu(), entry, 0u);
     ran_ = running_ = true;
     deadline_ = seconds == 0u
         ? std::chrono::steady_clock::time_point::max()
@@ -327,6 +327,6 @@ void BootHost::run(std::uint32_t entry, unsigned seconds, std::uint64_t max_disp
     running_ = false;
     std::cout << "[mhp1-boot] stopped=" << runtime_.stop_reason() << " pc=" << psprecomp::hex32(runtime_.cpu().pc)
               << " import_calls=" << import_calls_ << " sdk=" << psprecomp::hex32(compiled_sdk_version_) << "\n"
-              << mhp2g::kernel().describe_threads() << "\n";
+              << mh::kernel().describe_threads() << "\n";
 }
 } // namespace mhp1

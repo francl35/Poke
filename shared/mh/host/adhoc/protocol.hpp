@@ -19,7 +19,7 @@
 #include <string>
 #include <string_view>
 
-namespace mhp2g::adhoc {
+namespace mh::adhoc {
 
 using Mac = std::array<std::uint8_t, 6>;
 

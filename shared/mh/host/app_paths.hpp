@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <vector>
 
-namespace mhp2g {
+namespace mh {
 
 // The running executable, resolved through the operating system rather than
 // argv[0]; empty if it cannot be determined.

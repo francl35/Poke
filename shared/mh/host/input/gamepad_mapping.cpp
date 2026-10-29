@@ -4,7 +4,7 @@
 #include <cctype>
 #include <cstdlib>
 
-namespace mhp2g::input::mapping {
+namespace mh::input::mapping {
 namespace {
 
 constexpr const char *kFields[kTargets] = {

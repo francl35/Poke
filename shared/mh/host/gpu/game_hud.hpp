@@ -45,7 +45,7 @@ class Runtime;
 // The renderer then leaves out the draws of HUD packets, and only those,
 // while the HUD is hidden. The packets' other commands still run, so the GE
 // state they set is the same either way.
-namespace mhp2g::gpu::hud {
+namespace mh::gpu::hud {
 
 // Called at every flip, where guest functions may be wrapped: puts the
 // wrappers in place once the HUD is first hidden (or MHP2G_TRACE_HUD asks).

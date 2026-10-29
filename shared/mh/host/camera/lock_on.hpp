@@ -39,7 +39,7 @@ class GuestMemory;
 //   point, so the camera looks along -(sin yaw, cos yaw). Checked in two
 //   quests: yaw 7283 (40.0 degrees) with the eye at 40.0 degrees, 32768 with
 //   the eye at 180.
-namespace mhp2g::camera {
+namespace mh::camera {
 
 struct Vec3 {
     float x{};

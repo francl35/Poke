@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <sstream>
 
-namespace mhp2g::input::touch {
+namespace mh::input::touch {
 namespace {
 
 constexpr std::uint16_t kTriangle = 0x1000u, kCircle = 0x2000u, kCross = 0x4000u, kSquare = 0x8000u;

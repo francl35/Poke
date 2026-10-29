@@ -13,7 +13,7 @@
 #include <chrono>
 #include <iostream>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 namespace {
 
 constexpr const char *kParamSfo = "PARAM.SFO";

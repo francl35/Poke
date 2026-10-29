@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace mhp2g::gpu::ui {
+namespace mh::gpu::ui {
 namespace {
 
 // A page's texels in rows, one ink value (the palette index) per texel: the

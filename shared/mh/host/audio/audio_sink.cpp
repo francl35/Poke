@@ -18,7 +18,7 @@
 #include <SDL3/SDL.h>
 #endif
 
-namespace mhp2g::audio {
+namespace mh::audio {
 namespace {
 
 // ~186 ms. Long enough that a slow guest frame does not underrun, short enough

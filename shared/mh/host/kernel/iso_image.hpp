@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g {
+namespace mh {
 
 // Read-only ISO9660 view of a PSP UMD image. Paths are case-insensitive and
 // use '/' separators relative to the image root (e.g. "PSP_GAME/USRDIR/DATA.BIN").

@@ -3,7 +3,7 @@
 // The Layered armor page (game/layered_armor.hpp), opened from the Mods
 // page: the switch, the piece chosen for each armor part, and the list of
 // pieces to choose from, with the game's own names.
-namespace mhp2g::ui {
+namespace mh::ui {
 
 // The row on the Mods page that opens the page.
 void layered_armor_row();

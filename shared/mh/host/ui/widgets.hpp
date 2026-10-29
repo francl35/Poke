@@ -1,6 +1,15 @@
 #pragma once
 
 #include "imgui.h"
+#include "ui/theme_palette.hpp"
+
+#if defined(MHP_UI_THEME_HEADER)
+#include MHP_UI_THEME_HEADER
+#else
+namespace mh::ui {
+inline constexpr ThemePalette kSelectedTheme = kDefaultTheme;
+}
+#endif
 
 #include <initializer_list>
 #include <string>
@@ -8,24 +17,31 @@
 // The look of the interface and the controls its screens are built from.
 // Everything is sized from the current text size, so it scales with the
 // window, and every control works with a gamepad, a keyboard and a mouse.
-namespace mhp2g::ui {
+namespace mh::ui {
 
-// Colours from the project's logo: dark brown, bronze and gold.
+// Palette chosen by the application profile.
 namespace colors {
-inline constexpr ImU32 kBackdrop = IM_COL32(12, 8, 5, 170);
-inline constexpr ImU32 kPanel = IM_COL32(36, 46, 56, 246);
-inline constexpr ImU32 kPanelEdge = IM_COL32(105, 134, 154, 255);
-inline constexpr ImU32 kRow = IM_COL32(255, 240, 210, 10);
-inline constexpr ImU32 kRowHover = IM_COL32(162, 197, 217, 28);
-inline constexpr ImU32 kRowFocus = IM_COL32(162, 197, 217, 64);
-inline constexpr ImU32 kAccent = IM_COL32(162, 197, 217, 255);
-inline constexpr ImU32 kAccentBright = IM_COL32(221, 238, 247, 255);
-inline constexpr ImU32 kText = IM_COL32(246, 220, 174, 255);
-inline constexpr ImU32 kTextDim = IM_COL32(170, 190, 204, 255);
-inline constexpr ImU32 kTextDisabled = IM_COL32(116, 135, 149, 255);
-inline constexpr ImU32 kDanger = IM_COL32(214, 102, 76, 255);
-inline constexpr ImU32 kGood = IM_COL32(150, 196, 120, 255);
-inline constexpr ImU32 kTrack = IM_COL32(255, 240, 210, 36);
+inline constexpr ImU32 kBackdrop = kSelectedTheme.backdrop;
+inline constexpr ImU32 kPanel = kSelectedTheme.panel;
+inline constexpr ImU32 kPanelEdge = kSelectedTheme.panelEdge;
+inline constexpr ImU32 kRow = kSelectedTheme.row;
+inline constexpr ImU32 kRowHover = kSelectedTheme.rowHover;
+inline constexpr ImU32 kRowFocus = kSelectedTheme.rowFocus;
+inline constexpr ImU32 kAccent = kSelectedTheme.accent;
+inline constexpr ImU32 kAccentBright = kSelectedTheme.accentBright;
+inline constexpr ImU32 kText = kSelectedTheme.text;
+inline constexpr ImU32 kTextDim = kSelectedTheme.textDim;
+inline constexpr ImU32 kTextDisabled = kSelectedTheme.textDisabled;
+inline constexpr ImU32 kDanger = kSelectedTheme.danger;
+inline constexpr ImU32 kGood = kSelectedTheme.good;
+inline constexpr ImU32 kTrack = kSelectedTheme.track;
+inline constexpr ImU32 kPopup = kSelectedTheme.popup;
+inline constexpr ImU32 kModalDim = kSelectedTheme.modalDim;
+inline constexpr ImU32 kFrame = kSelectedTheme.frame;
+inline constexpr ImU32 kSelection = kSelectedTheme.selection;
+inline constexpr ImU32 kScrollGrab = kSelectedTheme.scrollGrab;
+inline constexpr ImU32 kScrollHover = kSelectedTheme.scrollHover;
+inline constexpr ImU32 kSeparator = kSelectedTheme.separator;
 } // namespace colors
 
 ImGuiStyle make_style(float scale, float font_size);

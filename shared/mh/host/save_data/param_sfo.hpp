@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 
 class ParamSfo {
 public:

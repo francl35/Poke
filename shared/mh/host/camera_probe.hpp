@@ -20,7 +20,7 @@ namespace psprecomp {
 class Runtime;
 }
 
-namespace mhp2g::probe {
+namespace mh::probe {
 
 // Called once per presented frame, after the frame's camera has been measured.
 // `view_matrix_source` is the display-list address the frame's view matrix was

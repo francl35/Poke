@@ -5,7 +5,7 @@
 #include <memory>
 #include <span>
 
-namespace mhp2g::audio {
+namespace mh::audio {
 
 enum class AtracCodec {
     Atrac3,     // baseline ATRAC3: 1024 samples per channel per frame

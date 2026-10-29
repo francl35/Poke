@@ -8,7 +8,7 @@
 #include <fstream>
 #include <unistd.h>
 #endif
-namespace mhp2g::perf::resource_detail {
+namespace mh::perf::resource_detail {
 #if defined(__linux__)
 inline bool parse_statm(std::istream &in, long page_size, std::uint64_t &bytes) {
     bytes = 0u;

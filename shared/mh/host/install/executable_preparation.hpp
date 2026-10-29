@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-namespace mhp2g::install {
+namespace mh::install {
 
 // Turns PSP_GAME/SYSDIR/EBOOT.BIN of the supported disc into the executable
 // the recompiled code was generated from.

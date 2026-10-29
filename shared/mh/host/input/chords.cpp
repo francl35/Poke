@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace mhp2g::input {
+namespace mh::input {
 namespace {
 
 // What a chord the port reads by itself does: nothing the game sees.

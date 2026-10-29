@@ -24,7 +24,7 @@
 #include <span>
 #include <vector>
 
-namespace mhp2g::savedata {
+namespace mh::savedata {
 
 enum class CryptMode : std::uint8_t {
     Mode1 = 1, // no game key

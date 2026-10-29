@@ -16,7 +16,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace mhp2g {
+namespace mh {
 namespace {
 
 // FontPixelFormat values used by SceFontGlyphImage.
