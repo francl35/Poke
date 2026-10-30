@@ -82,6 +82,43 @@ unsigned heartbeat_hits = 0;
 void heartbeat(std::uint64_t, std::uint32_t) {
     ++heartbeat_hits;
 }
+void generated_unit_invalidation_contracts() {
+    psprecomp::Runtime runtime;
+    constexpr std::uint32_t neighbor = base + 0x4000u;
+    runtime.register_generated_unit(0u, base, 0x4000u, next);
+    runtime.register_generated_unit(1u, neighbor, 0x4000u, next);
+    runtime.register_function(base, next, "recomp_unit_test_0");
+    runtime.register_function(base + 4u, next, "recomp_unit_test_0_tail");
+    runtime.register_function(neighbor, next, "recomp_unit_test_1");
+    psprecomp::AllegrexContext cpu{};
+    cpu.pc = base;
+    check(runtime.invoke_chained_unit(cpu, 0u), "Generated unit must chain before invalidation");
+    // Exact HLE/native overrides inside the retired range must survive.
+    runtime.register_function(base + 8u, next, "synthetic_import_bridge");
+    check(runtime.invalidate_generated_code_unit(base + 4u) == 2u,
+        "Invalidation must retire generated entries from exactly one unit");
+    check(!runtime.has_function(base) && !runtime.has_function(base + 4u) &&
+            runtime.has_function(base + 8u) && runtime.has_function(neighbor),
+        "Invalidation removed an override/neighbor or left stale generated entries");
+    cpu.pc = base;
+    check(!runtime.invoke_chained_unit(cpu, 0u), "Retired unit still uses dense chaining");
+    cpu.pc = base;
+    check(!runtime.invoke_chained_call(cpu), "Retired unit still uses exact chaining");
+    cpu.pc = base;
+    check(!runtime.invoke_chained_direct<&next, 0u, 0u, base>(cpu),
+        "Retired unit still uses compile-time direct chaining");
+    const auto before = cpu.gpr[2];
+    cpu.pc = base + 8u;
+    check(runtime.invoke_isolated_aot(base + 8u, cpu) && cpu.gpr[2] == before + 1u,
+        "Import/native override no longer executes after generated invalidation");
+    cpu.pc = neighbor;
+    check(runtime.invoke_chained_unit(cpu, 1u), "Unrelated generated unit stopped chaining");
+    check(runtime.invalidate_generated_code_unit(base) == 0u && runtime.has_function(base + 8u),
+        "Repeated invalidation must preserve exact overrides");
+    check(runtime.invalidate_generated_code_unit(base - 4u) == 0u && runtime.has_function(neighbor),
+        "Out-of-range invalidation must not retire a neighboring unit");
+}
+
 void dispatch_contracts() {
     {
         psprecomp::Runtime runtime;
@@ -1231,6 +1268,7 @@ int main(int argc, char **argv) {
         guest_memory_contracts(false);
         tool_contracts();
         elf_contracts();
+        generated_unit_invalidation_contracts();
         dispatch_contracts();
         diagnostic_contracts();
         format_contracts();

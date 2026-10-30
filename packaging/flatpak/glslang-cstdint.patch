@@ -1,0 +1,5 @@
+--- a/SPIRV/SpvBuilder.h
++++ b/SPIRV/SpvBuilder.h
+@@ -63 +63,2 @@
+ #include <stack>
++#include <cstdint>

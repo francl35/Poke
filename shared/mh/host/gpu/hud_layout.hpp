@@ -60,6 +60,42 @@ public:
         }
         if (!clock_) return {};
         const bool hud_sheet = draw.textured && draw.texture_address == hud_texture_;
+        // MHP1 boosted stamina reaches x387 (330 pixels from x57), beyond
+        // the generic top-left gate. Match only its traced strip and fill;
+        // do not widen unrelated HUD/menu geometry or the MHP2G rules.
+                // MHP1 stamina may extend beyond the generic top-left HUD bounds.
+        // Keep the fill, background and HUD-sheet caps on the same anchor.
+        if (mhp1 && !draw.glyph_page) {
+            const bool gauge_span =
+                std::abs(b.left - 57.0f) < 0.51f &&
+                b.right >= b.left && b.right <= 480.0f;
+
+            const bool gauge_fill =
+                gauge_span && !draw.textured &&
+                ((std::abs(b.top - 17.0f) < 0.51f &&
+                  std::abs(b.bottom - 19.0f) < 0.51f) ||
+                 (std::abs(b.top - 22.0f) < 0.51f &&
+                  std::abs(b.bottom - 24.0f) < 0.51f));
+
+            const bool gauge_strip =
+                gauge_span && draw.textured &&
+                draw.width == 16u && draw.height == 8u &&
+                ((std::abs(b.top - 12.0f) < 0.51f &&
+                  std::abs(b.bottom - 20.0f) < 0.51f) ||
+                 (std::abs(b.top - 21.0f) < 0.51f &&
+                  std::abs(b.bottom - 29.0f) < 0.51f)) &&
+                same(draw.uv, {0, 0, b.right - b.left, 8});
+
+            const bool gauge_cap =
+                hud_sheet &&
+                inside(b, {56, 9, 480, 33}) &&
+                inside(draw.uv, {52, 32, 76, 56}) &&
+                b.right - b.left <= 24.0f &&
+                b.bottom - b.top <= 24.0f;
+
+            if (gauge_fill || gauge_strip || gauge_cap)
+                return {HudGroup::TopLeft, 8, top};
+        }
         if (inside(b, {8, top, right, 74})) {
             const bool bar_fill = !draw.textured && inside(b, {56, 12, 344, 29});
             const bool bar_strip = draw.textured && draw.width == 16u && draw.height == 8u &&

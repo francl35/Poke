@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Kokkotto
+Comment=Monster Hunter Portable FreedomDX native project
+Exec=kokoto
+Icon=io.github.francl35.Kokoto
+Terminal=false
+Categories=Game;

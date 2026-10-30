@@ -1,0 +1,116 @@
+{
+  "app-id": "io.github.francl35.Kokoto",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "25.08",
+  "sdk": "org.freedesktop.Sdk",
+  "command": "kokoto",
+  "branch": "test",
+  "finish-args": [
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--share=ipc",
+    "--socket=pulseaudio",
+    "--device=all"
+  ],
+  "build-options": {
+    "env": {
+      "CMAKE_BUILD_PARALLEL_LEVEL": "2"
+    }
+  },
+  "cleanup": [
+    "/include",
+    "/lib/pkgconfig",
+    "/lib/cmake",
+    "/share/man",
+    "/share/doc",
+    "/bin/glslang",
+    "/bin/glslangValidator",
+    "*.a",
+    "*.la"
+  ],
+  "modules": [
+    {
+      "name": "sdl3",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSDL_SHARED=ON",
+        "-DSDL_STATIC=OFF",
+        "-DSDL_TEST_LIBRARY=OFF",
+        "-DSDL_TESTS=OFF"
+      ],
+      "post-install": [
+        "install -Dm644 LICENSE.txt /app/share/licenses/SDL3/LICENSE.txt"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz",
+          "sha256": "9c75cf16330322c217dedd2e0609f1124f1b54b8633e763467b4684d0f4334a3"
+        }
+      ]
+    },
+    {
+      "name": "glslang",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DENABLE_OPT=OFF",
+        "-DENABLE_GLSLANG_BINARIES=ON",
+        "-DENABLE_SPVREMAPPER=OFF",
+        "-DBUILD_TESTING=OFF"
+      ],
+      "post-install": [
+        "install -Dm644 LICENSE.txt /app/share/licenses/glslang/LICENSE.txt"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/KhronosGroup/glslang/archive/14.0.0.tar.gz",
+          "sha256": "80bbb916a23e94ea9cbfb1acb5d1a44a7e0c9613bcf5b5947c03f2273bdc92b0"
+        },
+        {
+          "type": "patch",
+          "path": "glslang-cstdint.patch"
+        }
+      ]
+    },
+    {
+      "name": "kokoto",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 flatpak-files/build_mhp1.py"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "source"
+        },
+        {
+          "type": "file",
+          "url": "https://ffmpeg.org/releases/ffmpeg-7.1.5.tar.xz",
+          "sha256": "de668509caf9e35e3cd162473441fdb29538c6d96ed080292b3cf9e6fc5d558f",
+          "dest": "flatpak-deps/downloads"
+        },
+        {
+          "type": "archive",
+          "url": "https://codeload.github.com/KhronosGroup/KTX-Software/tar.gz/4d6fc70eaf62ad0558e63e8d97eb9766118327a6",
+          "sha256": "4d0a3c4470c67e0f1544d2a92f379dc919c9627a5c3fa5c4fcaf4c22324827f5",
+          "dest": "flatpak-deps/ktx",
+          "archive-type": "tar-gzip"
+        },
+        {
+          "type": "dir",
+          "path": "overlay-cache",
+          "dest": "flatpak-deps/overlay-cache"
+        }
+      ],
+      "build-options": {
+        "env": {
+          "MH_OVERLAY_POLICY": "repair-cache",
+          "MH_BUILD_JOBS": "4"
+        }
+      }
+    }
+  ]
+}
